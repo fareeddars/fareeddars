@@ -2,11 +2,34 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import AppLayout from "@/components/AppLayout";
+import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import Farmers from "@/pages/Farmers";
+import Ledger from "@/pages/Ledger";
+import Inventory from "@/pages/Inventory";
+import ProfitLoss from "@/pages/ProfitLoss";
+import Reports from "@/pages/Reports";
+import AdminPanel from "@/pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, loading } = useAuth();
+  if (loading) return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading...</div>;
+  if (!session) return <Navigate to="/auth" replace />;
+  return <AppLayout>{children}</AppLayout>;
+};
+
+const AuthRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, loading } = useAuth();
+  if (loading) return null;
+  if (session) return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -14,11 +37,19 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/farmers" element={<ProtectedRoute><Farmers /></ProtectedRoute>} />
+            <Route path="/ledger" element={<ProtectedRoute><Ledger /></ProtectedRoute>} />
+            <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+            <Route path="/profit-loss" element={<ProtectedRoute><ProfitLoss /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

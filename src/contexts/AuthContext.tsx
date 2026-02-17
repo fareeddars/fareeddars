@@ -1,0 +1,104 @@
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type AppRole = Database["public"]["Enums"]["app_role"];
+
+interface UserRole {
+  role: AppRole;
+  can_create: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+  is_active: boolean;
+}
+
+interface Profile {
+  full_name: string;
+  email: string;
+}
+
+interface AuthContextType {
+  session: Session | null;
+  user: User | null;
+  profile: Profile | null;
+  userRole: UserRole | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+  isAdmin: boolean;
+  isManagerOrAdmin: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUserData = async (userId: string) => {
+    const [profileRes, roleRes] = await Promise.all([
+      supabase.from("profiles").select("full_name, email").eq("user_id", userId).single(),
+      supabase.from("user_roles").select("role, can_create, can_edit, can_delete, is_active").eq("user_id", userId).single(),
+    ]);
+    if (profileRes.data) setProfile(profileRes.data);
+    if (roleRes.data) setUserRole(roleRes.data);
+  };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        setTimeout(() => fetchUserData(session.user.id), 0);
+      } else {
+        setProfile(null);
+        setUserRole(null);
+      }
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserData(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setProfile(null);
+    setUserRole(null);
+  };
+
+  const isAdmin = userRole?.role === "admin";
+  const isManagerOrAdmin = userRole?.role === "admin" || userRole?.role === "manager";
+
+  return (
+    <AuthContext.Provider value={{
+      session, user, profile, userRole, loading, signOut,
+      isAdmin, isManagerOrAdmin,
+      canCreate: userRole?.can_create ?? false,
+      canEdit: userRole?.can_edit ?? false,
+      canDelete: userRole?.can_delete ?? false,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
