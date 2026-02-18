@@ -116,14 +116,22 @@ export type Database = {
       ledger_entries: {
         Row: {
           amount: number
+          category: string | null
           created_at: string
           created_by: string
+          crop_type: string | null
+          crop_weight: number | null
+          deductions: number | null
           description: string
+          entry_date: string | null
           entry_type: string
           farmer_id: string
+          gross_weight: number | null
           id: string
+          inventory_item_id: string | null
           is_shared: boolean
           net_weight: number | null
+          payment_method: string | null
           quantity: number | null
           rate: number | null
           shared_amount: number | null
@@ -131,14 +139,22 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          category?: string | null
           created_at?: string
           created_by: string
+          crop_type?: string | null
+          crop_weight?: number | null
+          deductions?: number | null
           description?: string
+          entry_date?: string | null
           entry_type: string
           farmer_id: string
+          gross_weight?: number | null
           id?: string
+          inventory_item_id?: string | null
           is_shared?: boolean
           net_weight?: number | null
+          payment_method?: string | null
           quantity?: number | null
           rate?: number | null
           shared_amount?: number | null
@@ -146,14 +162,22 @@ export type Database = {
         }
         Update: {
           amount?: number
+          category?: string | null
           created_at?: string
           created_by?: string
+          crop_type?: string | null
+          crop_weight?: number | null
+          deductions?: number | null
           description?: string
+          entry_date?: string | null
           entry_type?: string
           farmer_id?: string
+          gross_weight?: number | null
           id?: string
+          inventory_item_id?: string | null
           is_shared?: boolean
           net_weight?: number | null
+          payment_method?: string | null
           quantity?: number | null
           rate?: number | null
           shared_amount?: number | null
@@ -165,6 +189,13 @@ export type Database = {
             columns: ["farmer_id"]
             isOneToOne: false
             referencedRelation: "farmers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
             referencedColumns: ["id"]
           },
         ]
