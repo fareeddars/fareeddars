@@ -10,69 +10,173 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
+import { Plus, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
+
+const EXPENSE_CATEGORIES = [
+  "Seed", "Fertilizer", "Pesticide", "Labour", "Tractor", "Irrigation", "Cash", "Others",
+];
 
 const Ledger = () => {
   const { user, canCreate } = useAuth();
   const { toast } = useToast();
   const [entries, setEntries] = useState<(Tables<"ledger_entries"> & { farmers?: { name: string } | null })[]>([]);
   const [farmers, setFarmers] = useState<Tables<"farmers">[]>([]);
+  const [inventory, setInventory] = useState<Tables<"inventory">[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    farmer_id: "", entry_type: "expense" as string, description: "", amount: "",
-    quantity: "", rate: "", net_weight: "", is_shared: false,
-  });
+  const [activeTab, setActiveTab] = useState("expense");
+
+  // Shared fields
+  const [farmerId, setFarmerId] = useState("");
+  const [entryDate, setEntryDate] = useState<Date>(new Date());
+  const [description, setDescription] = useState("");
+
+  // Expense fields
+  const [category, setCategory] = useState("");
+  const [inventoryItemId, setInventoryItemId] = useState("");
+  const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [expenseAmount, setExpenseAmount] = useState("");
+  const [isShared, setIsShared] = useState(false);
+
+  // Sale fields
+  const [grossWeight, setGrossWeight] = useState("");
+  const [deductionsVal, setDeductionsVal] = useState("");
+  const [saleRate, setSaleRate] = useState("");
+
+  // Payment fields
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [cashAmount, setCashAmount] = useState("");
+  const [cropType, setCropType] = useState("");
+  const [cropWeight, setCropWeight] = useState("");
+  const [cropRate, setCropRate] = useState("");
 
   const fetchData = async () => {
-    const [entriesRes, farmersRes] = await Promise.all([
+    const [entriesRes, farmersRes, inventoryRes] = await Promise.all([
       supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false }),
       supabase.from("farmers").select("*"),
+      supabase.from("inventory").select("*"),
     ]);
     if (entriesRes.data) setEntries(entriesRes.data);
     if (farmersRes.data) setFarmers(farmersRes.data);
+    if (inventoryRes.data) setInventory(inventoryRes.data);
   };
 
   useEffect(() => { fetchData(); }, []);
 
-  const computedAmount = () => {
-    if (form.entry_type === "sale" && form.net_weight && form.rate) {
-      return Number(form.net_weight) * Number(form.rate);
+  // Auto-fill price from inventory
+  useEffect(() => {
+    if (inventoryItemId) {
+      const item = inventory.find((i) => i.id === inventoryItemId);
+      if (item) setPrice(String(item.price_per_unit));
     }
-    return Number(form.amount) || 0;
+  }, [inventoryItemId, inventory]);
+
+  // Auto-calculate expense amount
+  const computedExpenseAmount = () => {
+    if (price && quantity) return Number(price) * Number(quantity);
+    return Number(expenseAmount) || 0;
+  };
+
+  // Sale calculations
+  const netWeight = () => (Number(grossWeight) || 0) - (Number(deductionsVal) || 0);
+  const saleTotal = () => netWeight() * (Number(saleRate) || 0);
+
+  // Payment crop return total
+  const cropTotal = () => (Number(cropWeight) || 0) * (Number(cropRate) || 0);
+
+  const resetForm = () => {
+    setFarmerId(""); setEntryDate(new Date()); setDescription("");
+    setCategory(""); setInventoryItemId(""); setPrice(""); setQuantity(""); setExpenseAmount(""); setIsShared(false);
+    setGrossWeight(""); setDeductionsVal(""); setSaleRate("");
+    setPaymentMethod("cash"); setCashAmount(""); setCropType(""); setCropWeight(""); setCropRate("");
+    setActiveTab("expense");
   };
 
   const handleSave = async () => {
-    if (!user) return;
-    const amount = computedAmount();
-    const sharedAmount = form.is_shared ? amount / 2 : null;
+    if (!user || !farmerId) return;
 
-    const { error } = await supabase.from("ledger_entries").insert({
-      farmer_id: form.farmer_id,
-      entry_type: form.entry_type,
-      description: form.description,
-      amount,
-      quantity: form.quantity ? Number(form.quantity) : null,
-      rate: form.rate ? Number(form.rate) : null,
-      net_weight: form.net_weight ? Number(form.net_weight) : null,
-      is_shared: form.is_shared,
-      shared_amount: sharedAmount,
+    let amount = 0;
+    let entryData: Record<string, unknown> = {
+      farmer_id: farmerId,
+      entry_type: activeTab,
+      description,
       created_by: user.id,
-    });
+      entry_date: format(entryDate, "yyyy-MM-dd"),
+    };
+
+    if (activeTab === "expense") {
+      amount = computedExpenseAmount();
+      entryData = {
+        ...entryData,
+        amount,
+        category,
+        inventory_item_id: inventoryItemId || null,
+        quantity: quantity ? Number(quantity) : null,
+        rate: price ? Number(price) : null,
+        is_shared: isShared,
+        shared_amount: isShared ? amount / 2 : null,
+      };
+    } else if (activeTab === "sale") {
+      amount = saleTotal();
+      entryData = {
+        ...entryData,
+        amount,
+        gross_weight: grossWeight ? Number(grossWeight) : null,
+        deductions: deductionsVal ? Number(deductionsVal) : null,
+        net_weight: netWeight() || null,
+        rate: saleRate ? Number(saleRate) : null,
+      };
+    } else {
+      // payment
+      if (paymentMethod === "cash") {
+        amount = Number(cashAmount) || 0;
+      } else {
+        amount = cropTotal();
+      }
+      entryData = {
+        ...entryData,
+        amount,
+        payment_method: paymentMethod,
+        crop_type: paymentMethod === "crop_return" ? cropType : null,
+        crop_weight: paymentMethod === "crop_return" && cropWeight ? Number(cropWeight) : null,
+        rate: paymentMethod === "crop_return" && cropRate ? Number(cropRate) : null,
+      };
+    }
+
+    const { error } = await supabase.from("ledger_entries").insert(entryData as any);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Entry added" });
-      setOpen(false);
-      setForm({ farmer_id: "", entry_type: "expense", description: "", amount: "", quantity: "", rate: "", net_weight: "", is_shared: false });
-      fetchData();
+      return;
     }
+
+    // Auto-deduct inventory stock
+    if (activeTab === "expense" && inventoryItemId && quantity) {
+      const item = inventory.find((i) => i.id === inventoryItemId);
+      if (item) {
+        await supabase.from("inventory").update({
+          current_stock: item.current_stock - Number(quantity),
+        }).eq("id", inventoryItemId);
+      }
+    }
+
+    toast({ title: "Entry added successfully" });
+    setOpen(false);
+    resetForm();
+    fetchData();
   };
 
   const typeBadge = (type: string) => {
-    const colors: Record<string, string> = { expense: "destructive", sale: "default", payment: "secondary" };
-    return <Badge variant={colors[type] as any || "default"}>{type}</Badge>;
+    const variants: Record<string, "destructive" | "default" | "secondary"> = {
+      expense: "destructive", sale: "default", payment: "secondary",
+    };
+    return <Badge variant={variants[type] || "default"} className="capitalize">{type}</Badge>;
   };
 
   return (
@@ -83,50 +187,183 @@ const Ledger = () => {
           <p className="text-muted-foreground">Track expenses, sales, and payments</p>
         </div>
         {canCreate && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />New Entry</Button></DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader><DialogTitle>New Ledger Entry</DialogTitle><DialogDescription>Add a new transaction record</DialogDescription></DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Farmer *</Label>
-                  <Select value={form.farmer_id} onValueChange={(v) => setForm({ ...form, farmer_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select farmer" /></SelectTrigger>
-                    <SelectContent>{farmers.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Type *</Label>
-                  <Select value={form.entry_type} onValueChange={(v) => setForm({ ...form, entry_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="expense">Expense</SelectItem>
-                      <SelectItem value="sale">Sale</SelectItem>
-                      <SelectItem value="payment">Payment (Return)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2"><Label>Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-                
-                {form.entry_type === "sale" ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><Label>Net Weight (kg)</Label><Input type="number" value={form.net_weight} onChange={(e) => setForm({ ...form, net_weight: e.target.value })} /></div>
-                    <div className="space-y-2"><Label>Rate (₨/kg)</Label><Input type="number" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} /></div>
-                    <div className="col-span-2 text-sm text-muted-foreground">Calculated: ₨ {computedAmount().toLocaleString()}</div>
-                  </div>
-                ) : (
-                  <div className="space-y-2"><Label>Amount (₨)</Label><Input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
-                )}
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button><Plus className="mr-2 h-4 w-4" />New Transaction</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>New Transaction</DialogTitle>
+                <DialogDescription>Add a new ledger entry</DialogDescription>
+              </DialogHeader>
 
-                {form.entry_type === "expense" && (
-                  <div className="flex items-center gap-3">
-                    <Switch checked={form.is_shared} onCheckedChange={(v) => setForm({ ...form, is_shared: v })} />
-                    <Label>50/50 Cost Sharing</Label>
-                    {form.is_shared && <span className="text-sm text-muted-foreground">Each pays: ₨ {(computedAmount() / 2).toLocaleString()}</span>}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="w-full grid grid-cols-3">
+                  <TabsTrigger value="expense">Expense</TabsTrigger>
+                  <TabsTrigger value="sale">Sale</TabsTrigger>
+                  <TabsTrigger value="payment">Payment</TabsTrigger>
+                </TabsList>
+
+                {/* Shared: Farmer + Date */}
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label>Farmer *</Label>
+                    <Select value={farmerId} onValueChange={setFarmerId}>
+                      <SelectTrigger><SelectValue placeholder="Select farmer" /></SelectTrigger>
+                      <SelectContent>{farmers.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                    </Select>
                   </div>
-                )}
-              </div>
-              <DialogFooter><Button onClick={handleSave} disabled={!form.farmer_id}>Save Entry</Button></DialogFooter>
+                  <div className="space-y-2">
+                    <Label>Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !entryDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {entryDate ? format(entryDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={entryDate} onSelect={(d) => d && setEntryDate(d)} initialFocus /></PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {/* EXPENSE TAB */}
+                <TabsContent value="expense" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                      <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c} value={c.toLowerCase()}>{c}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Enter description" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Link to Inventory (Optional)</Label>
+                    <Select value={inventoryItemId} onValueChange={setInventoryItemId}>
+                      <SelectTrigger><SelectValue placeholder="Select inventory item" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {inventory.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.item_name} — ₨{item.price_per_unit}/{item.unit} (Stock: {item.current_stock})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Price (₨)</Label>
+                      <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Quantity</Label>
+                      <Input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" />
+                    </div>
+                  </div>
+                  {(!price || !quantity) && (
+                    <div className="space-y-2">
+                      <Label>Amount (₨)</Label>
+                      <Input type="number" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} placeholder="Manual amount" />
+                    </div>
+                  )}
+                  {(price && quantity) && (
+                    <div className="rounded-md bg-accent p-3 text-sm font-medium">
+                      Total: ₨ {computedExpenseAmount().toLocaleString()}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <Switch checked={isShared} onCheckedChange={setIsShared} />
+                    <Label>50/50 Cost Sharing</Label>
+                    {isShared && (
+                      <span className="text-sm text-muted-foreground ml-auto">
+                        Each pays: ₨ {(computedExpenseAmount() / 2).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* SALE TAB */}
+                <TabsContent value="sale" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Enter description" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Gross Weight (kg)</Label>
+                      <Input type="number" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Deductions (kg)</Label>
+                      <Input type="number" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" />
+                    </div>
+                  </div>
+                  <div className="rounded-md bg-accent p-3 text-sm">
+                    <span className="font-medium">Net Weight:</span> {netWeight().toLocaleString()} kg
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Rate per kg (₨)</Label>
+                    <Input type="number" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" />
+                  </div>
+                  <div className="rounded-md bg-accent p-3 text-sm font-medium">
+                    Total Amount: ₨ {saleTotal().toLocaleString()}
+                  </div>
+                </TabsContent>
+
+                {/* PAYMENT TAB */}
+                <TabsContent value="payment" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Enter description" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Payment Method</Label>
+                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash Payment</SelectItem>
+                        <SelectItem value="crop_return">Crop Return</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {paymentMethod === "cash" ? (
+                    <div className="space-y-2">
+                      <Label>Amount (₨)</Label>
+                      <Input type="number" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Crop Type</Label>
+                        <Input value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="e.g. Wheat, Rice" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Crop Weight (kg)</Label>
+                          <Input type="number" value={cropWeight} onChange={(e) => setCropWeight(e.target.value)} placeholder="0" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Rate per kg (₨)</Label>
+                          <Input type="number" value={cropRate} onChange={(e) => setCropRate(e.target.value)} placeholder="0" />
+                        </div>
+                      </div>
+                      <div className="rounded-md bg-accent p-3 text-sm font-medium">
+                        Total: ₨ {cropTotal().toLocaleString()}
+                      </div>
+                    </>
+                  )}
+                </TabsContent>
+              </Tabs>
+
+              <DialogFooter>
+                <Button onClick={handleSave} disabled={!farmerId} className="w-full">
+                  Save Entry
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         )}
@@ -141,6 +378,7 @@ const Ledger = () => {
                 <TableHead>Date</TableHead>
                 <TableHead>Farmer</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead className="text-right">Amount (₨)</TableHead>
               </TableRow>
@@ -148,14 +386,17 @@ const Ledger = () => {
             <TableBody>
               {entries.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="text-sm">{new Date(e.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-sm">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{e.farmers?.name ?? "—"}</TableCell>
                   <TableCell>{typeBadge(e.entry_type)}</TableCell>
-                  <TableCell>{e.description}</TableCell>
+                  <TableCell className="capitalize">{(e as any).category || "—"}</TableCell>
+                  <TableCell>{e.description || "—"}</TableCell>
                   <TableCell className="text-right font-mono">{Number(e.amount).toLocaleString()}</TableCell>
                 </TableRow>
               ))}
-              {entries.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No entries yet</TableCell></TableRow>}
+              {entries.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No entries yet</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
