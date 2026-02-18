@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -46,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const dataFetchedRef = useRef(false);
 
   const fetchUserData = async (userId: string) => {
     const [profileRes, roleRes] = await Promise.all([
@@ -57,14 +58,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        setTimeout(() => fetchUserData(session.user.id), 0);
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          dataFetchedRef.current = false;
+        }
+        if (!dataFetchedRef.current) {
+          dataFetchedRef.current = true;
+          setTimeout(() => fetchUserData(session.user.id), 0);
+        }
       } else {
         setProfile(null);
         setUserRole(null);
+        dataFetchedRef.current = false;
       }
       setLoading(false);
     });
@@ -72,7 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
+      if (session?.user && !dataFetchedRef.current) {
+        dataFetchedRef.current = true;
         fetchUserData(session.user.id);
       }
       setLoading(false);
