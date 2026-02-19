@@ -150,7 +150,7 @@ const Reports = () => {
       )}
 
       {/* PRINT AREA — hidden on screen, visible on print */}
-      <div id="print-area" ref={printRef} className="hidden print:block">
+      <div id="print-area" ref={printRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm' }}>
         <style>{`
           @media print {
             #print-area { display: block !important; font-family: Arial, sans-serif; color: #000; }
