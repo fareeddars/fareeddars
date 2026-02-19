@@ -6,19 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Phone, MapPin } from "lucide-react";
+import { Plus, Search, Phone, MapPin, Pencil, Trash2 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 const Farmers = () => {
-  const { user, isManagerOrAdmin } = useAuth();
+  const { user, isManagerOrAdmin, isAdmin } = useAuth();
   const { toast } = useToast();
   const [farmers, setFarmers] = useState<Tables<"farmers">[]>([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingFarmer, setEditingFarmer] = useState<Tables<"farmers"> | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", address: "", farm_details: "", initial_balance: "0" });
+  const [editForm, setEditForm] = useState({ name: "", phone: "", address: "", farm_details: "", initial_balance: "0" });
 
   const fetchFarmers = async () => {
     const { data } = await supabase.from("farmers").select("*").order("created_at", { ascending: false });
@@ -44,6 +48,47 @@ const Farmers = () => {
       setForm({ name: "", phone: "", address: "", farm_details: "", initial_balance: "0" });
       setOpen(false);
       setConfirmOpen(false);
+      fetchFarmers();
+    }
+  };
+
+  const openEdit = (farmer: Tables<"farmers">) => {
+    setEditingFarmer(farmer);
+    setEditForm({
+      name: farmer.name,
+      phone: farmer.phone || "",
+      address: farmer.address || "",
+      farm_details: farmer.farm_details || "",
+      initial_balance: String(farmer.initial_balance),
+    });
+    setEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingFarmer) return;
+    const { error } = await supabase.from("farmers").update({
+      name: editForm.name,
+      phone: editForm.phone || null,
+      address: editForm.address || null,
+      farm_details: editForm.farm_details || null,
+      initial_balance: Number(editForm.initial_balance) || 0,
+    }).eq("id", editingFarmer.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Farmer updated successfully" });
+      setEditOpen(false);
+      setEditingFarmer(null);
+      fetchFarmers();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("farmers").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Farmer deleted" });
       fetchFarmers();
     }
   };
@@ -98,8 +143,38 @@ const Farmers = () => {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((farmer) => (
           <Card key={farmer.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 flex flex-row items-start justify-between">
               <CardTitle className="text-lg">{farmer.name}</CardTitle>
+              <div className="flex gap-1">
+                {isManagerOrAdmin && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(farmer)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+                {isAdmin && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Farmer</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete <strong>{farmer.name}</strong>? This will also delete all their ledger entries. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(farmer.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               {farmer.phone && <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{farmer.phone}</div>}
@@ -114,6 +189,27 @@ const Farmers = () => {
           <div className="col-span-full text-center py-12 text-muted-foreground">No farmers found.</div>
         )}
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Farmer</DialogTitle>
+            <DialogDescription>Update farmer details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2"><Label>Name *</Label><Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Phone</Label><Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Address</Label><Input value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Farm Details</Label><Textarea value={editForm.farm_details} onChange={(e) => setEditForm({ ...editForm, farm_details: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Initial Balance (₨)</Label><Input type="number" value={editForm.initial_balance} onChange={(e) => setEditForm({ ...editForm, initial_balance: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdate} disabled={!editForm.name}>Update Farmer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
