@@ -49,7 +49,37 @@ const Reports = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    const printContent = document.getElementById("print-area")?.innerHTML;
+    if (!printContent) return;
+    const win = window.open("", "_blank", "width=900,height=700");
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>Agricultural Statement</title><style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, sans-serif; font-size: 11px; color: #000; background: white; padding: 15mm; }
+      .print-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 11px; }
+      .print-table th { background: #f0f0f0; padding: 6px 8px; text-align: left; border: 1px solid #ccc; font-weight: 700; }
+      .print-table td { padding: 5px 8px; border: 1px solid #ccc; }
+      .print-table tfoot td { background: #e8e8e8; font-weight: 700; }
+      .print-table tr:nth-child(even) td { background: #fafafa; }
+      .section-title { font-size: 13px; font-weight: 700; margin: 16px 0 6px; border-bottom: 2px solid #333; padding-bottom: 4px; }
+      .report-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 12px; }
+      .report-header h1 { font-size: 22px; margin: 0 0 4px; }
+      .report-header p { font-size: 12px; margin: 2px 0; color: #444; }
+      .farmer-block { page-break-inside: avoid; margin-bottom: 32px; }
+      .farmer-name { font-size: 16px; font-weight: 700; background: #222; color: #fff; padding: 6px 12px; margin-bottom: 10px; }
+      .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+      .summary-box { border: 1px solid #ccc; padding: 10px; }
+      .summary-box h3 { font-size: 12px; font-weight: 700; margin: 0 0 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+      .summary-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
+      .summary-total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; padding: 5px 0 0; border-top: 1px solid #000; margin-top: 4px; }
+      .profit { color: #166534; }
+      .loss { color: #991b1b; }
+      .text-right { text-align: right; }
+      @page { margin: 15mm; size: A4; }
+    </style></head><body>${printContent}</body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); win.close(); }, 300);
   };
 
   // Get farmers included in the report
@@ -67,6 +97,7 @@ const Reports = () => {
     const expenses = farmerEntries.filter((e) => e.entry_type === "expense");
     const sales = farmerEntries.filter((e) => e.entry_type === "sale");
     const payments = farmerEntries.filter((e) => e.entry_type === "payment");
+    const loans = farmerEntries.filter((e) => e.entry_type === "loan");
 
     const totalFarmerExpenses = expenses.reduce((sum, e) => {
       if (e.is_shared) return sum + (e.shared_amount ?? e.amount / 2);
@@ -79,12 +110,13 @@ const Reports = () => {
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
     const totalSales = sales.reduce((sum, e) => sum + e.amount, 0);
     const totalPayments = payments.reduce((sum, e) => sum + e.amount, 0);
+    const totalLoans = loans.reduce((sum, e) => sum + e.amount, 0);
     const farmer = getFarmer(farmerId);
     const initialBalance = Number(farmer?.initial_balance ?? 0);
-    const balanceOwed = initialBalance + totalFarmerExpenses - totalPayments;
-    const netProfit = totalSales - totalLandlordExpenses;
+    const balanceOwed = initialBalance + totalFarmerExpenses + totalLoans - totalPayments;
+    const netProfit = totalSales - totalFarmerExpenses - totalLandlordExpenses;
 
-    return { expenses, sales, payments, totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, initialBalance, balanceOwed, netProfit };
+    return { expenses, sales, payments, loans, totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, initialBalance, balanceOwed, netProfit };
   };
 
   const selectedFarmerName = selectedFarmerId === "all" ? "All Farmers" : getFarmerName(selectedFarmerId);
@@ -199,7 +231,7 @@ const Reports = () => {
         </div>
 
         {reportFarmerIds.map((farmerId) => {
-          const { expenses, sales, payments, totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, initialBalance, balanceOwed, netProfit } = calcSections(farmerId);
+          const { expenses, sales, payments, loans, totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, initialBalance, balanceOwed, netProfit } = calcSections(farmerId);
           const farmer = getFarmer(farmerId);
           if (!farmer) return null;
 
@@ -325,26 +357,59 @@ const Reports = () => {
                 </table>
               ) : <p style={{ fontSize: "11px", color: "#666" }}>No payment entries.</p>}
 
-              {/* Section 4 & 5: Summary + Profit/Loss */}
+              {/* Section 4: Personal Loans */}
+              <div className="section-title">4. Personal Loans from Landlord</div>
+              {loans.length > 0 ? (
+                <table className="print-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Description</th>
+                      <th className="text-right">Amount (₨)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loans.map((e) => (
+                      <tr key={e.id}>
+                        <td>{e.entry_date ?? "—"}</td>
+                        <td>{e.description || "—"}</td>
+                        <td className="text-right">{fmtNum(e.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan={2}><strong>Total Loans</strong></td>
+                      <td className="text-right"><strong>{fmtNum(totalLoans)}</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : <p style={{ fontSize: "11px", color: "#666" }}>No loan entries.</p>}
+
+              {/* Section 5 & 6: Account Summary + Profit/Loss */}
               <div className="summary-grid">
                 {/* Account Summary */}
                 <div className="summary-box">
-                  <h3>4. Account Summary</h3>
-                  <div className="summary-row"><span>Opening Balance</span><span>{fmtNum(initialBalance)}</span></div>
-                  <div className="summary-row"><span>Total Expenses (Farmer's Share)</span><span>{fmtNum(totalFarmerExpenses)}</span></div>
-                  <div className="summary-row"><span>Total Sales Income</span><span>{fmtNum(totalSales)}</span></div>
-                  <div className="summary-row"><span>Total Payments Received</span><span>({fmtNum(totalPayments)})</span></div>
+                  <h3>5. Account Summary</h3>
+                  <div className="summary-row"><span>Opening Balance (Previous Due)</span><span>{fmtNum(initialBalance)}</span></div>
+                  <div className="summary-row"><span>+ Farmer's Expense Share</span><span>{fmtNum(totalFarmerExpenses)}</span></div>
+                  <div className="summary-row"><span>+ Personal Loans from Landlord</span><span>{fmtNum(totalLoans)}</span></div>
+                  <div className="summary-row" style={{ borderTop: "1px solid #ccc", marginTop: "4px", paddingTop: "4px", fontWeight: 700 }}>
+                    <span>= Total Amount Owed</span><span>{fmtNum(initialBalance + totalFarmerExpenses + totalLoans)}</span>
+                  </div>
+                  <div className="summary-row"><span>− Payments Received</span><span>({fmtNum(totalPayments)})</span></div>
                   <div className={`summary-total ${balanceOwed > 0 ? "loss" : "profit"}`}>
-                    <span>Balance Owed by Farmer</span>
-                    <span>{fmt(Math.abs(balanceOwed))}{balanceOwed < 0 ? " (CR)" : ""}</span>
+                    <span>= Balance Still Due</span>
+                    <span>{balanceOwed <= 0 ? "Settled ✓" : fmt(Math.abs(balanceOwed))}</span>
                   </div>
                 </div>
 
                 {/* Profit / Loss */}
                 <div className="summary-box">
-                  <h3>5. Profit / Loss (Landlord)</h3>
+                  <h3>6. Profit / Loss (Landlord)</h3>
                   <div className="summary-row"><span>Total Sales Income</span><span>{fmtNum(totalSales)}</span></div>
-                  <div className="summary-row"><span>Landlord's Expense Share</span><span>({fmtNum(totalLandlordExpenses)})</span></div>
+                  <div className="summary-row"><span>− Farmer's Expense Share</span><span>({fmtNum(totalFarmerExpenses)})</span></div>
+                  <div className="summary-row"><span>− Landlord's Expense Share</span><span>({fmtNum(totalLandlordExpenses)})</span></div>
                   <div className={`summary-total ${netProfit >= 0 ? "profit" : "loss"}`}>
                     <span>{netProfit >= 0 ? "Net Profit" : "Net Loss"}</span>
                     <span>{fmt(Math.abs(netProfit))}</span>
@@ -366,7 +431,7 @@ const Reports = () => {
       {reportReady && reportFarmerIds.length > 0 && (
         <div className="space-y-4">
           {reportFarmerIds.map((farmerId) => {
-            const { totalFarmerExpenses, totalLandlordExpenses, totalSales, totalPayments, balanceOwed, netProfit } = calcSections(farmerId);
+            const { totalFarmerExpenses, totalLandlordExpenses, totalSales, totalPayments, totalLoans, balanceOwed, netProfit } = calcSections(farmerId);
             return (
               <Card key={farmerId}>
                 <CardHeader>
@@ -387,12 +452,18 @@ const Reports = () => {
                       <p className="font-mono font-medium">{fmt(totalSales)}</p>
                     </div>
                     <div>
+                      <p className="text-muted-foreground">Personal Loans</p>
+                      <p className="font-mono font-medium">{fmt(totalLoans)}</p>
+                    </div>
+                    <div>
                       <p className="text-muted-foreground">Payments Received</p>
                       <p className="font-mono font-medium">{fmt(totalPayments)}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Balance Owed</p>
-                      <p className={`font-mono font-medium ${balanceOwed > 0 ? "text-destructive" : "text-green-700"}`}>{fmt(Math.abs(balanceOwed))}</p>
+                      <p className="text-muted-foreground">Balance Due</p>
+                      <p className={`font-mono font-medium ${balanceOwed > 0 ? "text-destructive" : "text-green-700"}`}>
+                        {balanceOwed <= 0 ? "Settled ✓" : fmt(Math.abs(balanceOwed))}
+                      </p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Net Profit/Loss</p>
