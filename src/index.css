@@ -160,19 +160,22 @@ All colors MUST be HSL.
 }
 
 @media print {
-  /* Hide the entire app shell */
-  #root > * {
-    display: none !important;
+  /* Hide everything on the page */
+  body > * {
+    visibility: hidden;
   }
-  /* Show and position the print area */
+  /* Show only the print area */
   #print-area {
-    display: block !important;
+    visibility: visible !important;
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
     height: auto !important;
-    z-index: 9999 !important;
     background: white !important;
+  }
+  /* Make sure all children of print area are visible */
+  #print-area * {
+    visibility: visible !important;
   }
 }

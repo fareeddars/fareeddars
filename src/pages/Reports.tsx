@@ -149,36 +149,46 @@ const Reports = () => {
         </Card>
       )}
 
-      {/* PRINT AREA — hidden on screen, visible on print */}
-      <div id="print-area" ref={printRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm' }}>
+      {/* PRINT AREA — off-screen on screen, visible on print via CSS visibility */}
+      <div
+        id="print-area"
+        ref={printRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '210mm',
+          visibility: 'hidden',
+          pointerEvents: 'none',
+          zIndex: -1,
+          padding: '20mm',
+          boxSizing: 'border-box',
+          fontFamily: 'Arial, sans-serif',
+          color: '#000',
+          background: 'white',
+        }}
+      >
         <style>{`
-          @media print {
-            #print-area { display: block !important; font-family: Arial, sans-serif; color: #000; }
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; }
-            .print-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 11px; }
-            .print-table th { background: #f0f0f0; padding: 6px 8px; text-align: left; border: 1px solid #ccc; font-weight: 700; }
-            .print-table td { padding: 5px 8px; border: 1px solid #ccc; }
-            .print-table tfoot td { background: #f5f5f5; font-weight: 700; }
-            .print-table tr:nth-child(even) td { background: #fafafa; }
-            .print-table tfoot tr td { background: #e8e8e8 !important; }
-            .section-title { font-size: 13px; font-weight: 700; margin: 16px 0 6px; border-bottom: 2px solid #333; padding-bottom: 4px; }
-            .report-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 12px; }
-            .report-header h1 { font-size: 22px; margin: 0 0 4px; }
-            .report-header p { font-size: 12px; margin: 2px 0; color: #444; }
-            .farmer-block { page-break-inside: avoid; margin-bottom: 32px; }
-            .farmer-name { font-size: 16px; font-weight: 700; background: #222; color: #fff; padding: 6px 12px; margin-bottom: 10px; }
-            .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-            .summary-box { border: 1px solid #ccc; padding: 10px; }
-            .summary-box h3 { font-size: 12px; font-weight: 700; margin: 0 0 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
-            .summary-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
-            .summary-total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; padding: 5px 0 0; border-top: 1px solid #000; margin-top: 4px; }
-            .profit { color: #166534; }
-            .loss { color: #991b1b; }
-            .text-right { text-align: right; }
-            @page { margin: 15mm; size: A4; }
-          }
+          .print-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 11px; }
+          .print-table th { background: #f0f0f0; padding: 6px 8px; text-align: left; border: 1px solid #ccc; font-weight: 700; }
+          .print-table td { padding: 5px 8px; border: 1px solid #ccc; }
+          .print-table tfoot td { background: #e8e8e8; font-weight: 700; }
+          .print-table tr:nth-child(even) td { background: #fafafa; }
+          .section-title { font-size: 13px; font-weight: 700; margin: 16px 0 6px; border-bottom: 2px solid #333; padding-bottom: 4px; }
+          .report-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 12px; }
+          .report-header h1 { font-size: 22px; margin: 0 0 4px; }
+          .report-header p { font-size: 12px; margin: 2px 0; color: #444; }
+          .farmer-block { page-break-inside: avoid; margin-bottom: 32px; }
+          .farmer-name { font-size: 16px; font-weight: 700; background: #222; color: #fff; padding: 6px 12px; margin-bottom: 10px; }
+          .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+          .summary-box { border: 1px solid #ccc; padding: 10px; }
+          .summary-box h3 { font-size: 12px; font-weight: 700; margin: 0 0 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+          .summary-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
+          .summary-total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; padding: 5px 0 0; border-top: 1px solid #000; margin-top: 4px; }
+          .profit { color: #166534; }
+          .loss { color: #991b1b; }
+          .text-right { text-align: right; }
+          @page { margin: 15mm; size: A4; }
         `}</style>
 
         {/* Report Header */}
