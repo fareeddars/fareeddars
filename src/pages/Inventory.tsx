@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, AlertTriangle, Pencil, Trash2 } from "lucide-react";
+import { Plus, AlertTriangle, Pencil, Trash2, Download } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 const Inventory = () => {
@@ -28,6 +28,19 @@ const Inventory = () => {
   };
 
   useEffect(() => { fetchItems(); }, []);
+
+  const downloadCSV = () => {
+    const headers = ["Item Name", "Stock", "Unit", "Price/Unit (Rs)", "Low Stock Threshold"];
+    const rows = items.map(i => [i.item_name, i.current_stock, i.unit, i.price_per_unit, i.low_stock_threshold]);
+    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "inventory.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -97,7 +110,11 @@ const Inventory = () => {
           <h1 className="text-2xl font-serif font-bold text-foreground">Inventory</h1>
           <p className="text-muted-foreground">Track your stock items</p>
         </div>
-        {isManagerOrAdmin && (
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={downloadCSV} disabled={items.length === 0}>
+            <Download className="mr-2 h-4 w-4" />Download CSV
+          </Button>
+          {isManagerOrAdmin && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />Add Item</Button></DialogTrigger>
             <DialogContent>
@@ -116,7 +133,8 @@ const Inventory = () => {
               <DialogFooter><Button onClick={handleSave} disabled={!form.item_name}>Save Item</Button></DialogFooter>
             </DialogContent>
           </Dialog>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

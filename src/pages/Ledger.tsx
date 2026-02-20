@@ -57,6 +57,9 @@ const Ledger = () => {
   const [cropWeight, setCropWeight] = useState("");
   const [cropRate, setCropRate] = useState("");
 
+  // Loan fields
+  const [loanAmount, setLoanAmount] = useState("");
+
   const fetchData = async () => {
     const [entriesRes, farmersRes, inventoryRes] = await Promise.all([
       supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false }),
@@ -96,6 +99,7 @@ const Ledger = () => {
     setCategory(""); setInventoryItemId(""); setPrice(""); setQuantity(""); setExpenseAmount(""); setIsShared(false);
     setGrossWeight(""); setDeductionsVal(""); setSaleRate("");
     setPaymentMethod("cash"); setCashAmount(""); setCropType(""); setCropWeight(""); setCropRate("");
+    setLoanAmount("");
     setActiveTab("expense");
   };
 
@@ -133,8 +137,7 @@ const Ledger = () => {
         net_weight: netWeight() || null,
         rate: saleRate ? Number(saleRate) : null,
       };
-    } else {
-      // payment
+    } else if (activeTab === "payment") {
       if (paymentMethod === "cash") {
         amount = Number(cashAmount) || 0;
       } else {
@@ -147,6 +150,13 @@ const Ledger = () => {
         crop_type: paymentMethod === "crop_return" ? cropType : null,
         crop_weight: paymentMethod === "crop_return" && cropWeight ? Number(cropWeight) : null,
         rate: paymentMethod === "crop_return" && cropRate ? Number(cropRate) : null,
+      };
+    } else if (activeTab === "loan") {
+      amount = Number(loanAmount) || 0;
+      entryData = {
+        ...entryData,
+        amount,
+        entry_type: "loan",
       };
     }
 
@@ -173,6 +183,9 @@ const Ledger = () => {
   };
 
   const typeBadge = (type: string) => {
+    if (type === "loan") {
+      return <Badge variant="outline" className="capitalize border-blue-500 text-blue-600">Loan</Badge>;
+    }
     const variants: Record<string, "destructive" | "default" | "secondary"> = {
       expense: "destructive", sale: "default", payment: "secondary",
     };
@@ -198,10 +211,11 @@ const Ledger = () => {
               </DialogHeader>
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="w-full grid grid-cols-3">
+                <TabsList className="w-full grid grid-cols-4">
                   <TabsTrigger value="expense">Expense</TabsTrigger>
                   <TabsTrigger value="sale">Sale</TabsTrigger>
                   <TabsTrigger value="payment">Payment</TabsTrigger>
+                  <TabsTrigger value="loan">Loan</TabsTrigger>
                 </TabsList>
 
                 {/* Shared: Farmer + Date */}
@@ -355,6 +369,23 @@ const Ledger = () => {
                         Total: ₨ {cropTotal().toLocaleString()}
                       </div>
                     </>
+                  )}
+                </TabsContent>
+
+                {/* LOAN TAB */}
+                <TabsContent value="loan" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Loan purpose / details" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Amount (₨)</Label>
+                    <Input type="number" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} placeholder="0" />
+                  </div>
+                  {loanAmount && (
+                    <div className="rounded-md bg-accent p-3 text-sm font-medium">
+                      Loan Amount: ₨ {Number(loanAmount).toLocaleString()}
+                    </div>
                   )}
                 </TabsContent>
               </Tabs>
