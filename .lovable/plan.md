@@ -1,156 +1,60 @@
+# Fix Loan & Multi-Script Support (Transliteration)
 
-# Full App Update Plan: Loan Section + Inventory Download + Enhanced Reports
+## Task 1: Database Fix (Loan Entry)
 
-## Summary of Changes Requested
-1. **Ledger — Add "Loan" transaction tab**: A 4th tab next to Expense/Sale/Payment for recording personal loans taken from the landlord, with Farmer, Date, Description, and Amount fields.
-2. **Inventory — Export/Download button**: Download the full inventory list as a CSV file directly from the browser (no backend needed).
-3. **Reports — Personal Loan section in bill**: A new Section 4 in the printed bill showing all loan entries per farmer.
-4. **Reports — Enhanced Farmer Summary section**: A completely rewritten Account Summary with clear line items: Opening Balance, Farmer Expense Share, Personal Loan Total, Payments Made, Amount Still Due.
-5. **Reports — Enhanced Profit/Loss section**: Rewritten to show: Total Sales - Farmer's Expense Share - Landlord's Expense Share = Net Result.
-6. **Reports — Fix print blank page issue**: Rebuild the print mechanism to use `document.body.innerHTML` replacement — the most reliable approach for all browsers.
+Database mein `ledger_entries` table par jo CHECK constraint hai usay update karna hai taake `'loan'` ka lafz block na ho.
+
+- **Action:** Purana constraint drop karein aur naya add karein:
+
+SQL
+
+```
+ALTER TABLE public.ledger_entries DROP CONSTRAINT ledger_entries_entry_type_check;
+ALTER TABLE public.ledger_entries ADD CONSTRAINT ledger_entries_entry_type_check 
+CHECK (entry_type = ANY (ARRAY['expense','sale','payment','loan']));
+
+```
 
 ---
 
-## Part 1 — Database Migration
+## Task 2: Multi-Language Support (English, Sindhi, Urdu)
 
-A new `entry_type = 'loan'` will be stored in the existing `ledger_entries` table using the `amount` and `description` columns. **No new columns are needed** — loans use: `farmer_id`, `entry_date`, `description`, `amount`, `entry_type = 'loan'`.
+### 1. Language Reset Logic (No Storage)
 
-**No migration required** — the existing schema supports this perfectly. `entry_type` is a free-text column that already holds "expense", "sale", "payment". We add "loan" as a new valid value in code only.
+- **Rule:** App hamesha **English** mein start honi chahiye.
+- **Implementation:** `LanguageContext.tsx` mein `localStorage` ka istemal **NAHI** karna. Jab bhi page refresh ho ya app band karke kholi jaye, language automatically reset hokar `'en'` (English) ho jaye. User ko har session mein apni zaban khud select karni hogi.
 
----
+### 2. Transliteration (No Translation)
 
-## Part 2 — Ledger Page (`src/pages/Ledger.tsx`)
+- **Rule:** Humein lafzon ka tarjuma (meaning) nahi badalna, sirf unka rasm-ul-khat (script) badalna hai.
+- **Example:** Agar English mein "Save" likha hai, to Urdu mein usay "سیو" (Save) aur Sindhi mein "سيو" (Save) likha jaye, na ke "محفوظ".
+- **Dictionary Sample:**
+  - `en: "Dashboard"` ⮕ `ur: "ڈیش بورڈ"` ⮕ `sd: "ڊيش بورڊ"`
+  - `en: "Amount"` ⮕ `ur: "اماؤنٹ"` ⮕ `sd: "امائونٽ"`
+  - `en: "Farmer"` ⮕ `ur: "فارمر"` ⮕ `sd: "فارمر"`
 
-### Changes
-- The tab grid changes from `grid-cols-3` to `grid-cols-4`
-- Add a 4th `TabsTrigger` and `TabsContent` for **Loan**
-- Add `loanAmount` state variable
-- In `handleSave`, handle `activeTab === "loan"` to insert with `amount`, `description`, `farmer_id`, `entry_date`, `entry_type: "loan"`
-- In `resetForm`, reset `loanAmount`
-- In `typeBadge`, add `loan: "outline"` badge color (distinct blue/purple feel)
-- In the entries table at the bottom, the loan rows will now display naturally since all columns are already there
+### 3. Files to Create/Modify
 
-### Loan Tab Form Fields
-```
-Farmer *   →  Select dropdown (same shared component)
-Date       →  Date picker (same shared component)
-Description → Text input
-Amount (₨) → Number input
-```
-
-No inventory, no weight, no categories — clean and simple.
-
----
-
-## Part 3 — Inventory Page (`src/pages/Inventory.tsx`)
-
-### Add CSV Download Button
-A **Download CSV** button in the header (next to "Add Item"), visible to all authenticated users. When clicked:
-
-1. Builds a CSV string from the `items` state array with columns:
-   - Item Name, Current Stock, Unit, Price Per Unit (₨), Low Stock Threshold
-2. Creates a `Blob` with `text/csv` MIME type
-3. Creates a temporary `<a>` element with `download="inventory.csv"` and clicks it programmatically
-4. No external library needed — pure browser API
-
-```typescript
-const downloadCSV = () => {
-  const headers = ["Item Name", "Stock", "Unit", "Price/Unit (Rs)", "Low Stock Threshold"];
-  const rows = items.map(i => [i.item_name, i.current_stock, i.unit, i.price_per_unit, i.low_stock_threshold]);
-  const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = "inventory.csv"; a.click();
-  URL.revokeObjectURL(url);
-};
-```
-
-The button will use `<Download className="h-4 w-4 mr-2" />Download CSV` from lucide-react.
+- `src/contexts/LanguageContext.tsx`: Context banayein jo `language`, `t(key)` function, aur `dir` (ltr/rtl) provide kare. Default state `'en'` rakhein.
+- `src/i18n/translations.ts`: Is mein tamam UI labels ki list transliteration ke sath shamil karein (Sidebar, Buttons, Form labels, Reports).
+- `src/App.tsx`: `LanguageProvider` se wrap karein.
+- `src/components/AppLayout.tsx`: Root container par `dir={dir}` apply karein taake Urdu/Sindhi select karne par layout Right-to-Left (RTL) ho jaye.
+- `src/pages/Settings.tsx`: Language select karne ke liye 3 radio buttons add karein (English, Sindhi, Urdu).
+- `src/pages/Reports.tsx`:
+  - Ek **Print Language** selector lagayein.
+  - Bill/Report print karte waqt transliterated English words (Urdu/Sindhi script mein) aur **Jameel Noori Nastaleeq** font ka istemal karein.
+- `src/index.css`: RTL layout aur Urdu/Sindhi fonts ke liye CSS tweaks add karein.
 
 ---
 
-## Part 4 — Reports Page (`src/pages/Reports.tsx`)
+## Summary Table for Implementation
 
-### Fix the Blank Print Issue (Root Cause)
-The `visibility: hidden` + `visibility: visible` trick fails in many browsers because the hidden parent prevents child rendering. The fix: use a **print-specific window approach**:
 
-```typescript
-const handlePrint = () => {
-  const printContent = document.getElementById("print-area")?.innerHTML;
-  const win = window.open("", "_blank", "width=900,height=700");
-  win.document.write(`<html><head><style>...styles...</style></head><body>${printContent}</body></html>`);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.close();
-};
-```
-
-This opens a fresh blank window with only the report HTML, completely bypassing the React app's DOM and the CSS visibility problem. This is 100% reliable across Chrome, Firefox, and Safari.
-
-### New Section: Personal Loans
-
-Insert between Payments (Section 3) and Account Summary (Section 4):
-
-**Section 4 — Personal Loans from Landlord**
-
-| Date | Description | Amount (₨) |
-|------|-------------|------------|
-| ...  | ...         | ...        |
-| **Total Loans** | | **₨ X** |
-
-The `calcSections` function gets a new `loans` array and `totalLoans` value.
-
-### Rewritten Account Summary (Section 5)
-
-| Item | Amount (₨) |
-|------|------------|
-| Opening Balance (Previous Due) | X |
-| + Farmer's Expense Share | X |
-| + Personal Loans from Landlord | X |
-| **= Total Amount Owed by Farmer** | **X** |
-| − Payments Received | (X) |
-| **= Balance Still Due** | **X** (red) or **Settled** (green) |
-
-Formula:
-```
-balanceOwed = initialBalance + totalFarmerExpenses + totalLoans - totalPayments
-```
-
-### Rewritten Profit / Loss (Section 6)
-
-| Item | Amount (₨) |
-|------|------------|
-| Total Sales Income | X |
-| − Farmer's Expense Share | (X) |
-| − Landlord's Expense Share | (X) |
-| **Net Profit / Loss** | **X** |
-
-Formula:
-```
-netProfit = totalSales - totalFarmerExpenses - totalLandlordExpenses
-```
-
-> Note: The user requested "Total Sales minus both shares" for the profit calculation. This replaces the current formula of `totalSales - totalLandlordExpenses`.
-
-### Screen Preview Cards Update
-The on-screen summary cards after generating a report will also show the new "Total Loans" line item.
-
----
-
-## Technical Details
-
-### Files Modified
-1. **`src/pages/Ledger.tsx`** — Add Loan tab (4th tab), `loanAmount` state, loan save logic, loan badge color.
-2. **`src/pages/Inventory.tsx`** — Add `downloadCSV` function and Download CSV button with `Download` icon from lucide-react.
-3. **`src/pages/Reports.tsx`** — New Loan section in print bill, rewritten Account Summary + Profit/Loss formulas, print via `window.open()` to fix blank page.
-4. **`src/index.css`** — The `@media print` block can be simplified/kept as-is since the new approach opens a separate window.
-
-### No Migration Needed
-The `ledger_entries` table already has all the columns needed for loan entries. The `entry_type` column is plain text with no database-level constraint, so "loan" works as a new type without any schema change.
-
-### Badge Colors for All 4 Types
-- `expense` → `destructive` (red)
-- `sale` → `default` (primary/orange)
-- `payment` → `secondary` (grey)
-- `loan` → custom outline blue — using `className="border-blue-500 text-blue-600"` on a `default` Badge
+|                      |                                                     |
+| -------------------- | --------------------------------------------------- |
+| **Feature**          | **Requirement**                                     |
+| **Default Language** | Hamesha English (Refresh par reset ho jaye)         |
+| **Storage**          | `localStorage` use nahi karna                       |
+| **Language Style**   | **Transliteration** (English words in local script) |
+| **Layout**           | English (LTR), Urdu/Sindhi (RTL)                    |
+| **Fonts**            | Jameel Noori Nastaleeq for Urdu/Sindhi script       |
