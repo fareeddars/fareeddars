@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 const Inventory = () => {
   const { user, isManagerOrAdmin, isAdmin } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [items, setItems] = useState<Tables<"inventory">[]>([]);
   const [open, setOpen] = useState(false);
@@ -35,102 +37,70 @@ const Inventory = () => {
     const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "inventory.csv";
-    a.click();
+    const a = document.createElement("a"); a.href = url; a.download = "inventory.csv"; a.click();
     URL.revokeObjectURL(url);
   };
 
   const handleSave = async () => {
     if (!user) return;
     const { error } = await supabase.from("inventory").insert({
-      item_name: form.item_name,
-      current_stock: Number(form.current_stock),
-      unit: form.unit,
-      price_per_unit: Number(form.price_per_unit),
-      low_stock_threshold: Number(form.low_stock_threshold),
-      created_by: user.id,
+      item_name: form.item_name, current_stock: Number(form.current_stock), unit: form.unit,
+      price_per_unit: Number(form.price_per_unit), low_stock_threshold: Number(form.low_stock_threshold), created_by: user.id,
     });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Item added" });
-      setOpen(false);
-      setForm({ item_name: "", current_stock: "", unit: "bags", price_per_unit: "", low_stock_threshold: "5" });
-      fetchItems();
-    }
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Item added" }); setOpen(false); setForm({ item_name: "", current_stock: "", unit: "bags", price_per_unit: "", low_stock_threshold: "5" }); fetchItems(); }
   };
 
   const openEdit = (item: Tables<"inventory">) => {
     setEditingItem(item);
-    setEditForm({
-      item_name: item.item_name,
-      current_stock: String(item.current_stock),
-      unit: item.unit,
-      price_per_unit: String(item.price_per_unit),
-      low_stock_threshold: String(item.low_stock_threshold),
-    });
+    setEditForm({ item_name: item.item_name, current_stock: String(item.current_stock), unit: item.unit, price_per_unit: String(item.price_per_unit), low_stock_threshold: String(item.low_stock_threshold) });
     setEditOpen(true);
   };
 
   const handleUpdate = async () => {
     if (!editingItem) return;
     const { error } = await supabase.from("inventory").update({
-      item_name: editForm.item_name,
-      current_stock: Number(editForm.current_stock),
-      unit: editForm.unit,
-      price_per_unit: Number(editForm.price_per_unit),
-      low_stock_threshold: Number(editForm.low_stock_threshold),
+      item_name: editForm.item_name, current_stock: Number(editForm.current_stock), unit: editForm.unit,
+      price_per_unit: Number(editForm.price_per_unit), low_stock_threshold: Number(editForm.low_stock_threshold),
     }).eq("id", editingItem.id);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Item updated" });
-      setEditOpen(false);
-      setEditingItem(null);
-      fetchItems();
-    }
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Item updated" }); setEditOpen(false); setEditingItem(null); fetchItems(); }
   };
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("inventory").delete().eq("id", id);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Item deleted" });
-      fetchItems();
-    }
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Item deleted" }); fetchItems(); }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-serif font-bold text-foreground">Inventory</h1>
-          <p className="text-muted-foreground">Track your stock items</p>
+          <h1 className="text-2xl font-serif font-bold text-foreground">{t("inventory.title")}</h1>
+          <p className="text-muted-foreground">{t("inventory.subtitle")}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={downloadCSV} disabled={items.length === 0}>
-            <Download className="mr-2 h-4 w-4" />Download CSV
+            <Download className="mr-2 h-4 w-4" />{t("inventory.downloadCSV")}
           </Button>
           {isManagerOrAdmin && (
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />Add Item</Button></DialogTrigger>
+            <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />{t("inventory.addItem")}</Button></DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add Inventory Item</DialogTitle><DialogDescription>Enter item details</DialogDescription></DialogHeader>
+              <DialogHeader><DialogTitle>{t("inventory.addInventoryItem")}</DialogTitle><DialogDescription>{t("inventory.enterDetails")}</DialogDescription></DialogHeader>
               <div className="space-y-4">
-                <div className="space-y-2"><Label>Item Name *</Label><Input value={form.item_name} onChange={(e) => setForm({ ...form, item_name: e.target.value })} /></div>
+                <div className="space-y-2"><Label>{t("inventory.itemName")} *</Label><Input value={form.item_name} onChange={(e) => setForm({ ...form, item_name: e.target.value })} /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Current Stock</Label><Input type="number" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>Unit</Label><Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input type="number" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Price/Unit (₨)</Label><Input type="number" value={form.price_per_unit} onChange={(e) => setForm({ ...form, price_per_unit: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>Low Stock Alert</Label><Input type="number" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input type="number" value={form.price_per_unit} onChange={(e) => setForm({ ...form, price_per_unit: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input type="number" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} /></div>
                 </div>
               </div>
-              <DialogFooter><Button onClick={handleSave} disabled={!form.item_name}>Save Item</Button></DialogFooter>
+              <DialogFooter><Button onClick={handleSave} disabled={!form.item_name}>{t("inventory.saveItem")}</Button></DialogFooter>
             </DialogContent>
           </Dialog>
           )}
@@ -144,34 +114,21 @@ const Inventory = () => {
               <div className="flex items-center gap-2 flex-wrap">
                 <CardTitle className="text-lg">{item.item_name}</CardTitle>
                 {item.current_stock <= item.low_stock_threshold && (
-                  <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Low</Badge>
+                  <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" />{t("inventory.low")}</Badge>
                 )}
               </div>
               <div className="flex gap-1 shrink-0">
-                {isManagerOrAdmin && (
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                )}
+                {isManagerOrAdmin && (<Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item)}><Pencil className="h-3.5 w-3.5" /></Button>)}
                 {isAdmin && (
                   <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </AlertDialogTrigger>
+                    <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
                     <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Item</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete <strong>{item.item_name}</strong>? This action cannot be undone.
-                        </AlertDialogDescription>
+                      <AlertDialogHeader><AlertDialogTitle>{t("inventory.deleteItem")}</AlertDialogTitle>
+                        <AlertDialogDescription>{t("inventory.deleteConfirm")} <strong>{item.item_name}</strong>?</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          Delete
-                        </AlertDialogAction>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -179,32 +136,32 @@ const Inventory = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Stock:</span><span className="font-medium">{item.current_stock} {item.unit}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Price:</span><span className="font-mono">₨ {Number(item.price_per_unit).toLocaleString()}/{item.unit}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">{t("ledger.stock")}:</span><span className="font-medium">{item.current_stock} {item.unit}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">{t("ledger.price")}:</span><span className="font-mono">₨ {Number(item.price_per_unit).toLocaleString()}/{item.unit}</span></div>
             </CardContent>
           </Card>
         ))}
-        {items.length === 0 && <div className="col-span-full text-center py-12 text-muted-foreground">No inventory items yet.</div>}
+        {items.length === 0 && <div className="col-span-full text-center py-12 text-muted-foreground">{t("inventory.noItems")}</div>}
       </div>
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Edit Inventory Item</DialogTitle><DialogDescription>Update item details</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>{t("inventory.editItem")}</DialogTitle><DialogDescription>{t("inventory.updateDetails")}</DialogDescription></DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2"><Label>Item Name *</Label><Input value={editForm.item_name} onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })} /></div>
+            <div className="space-y-2"><Label>{t("inventory.itemName")} *</Label><Input value={editForm.item_name} onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Current Stock</Label><Input type="number" value={editForm.current_stock} onChange={(e) => setEditForm({ ...editForm, current_stock: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Unit</Label><Input value={editForm.unit} onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input type="number" value={editForm.current_stock} onChange={(e) => setEditForm({ ...editForm, current_stock: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input value={editForm.unit} onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Price/Unit (₨)</Label><Input type="number" value={editForm.price_per_unit} onChange={(e) => setEditForm({ ...editForm, price_per_unit: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Low Stock Alert</Label><Input type="number" value={editForm.low_stock_threshold} onChange={(e) => setEditForm({ ...editForm, low_stock_threshold: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input type="number" value={editForm.price_per_unit} onChange={(e) => setEditForm({ ...editForm, price_per_unit: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input type="number" value={editForm.low_stock_threshold} onChange={(e) => setEditForm({ ...editForm, low_stock_threshold: e.target.value })} /></div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdate} disabled={!editForm.item_name}>Update Item</Button>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleUpdate} disabled={!editForm.item_name}>{t("inventory.updateItem")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

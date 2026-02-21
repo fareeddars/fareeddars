@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Settings as SettingsIcon, User, Lock } from "lucide-react";
+import { Settings as SettingsIcon, User, Lock, Globe } from "lucide-react";
+import type { Language } from "@/i18n/translations";
 
 const Settings = () => {
   const { profile, user } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
   const { toast } = useToast();
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [saving, setSaving] = useState(false);
@@ -57,28 +61,52 @@ const Settings = () => {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-serif font-bold text-foreground flex items-center gap-2">
-          <SettingsIcon className="h-6 w-6" /> Settings
+          <SettingsIcon className="h-6 w-6" /> {t("settings.title")}
         </h1>
-        <p className="text-muted-foreground">Manage your account preferences</p>
+        <p className="text-muted-foreground">{t("settings.subtitle")}</p>
       </div>
+
+      {/* Language */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Globe className="h-4 w-4" /> {t("settings.language")}</CardTitle>
+          <CardDescription>{t("settings.selectLanguage")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup value={language} onValueChange={(v) => setLanguage(v as Language)} className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <RadioGroupItem value="en" id="lang-en" />
+              <Label htmlFor="lang-en">{t("settings.english")}</Label>
+            </div>
+            <div className="flex items-center gap-3">
+              <RadioGroupItem value="sd" id="lang-sd" />
+              <Label htmlFor="lang-sd">{t("settings.sindhi")}</Label>
+            </div>
+            <div className="flex items-center gap-3">
+              <RadioGroupItem value="ur" id="lang-ur" />
+              <Label htmlFor="lang-ur">{t("settings.urdu")}</Label>
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
 
       {/* Profile */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><User className="h-4 w-4" /> Profile</CardTitle>
-          <CardDescription>Update your display name</CardDescription>
+          <CardTitle className="flex items-center gap-2"><User className="h-4 w-4" /> {t("settings.profile")}</CardTitle>
+          <CardDescription>{t("settings.updateName")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Email</Label>
+            <Label>{t("admin.email")}</Label>
             <Input value={profile?.email || user?.email || ""} disabled className="bg-muted/40" />
           </div>
           <div className="space-y-2">
-            <Label>Full Name</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
+            <Label>{t("settings.fullName")}</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("settings.fullName")} />
           </div>
           <Button onClick={handleSaveProfile} disabled={saving}>
-            {saving ? "Saving..." : "Save Profile"}
+            {saving ? t("settings.saving") : t("settings.saveProfile")}
           </Button>
         </CardContent>
       </Card>
@@ -86,20 +114,20 @@ const Settings = () => {
       {/* Password */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Lock className="h-4 w-4" /> Change Password</CardTitle>
-          <CardDescription>Set a new password for your account</CardDescription>
+          <CardTitle className="flex items-center gap-2"><Lock className="h-4 w-4" /> {t("settings.changePassword")}</CardTitle>
+          <CardDescription>{t("settings.setNewPassword")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>New Password</Label>
+            <Label>{t("settings.newPassword")}</Label>
             <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="space-y-2">
-            <Label>Confirm New Password</Label>
+            <Label>{t("settings.confirmPassword")}</Label>
             <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <Button onClick={handleChangePassword} disabled={changingPw || !newPassword}>
-            {changingPw ? "Changing..." : "Change Password"}
+            {changingPw ? t("settings.changing") : t("settings.changePassword")}
           </Button>
         </CardContent>
       </Card>

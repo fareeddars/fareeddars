@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
@@ -20,6 +19,7 @@ interface UserWithRole {
 
 const AdminPanel = () => {
   const { isAdmin } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRole[]>([]);
 
@@ -50,29 +50,29 @@ const AdminPanel = () => {
   };
 
   if (!isAdmin) {
-    return <div className="flex items-center justify-center h-64 text-muted-foreground">Access denied. Admin only.</div>;
+    return <div className="flex items-center justify-center h-64 text-muted-foreground">{t("admin.accessDenied")}</div>;
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-serif font-bold text-foreground">Admin Panel</h1>
-        <p className="text-muted-foreground">Manage users, roles, and permissions</p>
+        <h1 className="text-2xl font-serif font-bold text-foreground">{t("admin.title")}</h1>
+        <p className="text-muted-foreground">{t("admin.subtitle")}</p>
       </div>
 
       <Card>
-        <CardHeader><CardTitle>User Management</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("admin.userManagement")}</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Create</TableHead>
-                <TableHead>Edit</TableHead>
-                <TableHead>Delete</TableHead>
-                <TableHead>Active</TableHead>
+                <TableHead>{t("common.name")}</TableHead>
+                <TableHead>{t("admin.email")}</TableHead>
+                <TableHead>{t("admin.role")}</TableHead>
+                <TableHead>{t("admin.create")}</TableHead>
+                <TableHead>{t("common.edit")}</TableHead>
+                <TableHead>{t("common.delete")}</TableHead>
+                <TableHead>{t("admin.active")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, BookOpen, Package, TrendingUp } from "lucide-react";
 
 const Dashboard = () => {
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const [stats, setStats] = useState({ farmers: 0, entries: 0, inventory: 0, revenue: 0 });
 
   useEffect(() => {
@@ -27,17 +29,17 @@ const Dashboard = () => {
   }, []);
 
   const cards = [
-    { title: "Total Farmers", value: stats.farmers, icon: Users, color: "text-primary" },
-    { title: "Ledger Entries", value: stats.entries, icon: BookOpen, color: "text-accent-foreground" },
-    { title: "Inventory Items", value: stats.inventory, icon: Package, color: "text-secondary" },
-    { title: "Total Revenue", value: `₨ ${stats.revenue.toLocaleString()}`, icon: TrendingUp, color: "text-primary" },
+    { title: t("dashboard.totalFarmers"), value: stats.farmers, icon: Users, color: "text-primary" },
+    { title: t("dashboard.ledgerEntries"), value: stats.entries, icon: BookOpen, color: "text-accent-foreground" },
+    { title: t("dashboard.inventoryItems"), value: stats.inventory, icon: Package, color: "text-secondary" },
+    { title: t("dashboard.totalRevenue"), value: `₨ ${stats.revenue.toLocaleString()}`, icon: TrendingUp, color: "text-primary" },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-serif font-bold text-foreground">Welcome back, {profile?.full_name || "User"}</h1>
-        <p className="text-muted-foreground">Here's an overview of your agriculture business.</p>
+        <h1 className="text-2xl font-serif font-bold text-foreground">{t("dashboard.welcome")}, {profile?.full_name || "User"}</h1>
+        <p className="text-muted-foreground">{t("dashboard.overview")}</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => (

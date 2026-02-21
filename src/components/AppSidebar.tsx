@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -11,21 +12,22 @@ import {
 
 const AppSidebar = () => {
   const { profile, userRole, isAdmin, signOut } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
   const mainNav = [
-    { title: "Dashboard", icon: LayoutDashboard, path: "/" },
-    { title: "Farmers", icon: Users, path: "/farmers" },
-    { title: "Ledger", icon: BookOpen, path: "/ledger" },
-    { title: "Inventory", icon: Package, path: "/inventory" },
-    { title: "Profit/Loss", icon: TrendingUp, path: "/profit-loss" },
-    { title: "Reports", icon: FileText, path: "/reports" },
+    { title: t("nav.dashboard"), icon: LayoutDashboard, path: "/" },
+    { title: t("nav.farmers"), icon: Users, path: "/farmers" },
+    { title: t("nav.ledger"), icon: BookOpen, path: "/ledger" },
+    { title: t("nav.inventory"), icon: Package, path: "/inventory" },
+    { title: t("nav.profitLoss"), icon: TrendingUp, path: "/profit-loss" },
+    { title: t("nav.reports"), icon: FileText, path: "/reports" },
   ];
 
   const adminNav = [
-    { title: "Admin Panel", icon: Shield, path: "/admin" },
-    { title: "Settings", icon: Settings, path: "/settings" },
+    { title: t("nav.admin"), icon: Shield, path: "/admin" },
+    { title: t("nav.settings"), icon: Settings, path: "/settings" },
   ];
 
   return (
@@ -36,7 +38,7 @@ const AppSidebar = () => {
             <Sprout className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-sidebar-foreground">Agriculture Ledger</span>
+            <span className="text-sm font-semibold text-sidebar-foreground">{t("nav.appName")}</span>
             <span className="text-xs text-muted-foreground capitalize">{userRole?.role ?? "staff"}</span>
           </div>
         </div>
@@ -44,7 +46,7 @@ const AppSidebar = () => {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("nav.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNav.map((item) => (
@@ -61,7 +63,7 @@ const AppSidebar = () => {
 
         {isAdmin && (
           <SidebarGroup>
-            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupLabel>{t("nav.administration")}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminNav.map((item) => (
