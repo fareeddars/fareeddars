@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -40,6 +40,9 @@ export const useAuth = () => {
   return ctx;
 };
 
+const SESSION_HIDDEN_KEY = "app_hidden_at";
+const AUTO_LOGOUT_SECONDS = 10;
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -56,6 +59,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (profileRes.data) setProfile(profileRes.data);
     if (roleRes.data) setUserRole(roleRes.data);
   };
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    setProfile(null);
+    setUserRole(null);
+    localStorage.removeItem(SESSION_HIDDEN_KEY);
+  }, []);
+
+  // Auto-logout: track when app is hidden/closed
+  useEffect(() => {
+    // On mount, check if we were away for more than 10 seconds
+    const hiddenAt = localStorage.getItem(SESSION_HIDDEN_KEY);
+    if (hiddenAt) {
+      const elapsed = (Date.now() - Number(hiddenAt)) / 1000;
+      if (elapsed > AUTO_LOGOUT_SECONDS) {
+        // Force sign out
+        localStorage.removeItem(SESSION_HIDDEN_KEY);
+        supabase.auth.signOut();
+        return;
+      }
+      localStorage.removeItem(SESSION_HIDDEN_KEY);
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        localStorage.setItem(SESSION_HIDDEN_KEY, String(Date.now()));
+      } else {
+        const storedAt = localStorage.getItem(SESSION_HIDDEN_KEY);
+        if (storedAt) {
+          const elapsed = (Date.now() - Number(storedAt)) / 1000;
+          localStorage.removeItem(SESSION_HIDDEN_KEY);
+          if (elapsed > AUTO_LOGOUT_SECONDS) {
+            signOut();
+          }
+        }
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      localStorage.setItem(SESSION_HIDDEN_KEY, String(Date.now()));
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [signOut]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -89,12 +142,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
-    setUserRole(null);
-  };
 
   const isAdmin = userRole?.role === "admin";
   const isManagerOrAdmin = userRole?.role === "admin" || userRole?.role === "manager";
