@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Package, TrendingUp } from "lucide-react";
+import { Users, BookOpen, Package, TrendingUp, ArrowUpRight } from "lucide-react";
 
 const Dashboard = () => {
   const { profile } = useAuth();
@@ -29,27 +29,40 @@ const Dashboard = () => {
   }, []);
 
   const cards = [
-    { title: t("dashboard.totalFarmers"), value: stats.farmers, icon: Users, color: "text-primary" },
-    { title: t("dashboard.ledgerEntries"), value: stats.entries, icon: BookOpen, color: "text-accent-foreground" },
-    { title: t("dashboard.inventoryItems"), value: stats.inventory, icon: Package, color: "text-secondary" },
-    { title: t("dashboard.totalRevenue"), value: `₨ ${stats.revenue.toLocaleString()}`, icon: TrendingUp, color: "text-primary" },
+    { title: t("dashboard.totalFarmers"), value: stats.farmers, icon: Users, accent: "bg-primary/10 text-primary" },
+    { title: t("dashboard.ledgerEntries"), value: stats.entries, icon: BookOpen, accent: "bg-accent text-accent-foreground" },
+    { title: t("dashboard.inventoryItems"), value: stats.inventory, icon: Package, accent: "bg-primary/10 text-primary" },
+    { title: t("dashboard.totalRevenue"), value: `₨ ${stats.revenue.toLocaleString()}`, icon: TrendingUp, accent: "bg-accent text-accent-foreground" },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-serif font-bold text-foreground">{t("dashboard.welcome")}, {profile?.full_name || "User"}</h1>
-        <p className="text-muted-foreground">{t("dashboard.overview")}</p>
+      {/* Welcome Section */}
+      <div className="relative overflow-hidden rounded-xl bg-card border border-border p-6">
+        <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/5" />
+        <div className="absolute -bottom-10 -right-10 w-24 h-24 rounded-full bg-accent/20" />
+        <div className="relative">
+          <p className="text-sm text-muted-foreground mb-1">{t("dashboard.welcome")}</p>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
+            {profile?.full_name || "User"} 👋
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">{t("dashboard.overview")}</p>
+        </div>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+      {/* Stats Grid */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => (
-          <Card key={card.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{card.title}</CardTitle>
-              <card.icon className={`h-5 w-5 ${card.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{card.value}</div>
+          <Card key={card.title} className="group hover:shadow-md transition-all duration-200 cursor-default overflow-hidden">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-start justify-between mb-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.accent} transition-transform group-hover:scale-110`}>
+                  <card.icon className="h-5 w-5" />
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground font-mono tracking-tight">{card.value}</div>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-tight">{card.title}</p>
             </CardContent>
           </Card>
         ))}
