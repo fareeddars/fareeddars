@@ -99,6 +99,29 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    if (action === "update_user") {
+      const { user_id, email, new_password } = payload;
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "user_id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const updateData: any = {};
+      if (email) updateData.email = email;
+      if (new_password) updateData.password = new_password;
+      if (email) updateData.email_confirm = true;
+
+      const { error: updateError } = await adminClient.auth.admin.updateUserById(user_id, updateData);
+      if (updateError) {
+        return new Response(JSON.stringify({ error: updateError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Also update profile email if changed
+      if (email) {
+        await adminClient.from("profiles").update({ email }).eq("user_id", user_id);
+      }
+
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
