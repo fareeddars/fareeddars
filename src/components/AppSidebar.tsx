@@ -31,38 +31,37 @@ const AppSidebar = () => {
     { title: t("nav.settings"), icon: Settings, path: "/settings" },
   ];
 
-  const roleBadgeColor: Record<string, string> = {
-    admin: "bg-primary/15 text-primary border-primary/30",
-    manager: "bg-accent text-accent-foreground border-accent-foreground/30",
-    staff: "bg-muted/20 text-muted-foreground border-border",
-  };
-
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+    <Sidebar className="border-none">
+      <SidebarHeader className="border-b border-sidebar-border/30 p-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-sm">
-            <Sprout className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sidebar-primary/20 backdrop-blur-sm shadow-lg">
+            <Sprout className="h-6 w-6 text-sidebar-foreground" />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-bold text-sidebar-foreground leading-none">{t("nav.appName")}</span>
-            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 w-fit capitalize ${roleBadgeColor[userRole?.role ?? "staff"] || ""}`}>
+            <span className="text-base font-bold text-sidebar-foreground leading-none tracking-tight">{t("nav.appName")}</span>
+            <Badge variant="outline" className="text-[10px] px-2 py-0 w-fit capitalize border-sidebar-foreground/30 text-sidebar-foreground/80 bg-sidebar-primary/10">
               {userRole?.role ?? "staff"}
             </Badge>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-2 py-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider">{t("nav.navigation")}</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50 px-3 mb-1">{t("nav.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNav.map((item) => (
+              {mainNav.map((item, i) => (
                 <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton isActive={location.pathname === item.path} onClick={() => navigate(item.path)}>
+                  <SidebarMenuButton
+                    isActive={location.pathname === item.path}
+                    onClick={() => navigate(item.path)}
+                    className="rounded-xl h-10 px-3 transition-all duration-200"
+                    style={{ animationDelay: `${i * 50}ms` }}
+                  >
                     <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    <span className="font-medium">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -72,14 +71,18 @@ const AppSidebar = () => {
 
         {isAdmin && (
           <SidebarGroup>
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-wider">{t("nav.administration")}</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50 px-3 mb-1">{t("nav.administration")}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminNav.map((item) => (
                   <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton isActive={location.pathname === item.path} onClick={() => navigate(item.path)}>
+                    <SidebarMenuButton
+                      isActive={location.pathname === item.path}
+                      onClick={() => navigate(item.path)}
+                      className="rounded-xl h-10 px-3 transition-all duration-200"
+                    >
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span className="font-medium">{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -89,16 +92,16 @@ const AppSidebar = () => {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-3">
+      <SidebarFooter className="border-t border-sidebar-border/30 p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-sm shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sidebar-primary/20 text-sidebar-foreground font-bold text-sm shrink-0">
             {(profile?.full_name || "U").charAt(0).toUpperCase()}
           </div>
           <div className="flex flex-col truncate flex-1 min-w-0">
-            <span className="text-sm font-medium text-sidebar-foreground truncate">{profile?.full_name || "User"}</span>
-            <span className="text-[11px] text-muted-foreground truncate">{profile?.email}</span>
+            <span className="text-sm font-semibold text-sidebar-foreground truncate">{profile?.full_name || "User"}</span>
+            <span className="text-[11px] text-sidebar-foreground/60 truncate">{profile?.email}</span>
           </div>
-          <Button variant="ghost" size="icon" onClick={signOut} className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive">
+          <Button variant="ghost" size="icon" onClick={signOut} className="shrink-0 h-9 w-9 rounded-xl text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-primary/20">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
