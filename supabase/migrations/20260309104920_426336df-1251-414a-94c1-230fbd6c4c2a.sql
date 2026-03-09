@@ -1,0 +1,1 @@
+UPDATE public.user_roles SET role = 'admin', can_create = true, can_edit = true, can_delete = true WHERE user_id = '5a5371c4-9b32-46e5-8abc-e547a47dc47c';
