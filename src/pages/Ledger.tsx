@@ -141,14 +141,14 @@ const Ledger = () => {
         {canCreate && (
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />{t("ledger.newTransaction")}</Button></DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full p-4 sm:p-6">
               <DialogHeader><DialogTitle>{t("ledger.newTransaction")}</DialogTitle><DialogDescription>{t("ledger.addEntry")}</DialogDescription></DialogHeader>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="w-full grid grid-cols-4">
-                  <TabsTrigger value="expense">{t("ledger.expense")}</TabsTrigger>
-                  <TabsTrigger value="sale">{t("ledger.sale")}</TabsTrigger>
-                  <TabsTrigger value="payment">{t("ledger.payment")}</TabsTrigger>
-                  <TabsTrigger value="loan">{t("ledger.loan")}</TabsTrigger>
+                <TabsList className="w-full grid grid-cols-4 h-auto gap-1 bg-muted/50 p-1 rounded-xl">
+                  <TabsTrigger value="expense" className="data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground data-[state=active]:shadow-md rounded-lg text-xs sm:text-sm py-2 transition-all duration-200">{t("ledger.expense")}</TabsTrigger>
+                  <TabsTrigger value="sale" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg text-xs sm:text-sm py-2 transition-all duration-200">{t("ledger.sale")}</TabsTrigger>
+                  <TabsTrigger value="payment" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg text-xs sm:text-sm py-2 transition-all duration-200">{t("ledger.payment")}</TabsTrigger>
+                  <TabsTrigger value="loan" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg text-xs sm:text-sm py-2 transition-all duration-200">{t("ledger.loan")}</TabsTrigger>
                 </TabsList>
 
                 <div className="space-y-4 mt-4">
