@@ -141,7 +141,7 @@ const Ledger = () => {
         {canCreate && (
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />{t("ledger.newTransaction")}</Button></DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full p-4 sm:p-6">
               <DialogHeader><DialogTitle>{t("ledger.newTransaction")}</DialogTitle><DialogDescription>{t("ledger.addEntry")}</DialogDescription></DialogHeader>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="w-full grid grid-cols-4 h-auto gap-1 bg-muted/50 p-1 rounded-xl">
