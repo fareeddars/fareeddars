@@ -127,6 +127,9 @@ export const translations: TranslationDict = {
   "inventory.deleteConfirm": { en: "Are you sure you want to delete", ur: "کیا آپ واقعی مٹانا چاہتے ہیں", sd: "ڇا توهان واقعي مٽائڻ چاهيو ٿا" },
   "inventory.noItems": { en: "No inventory items yet.", ur: "ابھی گودام میں کوئی چیز نہیں۔", sd: "اڃا گودام ۾ ڪا شئي ناهي." },
   "inventory.low": { en: "Low", ur: "کم", sd: "گهٽ" },
+  "inventory.downloadPDF": { en: "Print Report", ur: "رپورٹ چھاپیں", sd: "رپورٽ ڇاپيو" },
+  "inventory.stockValue": { en: "Stock Value", ur: "ذخیرے کی قیمت", sd: "ذخيري جي قيمت" },
+  "inventory.lowStockItems": { en: "Low Stock", ur: "کم ذخیرہ", sd: "گهٽ ذخيرو" },
 
   // Profit/Loss
   "profitLoss.title": { en: "Profit / Loss", ur: "نفع / نقصان", sd: "نفعو / نقصان" },

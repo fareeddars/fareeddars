@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,14 @@ const AppSidebar = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  const handleNav = (path: string) => {
+    navigate(path);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   const mainNav = [
     { title: t("nav.dashboard"), icon: LayoutDashboard, path: "/" },
@@ -56,7 +65,7 @@ const AppSidebar = () => {
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
                     isActive={location.pathname === item.path}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => handleNav(item.path)}
                     className="rounded-xl h-10 px-3 transition-all duration-200"
                     style={{ animationDelay: `${i * 50}ms` }}
                   >
@@ -78,7 +87,7 @@ const AppSidebar = () => {
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       isActive={location.pathname === item.path}
-                      onClick={() => navigate(item.path)}
+                      onClick={() => handleNav(item.path)}
                       className="rounded-xl h-10 px-3 transition-all duration-200"
                     >
                       <item.icon className="h-4 w-4" />
