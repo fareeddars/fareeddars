@@ -125,9 +125,10 @@ const Reports = () => {
       if (expenses.length > 0) {
         html += `<table class="print-table"><thead><tr><th>${pt("common.date", L)}</th><th>${pt("ledger.category", L)}</th><th>${pt("common.description", L)}</th><th class="text-right">${pt("print.farmerShare", L)} (₨)</th><th class="text-right">${pt("print.landlordShare", L)} (₨)</th><th class="text-right">${pt("common.total", L)} (₨)</th></tr></thead><tbody>`;
         expenses.forEach((e) => {
-          const fs = e.is_shared ? (e.shared_amount ?? e.amount / 2) : e.amount;
-          const ls = e.is_shared ? (e.amount - (e.shared_amount ?? e.amount / 2)) : 0;
-          html += `<tr><td>${e.entry_date ?? "—"}</td><td>${e.category ?? "—"}</td><td>${e.description || "—"}</td><td class="text-right">${fmtNum(fs)}</td><td class="text-right">${ls > 0 ? fmtNum(ls) : "—"}</td><td class="text-right">${fmtNum(e.amount)}</td></tr>`;
+          const isLandlordOnly = e.payment_method === "landlord_only";
+          const fs = isLandlordOnly ? 0 : (e.is_shared ? (e.shared_amount ?? e.amount / 2) : e.amount);
+          const ls = isLandlordOnly ? e.amount : (e.is_shared ? (e.amount - (e.shared_amount ?? e.amount / 2)) : 0);
+          html += `<tr><td>${e.entry_date ?? "—"}</td><td>${e.category ?? "—"}</td><td>${e.description || "—"}</td><td class="text-right">${fs > 0 ? fmtNum(fs) : "—"}</td><td class="text-right">${ls > 0 ? fmtNum(ls) : "—"}</td><td class="text-right">${fmtNum(e.amount)}</td></tr>`;
         });
         html += `</tbody><tfoot><tr><td colspan="3"><strong>${pt("common.total", L)}</strong></td><td class="text-right"><strong>${fmtNum(totalFarmerExpenses)}</strong></td><td class="text-right"><strong>${fmtNum(totalLandlordExpenses)}</strong></td><td class="text-right"><strong>${fmtNum(totalExpenses)}</strong></td></tr></tfoot></table>`;
       } else { html += `<p style="font-size:11px;color:#666">${pt("print.noExpenses", L)}</p>`; }
