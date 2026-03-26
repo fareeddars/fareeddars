@@ -25,6 +25,7 @@ const pt = (key: string, lang: Language): string => {
 
 const Reports = () => {
   const { t } = useLanguage();
+  const { selectedSeason, farmerSeasons } = useSeason();
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [selectedFarmerId, setSelectedFarmerId] = useState<string>("all");
   const [filterMonth, setFilterMonth] = useState<string>("");
@@ -34,11 +35,14 @@ const Reports = () => {
   const [printLang, setPrintLang] = useState<Language>("en");
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Only show farmers in the current season
+  const seasonFarmerIds = farmerSeasons.map(fs => fs.farmer_id);
+
   useEffect(() => {
     supabase.from("farmers").select("*").order("name").then(({ data }) => {
-      if (data) setFarmers(data);
+      if (data) setFarmers(data.filter(f => seasonFarmerIds.includes(f.id)));
     });
-  }, []);
+  }, [farmerSeasons]);
 
   const generateReport = async () => {
     setLoading(true);
