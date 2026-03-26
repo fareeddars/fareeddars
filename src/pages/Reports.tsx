@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSeason } from "@/contexts/SeasonContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, FileText } from "lucide-react";
+import { Printer, FileText, Leaf } from "lucide-react";
 import { translations, type Language } from "@/i18n/translations";
 import type { Tables } from "@/integrations/supabase/types";
 
