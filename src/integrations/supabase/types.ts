@@ -22,6 +22,7 @@ export type Database = {
           id: string
           month: string
           name: string
+          season_id: string | null
         }
         Insert: {
           amount?: number
@@ -30,6 +31,7 @@ export type Database = {
           id?: string
           month: string
           name: string
+          season_id?: string | null
         }
         Update: {
           amount?: number
@@ -38,8 +40,65 @@ export type Database = {
           id?: string
           month?: string
           name?: string
+          season_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farmer_seasons: {
+        Row: {
+          created_at: string
+          created_by: string
+          farmer_id: string
+          id: string
+          opening_balance: number
+          season_id: string
+          status: Database["public"]["Enums"]["farmer_season_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          farmer_id: string
+          id?: string
+          opening_balance?: number
+          season_id: string
+          status?: Database["public"]["Enums"]["farmer_season_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          farmer_id?: string
+          id?: string
+          opening_balance?: number
+          season_id?: string
+          status?: Database["public"]["Enums"]["farmer_season_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farmer_seasons_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "farmers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "farmer_seasons_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       farmers: {
         Row: {
@@ -126,6 +185,7 @@ export type Database = {
           entry_date: string | null
           entry_type: string
           farmer_id: string
+          farmer_season_id: string | null
           gross_weight: number | null
           id: string
           inventory_item_id: string | null
@@ -134,6 +194,7 @@ export type Database = {
           payment_method: string | null
           quantity: number | null
           rate: number | null
+          season_id: string | null
           shared_amount: number | null
           updated_at: string
         }
@@ -149,6 +210,7 @@ export type Database = {
           entry_date?: string | null
           entry_type: string
           farmer_id: string
+          farmer_season_id?: string | null
           gross_weight?: number | null
           id?: string
           inventory_item_id?: string | null
@@ -157,6 +219,7 @@ export type Database = {
           payment_method?: string | null
           quantity?: number | null
           rate?: number | null
+          season_id?: string | null
           shared_amount?: number | null
           updated_at?: string
         }
@@ -172,6 +235,7 @@ export type Database = {
           entry_date?: string | null
           entry_type?: string
           farmer_id?: string
+          farmer_season_id?: string | null
           gross_weight?: number | null
           id?: string
           inventory_item_id?: string | null
@@ -180,6 +244,7 @@ export type Database = {
           payment_method?: string | null
           quantity?: number | null
           rate?: number | null
+          season_id?: string | null
           shared_amount?: number | null
           updated_at?: string
         }
@@ -192,10 +257,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ledger_entries_farmer_season_id_fkey"
+            columns: ["farmer_season_id"]
+            isOneToOne: false
+            referencedRelation: "farmer_seasons"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ledger_entries_inventory_item_id_fkey"
             columns: ["inventory_item_id"]
             isOneToOne: false
             referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
             referencedColumns: ["id"]
           },
         ]
@@ -224,6 +303,39 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      seasons: {
+        Row: {
+          created_at: string
+          created_by: string
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string
+          status: Database["public"]["Enums"]["season_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date: string
+          status?: Database["public"]["Enums"]["season_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["season_status"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -282,6 +394,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "staff"
+      farmer_season_status: "active" | "left" | "completed"
+      season_status: "active" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -410,6 +524,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "manager", "staff"],
+      farmer_season_status: ["active", "left", "completed"],
+      season_status: ["active", "closed"],
     },
   },
 } as const
