@@ -210,7 +210,7 @@ const Ledger = () => {
                     <Label className="font-medium">{t("ledger.farmer")} *</Label>
                     <Select value={farmerId} onValueChange={setFarmerId}>
                       <SelectTrigger className="h-11"><SelectValue placeholder={t("ledger.selectFarmer")} /></SelectTrigger>
-                      <SelectContent>{farmers.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>{seasonFarmers.map((fs) => <SelectItem key={fs.farmer_id} value={fs.farmer_id}>{fs.farmers?.name || "—"}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
