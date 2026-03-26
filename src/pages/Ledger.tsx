@@ -171,13 +171,24 @@ const Ledger = () => {
 
   return (
     <div className="space-y-6">
+      {/* Season Closed Banner */}
+      {isSeasonClosed && (
+        <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+          <Lock className="h-4 w-4 shrink-0" /> {t("seasons.seasonClosed")}
+        </div>
+      )}
+      {!selectedSeason && (
+        <div className="rounded-xl bg-muted border border-border p-4 text-center text-muted-foreground">
+          {t("seasons.noActiveSeason")}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">{t("ledger.title")}</h1>
-          <p className="text-muted-foreground text-sm">{t("ledger.subtitle")}</p>
+          <p className="text-muted-foreground text-sm">{t("ledger.subtitle")} {selectedSeason ? `— ${selectedSeason.name}` : ""}</p>
         </div>
-        {canCreate && (
+        {canCreate && !isSeasonClosed && selectedSeason && (
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5">
