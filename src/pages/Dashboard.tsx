@@ -2,31 +2,40 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSeason } from "@/contexts/SeasonContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, BookOpen, Package, TrendingUp, Activity, Zap } from "lucide-react";
+import { Users, BookOpen, Package, TrendingUp, Activity, Zap, Leaf } from "lucide-react";
 
 const Dashboard = () => {
   const { profile } = useAuth();
   const { t } = useLanguage();
+  const { selectedSeason, farmerSeasons } = useSeason();
   const [stats, setStats] = useState({ farmers: 0, entries: 0, inventory: 0, revenue: 0 });
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [farmersRes, entriesRes, inventoryRes, revenueRes] = await Promise.all([
-        supabase.from("farmers").select("id", { count: "exact", head: true }),
-        supabase.from("ledger_entries").select("id", { count: "exact", head: true }),
+      let entriesQuery = supabase.from("ledger_entries").select("id", { count: "exact", head: true });
+      let revenueQuery = supabase.from("ledger_entries").select("amount").eq("entry_type", "sale");
+      
+      if (selectedSeason) {
+        entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+        revenueQuery = revenueQuery.eq("season_id", selectedSeason.id);
+      }
+
+      const [entriesRes, inventoryRes, revenueRes] = await Promise.all([
+        entriesQuery,
         supabase.from("inventory").select("id", { count: "exact", head: true }),
-        supabase.from("ledger_entries").select("amount").eq("entry_type", "sale"),
+        revenueQuery,
       ]);
       setStats({
-        farmers: farmersRes.count ?? 0,
+        farmers: farmerSeasons.length,
         entries: entriesRes.count ?? 0,
         inventory: inventoryRes.count ?? 0,
         revenue: revenueRes.data?.reduce((sum, e) => sum + Number(e.amount), 0) ?? 0,
       });
     };
     fetchStats();
-  }, []);
+  }, [selectedSeason?.id, farmerSeasons.length]);
 
   const cards = [
     {
@@ -78,7 +87,14 @@ const Dashboard = () => {
             <h1 className="text-2xl sm:text-3xl font-serif font-bold">
               {profile?.full_name || "User"} 👋
             </h1>
-            <p className="text-primary-foreground/60 mt-1 text-sm">{t("dashboard.overview")}</p>
+            <p className="text-primary-foreground/60 mt-1 text-sm flex items-center gap-2">
+              {t("dashboard.overview")}
+              {selectedSeason && (
+                <span className="inline-flex items-center gap-1 bg-primary-foreground/15 px-2 py-0.5 rounded-full text-xs">
+                  <Leaf className="h-3 w-3" /> {selectedSeason.name}
+                </span>
+              )}
+            </p>
           </div>
         </div>
       </div>

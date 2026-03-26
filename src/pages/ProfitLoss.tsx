@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useSeason } from "@/contexts/SeasonContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Leaf } from "lucide-react";
 
 const ProfitLoss = () => {
   const { t } = useLanguage();
+  const { selectedSeason } = useSeason();
   const [data, setData] = useState({ income: 0, expenses: 0 });
 
   useEffect(() => {
     const fetch = async () => {
-      const { data: entries } = await supabase.from("ledger_entries").select("entry_type, amount, is_shared, shared_amount");
+      let query = supabase.from("ledger_entries").select("entry_type, amount, is_shared, shared_amount");
+      if (selectedSeason) query = query.eq("season_id", selectedSeason.id);
+      const { data: entries } = await query;
       if (!entries) return;
       let income = 0, expenses = 0;
       entries.forEach((e) => {
@@ -21,7 +25,7 @@ const ProfitLoss = () => {
       setData({ income, expenses });
     };
     fetch();
-  }, []);
+  }, [selectedSeason?.id]);
 
   const profit = data.income - data.expenses;
 
@@ -29,7 +33,10 @@ const ProfitLoss = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-serif font-bold text-foreground">{t("profitLoss.title")}</h1>
-        <p className="text-muted-foreground">{t("profitLoss.subtitle")}</p>
+        <p className="text-muted-foreground">
+          {t("profitLoss.subtitle")}
+          {selectedSeason && <span className="ml-2 inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"><Leaf className="h-3 w-3" />{selectedSeason.name}</span>}
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
