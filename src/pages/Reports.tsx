@@ -73,10 +73,12 @@ const Reports = () => {
     const loans = farmerEntries.filter((e) => e.entry_type === "loan");
 
     const totalFarmerExpenses = expenses.reduce((sum, e) => {
+      if (e.payment_method === "landlord_only") return sum;
       if (e.is_shared) return sum + (e.shared_amount ?? e.amount / 2);
       return sum + e.amount;
     }, 0);
     const totalLandlordExpenses = expenses.reduce((sum, e) => {
+      if (e.payment_method === "landlord_only") return sum + e.amount;
       if (e.is_shared) return sum + (e.amount - (e.shared_amount ?? e.amount / 2));
       return sum;
     }, 0);
