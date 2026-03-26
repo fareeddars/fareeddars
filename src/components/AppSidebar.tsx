@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSeason } from "@/contexts/SeasonContext";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -8,13 +9,15 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  LayoutDashboard, Users, BookOpen, Package, TrendingUp, FileText, Settings, LogOut, Sprout, Shield,
+  LayoutDashboard, Users, BookOpen, Package, TrendingUp, FileText, Settings, LogOut, Sprout, Shield, Leaf,
 } from "lucide-react";
 
 const AppSidebar = () => {
   const { profile, userRole, isAdmin, signOut } = useAuth();
   const { t } = useLanguage();
+  const { seasons, selectedSeason, setSelectedSeasonId } = useSeason();
   const navigate = useNavigate();
   const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
@@ -28,6 +31,7 @@ const AppSidebar = () => {
 
   const mainNav = [
     { title: t("nav.dashboard"), icon: LayoutDashboard, path: "/" },
+    { title: t("nav.seasons"), icon: Leaf, path: "/seasons" },
     { title: t("nav.farmers"), icon: Users, path: "/farmers" },
     { title: t("nav.ledger"), icon: BookOpen, path: "/ledger" },
     { title: t("nav.inventory"), icon: Package, path: "/inventory" },
@@ -54,6 +58,24 @@ const AppSidebar = () => {
             </Badge>
           </div>
         </div>
+        {/* Season Selector */}
+        {seasons.length > 0 && (
+          <div className="mt-3">
+            <Select value={selectedSeason?.id || ""} onValueChange={(v) => setSelectedSeasonId(v)}>
+              <SelectTrigger className="h-8 text-xs bg-sidebar-primary/10 border-sidebar-foreground/20 text-sidebar-foreground rounded-lg">
+                <Leaf className="h-3 w-3 mr-1" />
+                <SelectValue placeholder={t("seasons.selectSeason")} />
+              </SelectTrigger>
+              <SelectContent>
+                {seasons.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name} {s.status === "active" ? "🟢" : "🔒"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-3">

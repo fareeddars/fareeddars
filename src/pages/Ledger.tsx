@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSeason } from "@/contexts/SeasonContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CalendarIcon, TrendingDown, TrendingUp, Wallet, HandCoins } from "lucide-react";
+import { Plus, CalendarIcon, TrendingDown, TrendingUp, Wallet, HandCoins, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
@@ -29,9 +30,9 @@ type CostAllocation = "farmer" | "shared" | "landlord";
 const Ledger = () => {
   const { user, canCreate } = useAuth();
   const { t } = useLanguage();
+  const { selectedSeason, farmerSeasons, isSeasonClosed } = useSeason();
   const { toast } = useToast();
   const [entries, setEntries] = useState<(Tables<"ledger_entries"> & { farmers?: { name: string } | null })[]>([]);
-  const [farmers, setFarmers] = useState<Tables<"farmers">[]>([]);
   const [inventory, setInventory] = useState<Tables<"inventory">[]>([]);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("expense");
@@ -55,18 +56,23 @@ const Ledger = () => {
   const [cropRate, setCropRate] = useState("");
   const [loanAmount, setLoanAmount] = useState("");
 
+  // Season farmers for dropdown (only active ones in selected season)
+  const seasonFarmers = farmerSeasons.filter(fs => fs.status === "active");
+
   const fetchData = async () => {
-    const [entriesRes, farmersRes, inventoryRes] = await Promise.all([
-      supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false }),
-      supabase.from("farmers").select("*"),
+    let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false });
+    if (selectedSeason) {
+      entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+    }
+    const [entriesRes, inventoryRes] = await Promise.all([
+      entriesQuery,
       supabase.from("inventory").select("*"),
     ]);
     if (entriesRes.data) setEntries(entriesRes.data);
-    if (farmersRes.data) setFarmers(farmersRes.data);
     if (inventoryRes.data) setInventory(inventoryRes.data);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [selectedSeason?.id]);
 
   useEffect(() => {
     if (inventoryItemId) {
@@ -93,11 +99,15 @@ const Ledger = () => {
   };
 
   const handleSave = async () => {
-    if (!user || !farmerId) return;
+    if (!user || !farmerId || !selectedSeason) return;
+    // Find the farmer_season record
+    const fs = farmerSeasons.find(fs => fs.farmer_id === farmerId && fs.season_id === selectedSeason.id);
     let amount = 0;
     let entryData: Record<string, unknown> = {
       farmer_id: farmerId, entry_type: activeTab, description, created_by: user.id,
       entry_date: format(entryDate, "yyyy-MM-dd"),
+      season_id: selectedSeason.id,
+      farmer_season_id: fs?.id || null,
     };
 
     if (activeTab === "expense") {
@@ -161,13 +171,24 @@ const Ledger = () => {
 
   return (
     <div className="space-y-6">
+      {/* Season Closed Banner */}
+      {isSeasonClosed && (
+        <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+          <Lock className="h-4 w-4 shrink-0" /> {t("seasons.seasonClosed")}
+        </div>
+      )}
+      {!selectedSeason && (
+        <div className="rounded-xl bg-muted border border-border p-4 text-center text-muted-foreground">
+          {t("seasons.noActiveSeason")}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">{t("ledger.title")}</h1>
-          <p className="text-muted-foreground text-sm">{t("ledger.subtitle")}</p>
+          <p className="text-muted-foreground text-sm">{t("ledger.subtitle")} {selectedSeason ? `— ${selectedSeason.name}` : ""}</p>
         </div>
-        {canCreate && (
+        {canCreate && !isSeasonClosed && selectedSeason && (
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5">
@@ -200,7 +221,7 @@ const Ledger = () => {
                     <Label className="font-medium">{t("ledger.farmer")} *</Label>
                     <Select value={farmerId} onValueChange={setFarmerId}>
                       <SelectTrigger className="h-11"><SelectValue placeholder={t("ledger.selectFarmer")} /></SelectTrigger>
-                      <SelectContent>{farmers.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>{seasonFarmers.map((fs) => <SelectItem key={fs.farmer_id} value={fs.farmer_id}>{fs.farmers?.name || "—"}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">

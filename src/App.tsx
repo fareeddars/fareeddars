@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { SeasonProvider } from "@/contexts/SeasonContext";
 import AppLayout from "@/components/AppLayout";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
@@ -15,6 +16,7 @@ import ProfitLoss from "@/pages/ProfitLoss";
 import Reports from "@/pages/Reports";
 import AdminPanel from "@/pages/AdminPanel";
 import Settings from "@/pages/Settings";
+import Seasons from "@/pages/Seasons";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,9 +43,11 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>
+          <SeasonProvider>
           <Routes>
             <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/seasons" element={<ProtectedRoute><Seasons /></ProtectedRoute>} />
             <Route path="/farmers" element={<ProtectedRoute><Farmers /></ProtectedRoute>} />
             <Route path="/ledger" element={<ProtectedRoute><Ledger /></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
@@ -53,6 +57,7 @@ const App = () => (
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </SeasonProvider>
           </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>

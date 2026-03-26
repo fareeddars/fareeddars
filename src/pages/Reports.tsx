@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSeason } from "@/contexts/SeasonContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, FileText } from "lucide-react";
+import { Printer, FileText, Leaf } from "lucide-react";
 import { translations, type Language } from "@/i18n/translations";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -24,6 +25,7 @@ const pt = (key: string, lang: Language): string => {
 
 const Reports = () => {
   const { t } = useLanguage();
+  const { selectedSeason, farmerSeasons } = useSeason();
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [selectedFarmerId, setSelectedFarmerId] = useState<string>("all");
   const [filterMonth, setFilterMonth] = useState<string>("");
@@ -33,16 +35,20 @@ const Reports = () => {
   const [printLang, setPrintLang] = useState<Language>("en");
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Only show farmers in the current season
+  const seasonFarmerIds = farmerSeasons.map(fs => fs.farmer_id);
+
   useEffect(() => {
     supabase.from("farmers").select("*").order("name").then(({ data }) => {
-      if (data) setFarmers(data);
+      if (data) setFarmers(data.filter(f => seasonFarmerIds.includes(f.id)));
     });
-  }, []);
+  }, [farmerSeasons]);
 
   const generateReport = async () => {
     setLoading(true);
     setReportReady(false);
     let query = supabase.from("ledger_entries").select("*").order("entry_date", { ascending: true });
+    if (selectedSeason) query = query.eq("season_id", selectedSeason.id);
     if (selectedFarmerId !== "all") query = query.eq("farmer_id", selectedFarmerId);
     if (filterMonth) {
       const [year, month] = filterMonth.split("-");
@@ -87,7 +93,9 @@ const Reports = () => {
     const totalPayments = payments.reduce((sum, e) => sum + e.amount, 0);
     const totalLoans = loans.reduce((sum, e) => sum + e.amount, 0);
     const farmer = getFarmer(farmerId);
-    const initialBalance = Number(farmer?.initial_balance ?? 0);
+    // Use farmer_season opening_balance if available, fallback to farmer's initial_balance
+    const fs = farmerSeasons.find(f => f.farmer_id === farmerId);
+    const initialBalance = fs ? Number(fs.opening_balance) : Number(farmer?.initial_balance ?? 0);
     const balanceOwed = initialBalance + totalFarmerExpenses + totalLoans - totalPayments;
     const netProfit = totalSales - totalFarmerExpenses - totalLandlordExpenses;
 
