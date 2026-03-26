@@ -48,6 +48,7 @@ const Reports = () => {
     setLoading(true);
     setReportReady(false);
     let query = supabase.from("ledger_entries").select("*").order("entry_date", { ascending: true });
+    if (selectedSeason) query = query.eq("season_id", selectedSeason.id);
     if (selectedFarmerId !== "all") query = query.eq("farmer_id", selectedFarmerId);
     if (filterMonth) {
       const [year, month] = filterMonth.split("-");
