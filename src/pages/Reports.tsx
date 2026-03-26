@@ -93,7 +93,9 @@ const Reports = () => {
     const totalPayments = payments.reduce((sum, e) => sum + e.amount, 0);
     const totalLoans = loans.reduce((sum, e) => sum + e.amount, 0);
     const farmer = getFarmer(farmerId);
-    const initialBalance = Number(farmer?.initial_balance ?? 0);
+    // Use farmer_season opening_balance if available, fallback to farmer's initial_balance
+    const fs = farmerSeasons.find(f => f.farmer_id === farmerId);
+    const initialBalance = fs ? Number(fs.opening_balance) : Number(farmer?.initial_balance ?? 0);
     const balanceOwed = initialBalance + totalFarmerExpenses + totalLoans - totalPayments;
     const netProfit = totalSales - totalFarmerExpenses - totalLandlordExpenses;
 
