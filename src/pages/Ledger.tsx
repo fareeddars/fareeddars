@@ -30,9 +30,9 @@ type CostAllocation = "farmer" | "shared" | "landlord";
 const Ledger = () => {
   const { user, canCreate } = useAuth();
   const { t } = useLanguage();
+  const { selectedSeason, farmerSeasons, isSeasonClosed } = useSeason();
   const { toast } = useToast();
   const [entries, setEntries] = useState<(Tables<"ledger_entries"> & { farmers?: { name: string } | null })[]>([]);
-  const [farmers, setFarmers] = useState<Tables<"farmers">[]>([]);
   const [inventory, setInventory] = useState<Tables<"inventory">[]>([]);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("expense");
@@ -56,18 +56,23 @@ const Ledger = () => {
   const [cropRate, setCropRate] = useState("");
   const [loanAmount, setLoanAmount] = useState("");
 
+  // Season farmers for dropdown (only active ones in selected season)
+  const seasonFarmers = farmerSeasons.filter(fs => fs.status === "active");
+
   const fetchData = async () => {
-    const [entriesRes, farmersRes, inventoryRes] = await Promise.all([
-      supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false }),
-      supabase.from("farmers").select("*"),
+    let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false });
+    if (selectedSeason) {
+      entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+    }
+    const [entriesRes, inventoryRes] = await Promise.all([
+      entriesQuery,
       supabase.from("inventory").select("*"),
     ]);
     if (entriesRes.data) setEntries(entriesRes.data);
-    if (farmersRes.data) setFarmers(farmersRes.data);
     if (inventoryRes.data) setInventory(inventoryRes.data);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [selectedSeason?.id]);
 
   useEffect(() => {
     if (inventoryItemId) {
