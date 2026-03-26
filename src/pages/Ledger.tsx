@@ -99,11 +99,15 @@ const Ledger = () => {
   };
 
   const handleSave = async () => {
-    if (!user || !farmerId) return;
+    if (!user || !farmerId || !selectedSeason) return;
+    // Find the farmer_season record
+    const fs = farmerSeasons.find(fs => fs.farmer_id === farmerId && fs.season_id === selectedSeason.id);
     let amount = 0;
     let entryData: Record<string, unknown> = {
       farmer_id: farmerId, entry_type: activeTab, description, created_by: user.id,
       entry_date: format(entryDate, "yyyy-MM-dd"),
+      season_id: selectedSeason.id,
+      farmer_season_id: fs?.id || null,
     };
 
     if (activeTab === "expense") {
