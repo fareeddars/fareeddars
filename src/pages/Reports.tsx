@@ -193,31 +193,32 @@ const Reports = () => {
     ${isRTL ? '<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">' : ''}
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: ${fontFamily}; font-size: 11px; color: #000; background: white; padding: 15mm; direction: ${isRTL ? 'rtl' : 'ltr'}; }
+      body { font-family: ${fontFamily}; font-size: 11px; color: #000; background: white; padding: 10mm; direction: ${isRTL ? 'rtl' : 'ltr'}; }
       .print-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 11px; }
       .print-table th { background: #f0f0f0; padding: 6px 8px; text-align: ${textAlign}; border: 1px solid #ccc; font-weight: 700; }
       .print-table td { padding: 5px 8px; border: 1px solid #ccc; }
       .print-table tfoot td { background: #e8e8e8; font-weight: 700; }
       .print-table tr:nth-child(even) td { background: #fafafa; }
-      .section-title { font-size: 13px; font-weight: 700; margin: 16px 0 6px; border-bottom: 2px solid #333; padding-bottom: 4px; }
-      .report-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 12px; }
-      .report-header h1 { font-size: 22px; margin: 0 0 4px; }
-      .report-header p { font-size: 12px; margin: 2px 0; color: #444; }
-      .farmer-block { page-break-inside: avoid; margin-bottom: 32px; }
-      .farmer-name { font-size: 16px; font-weight: 700; background: #222; color: #fff; padding: 6px 12px; margin-bottom: 10px; }
-      .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-      .summary-box { border: 1px solid #ccc; padding: 10px; }
-      .summary-box h3 { font-size: 12px; font-weight: 700; margin: 0 0 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
-      .summary-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
-      .summary-total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; padding: 5px 0 0; border-top: 1px solid #000; margin-top: 4px; }
+      .section-title { font-size: 13px; font-weight: 700; margin: 12px 0 4px; border-bottom: 2px solid #333; padding-bottom: 3px; }
+      .report-header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+      .report-header h1 { font-size: 20px; margin: 0 0 4px; }
+      .report-header p { font-size: 11px; margin: 2px 0; color: #444; }
+      .farmer-block { margin-bottom: 20px; }
+      .farmer-name { font-size: 14px; font-weight: 700; background: #222; color: #fff; padding: 5px 10px; margin-bottom: 8px; }
+      .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+      .summary-box { border: 1px solid #ccc; padding: 8px; }
+      .summary-box h3 { font-size: 12px; font-weight: 700; margin: 0 0 6px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
+      .summary-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
+      .summary-total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; padding: 4px 0 0; border-top: 1px solid #000; margin-top: 3px; }
       .profit { color: #166534; }
       .loss { color: #991b1b; }
       .text-right { text-align: ${isRTL ? 'left' : 'right'}; }
-      @page { margin: 15mm; size: A4; }
+      @media print { body { padding: 0; } }
+      @page { margin: 12mm; size: A4; }
     </style></head><body>${html}</body></html>`);
     win.document.close();
     win.focus();
-    setTimeout(() => { win.print(); win.close(); }, 300);
+    setTimeout(() => { win.print(); }, 600);
   };
 
   return (
