@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { Settings as SettingsIcon, User, Lock, Globe, Check } from "lucide-react";
 import type { Language } from "@/i18n/translations";
@@ -31,14 +30,8 @@ const Settings = () => {
   };
 
   const handleChangePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      toast({ title: "Passwords do not match", variant: "destructive" });
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
-      return;
-    }
+    if (newPassword !== confirmPassword) { toast({ title: "Passwords do not match", variant: "destructive" }); return; }
+    if (newPassword.length < 6) { toast({ title: "Password must be at least 6 characters", variant: "destructive" }); return; }
     setChangingPw(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setChangingPw(false);
@@ -54,17 +47,26 @@ const Settings = () => {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-serif font-bold text-foreground flex items-center gap-2">
-          <SettingsIcon className="h-6 w-6 text-primary" /> {t("settings.title")}
-        </h1>
-        <p className="text-muted-foreground">{t("settings.subtitle")}</p>
+      {/* Page Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-chart-3/80 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
+        <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
+            <SettingsIcon className="h-7 w-7" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("settings.title")}</h1>
+            <p className="text-primary-foreground/70 text-sm mt-0.5">{t("settings.subtitle")}</p>
+          </div>
+        </div>
       </div>
 
       {/* Language */}
-      <Card>
+      <Card className="overflow-hidden border-border/50 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="h-1 bg-gradient-to-r from-accent to-chart-5" />
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg"><Globe className="h-4 w-4 text-primary" /> {t("settings.language")}</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-lg"><Globe className="h-4 w-4 text-accent" /> {t("settings.language")}</CardTitle>
           <CardDescription>{t("settings.selectLanguage")}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -73,15 +75,17 @@ const Settings = () => {
               <button
                 key={lang.value}
                 onClick={() => setLanguage(lang.value)}
-                className={`relative flex flex-col items-center gap-1 rounded-lg border-2 p-4 transition-all ${
+                className={`relative flex flex-col items-center gap-1 rounded-xl border-2 p-4 transition-all duration-300 ${
                   language === lang.value
-                    ? "border-primary bg-primary/5 shadow-sm"
-                    : "border-border hover:border-primary/50 hover:bg-accent/30"
+                    ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
+                    : "border-border hover:border-primary/50 hover:bg-accent/5 hover:-translate-y-0.5"
                 }`}
               >
                 {language === lang.value && (
                   <div className="absolute top-2 right-2">
-                    <Check className="h-4 w-4 text-primary" />
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70">
+                      <Check className="h-3 w-3 text-primary-foreground" />
+                    </div>
                   </div>
                 )}
                 <span className="text-lg font-semibold">{lang.native}</span>
@@ -93,7 +97,8 @@ const Settings = () => {
       </Card>
 
       {/* Profile */}
-      <Card>
+      <Card className="overflow-hidden border-border/50 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="h-1 bg-gradient-to-r from-primary to-accent" />
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg"><User className="h-4 w-4 text-primary" /> {t("settings.profile")}</CardTitle>
           <CardDescription>{t("settings.updateName")}</CardDescription>
@@ -105,28 +110,29 @@ const Settings = () => {
           </div>
           <div className="space-y-2">
             <Label>{t("settings.fullName")}</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("settings.fullName")} />
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("settings.fullName")} className="h-11" />
           </div>
-          <Button onClick={handleSaveProfile} disabled={saving} className="w-full sm:w-auto">
+          <Button onClick={handleSaveProfile} disabled={saving} className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent">
             {saving ? t("settings.saving") : t("settings.saveProfile")}
           </Button>
         </CardContent>
       </Card>
 
       {/* Password */}
-      <Card>
+      <Card className="overflow-hidden border-border/50 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="h-1 bg-gradient-to-r from-destructive to-chart-4" />
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg"><Lock className="h-4 w-4 text-primary" /> {t("settings.changePassword")}</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-lg"><Lock className="h-4 w-4 text-destructive" /> {t("settings.changePassword")}</CardTitle>
           <CardDescription>{t("settings.setNewPassword")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>{t("settings.newPassword")}</Label>
-            <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" />
+            <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" className="h-11" />
           </div>
           <div className="space-y-2">
             <Label>{t("settings.confirmPassword")}</Label>
-            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" />
+            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className="h-11" />
           </div>
           <Button onClick={handleChangePassword} disabled={changingPw || !newPassword} className="w-full sm:w-auto">
             {changingPw ? t("settings.changing") : t("settings.changePassword")}

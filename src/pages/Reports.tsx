@@ -234,13 +234,24 @@ const Reports = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-serif font-bold text-foreground">{t("reports.title")}</h1>
-        <p className="text-muted-foreground">{t("reports.subtitle")}</p>
+      {/* Page Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chart-1 via-chart-1/90 to-chart-3/80 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-chart-1/20">
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
+        <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
+            <FileText className="h-7 w-7" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("reports.title")}</h1>
+            <p className="text-primary-foreground/70 text-sm mt-0.5">{t("reports.subtitle")}</p>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" />{t("reports.generateReport")}</CardTitle></CardHeader>
+      <Card className="overflow-hidden shadow-lg border-border/50">
+        <div className="h-1 bg-gradient-to-r from-chart-1 to-chart-3" />
+        <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />{t("reports.generateReport")}</CardTitle></CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Leaf } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Leaf, BarChart3 } from "lucide-react";
 
 const ProfitLoss = () => {
   const { t } = useLanguage();
@@ -31,49 +31,63 @@ const ProfitLoss = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-serif font-bold text-foreground">{t("profitLoss.title")}</h1>
-        <p className="text-muted-foreground">
-          {t("profitLoss.subtitle")}
-          {selectedSeason && <span className="ml-2 inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"><Leaf className="h-3 w-3" />{selectedSeason.name}</span>}
-        </p>
+      {/* Page Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chart-5 via-chart-5/90 to-accent/80 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-chart-5/20">
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
+        <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
+            <BarChart3 className="h-7 w-7" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("profitLoss.title")}</h1>
+            <p className="text-primary-foreground/70 text-sm mt-0.5 flex items-center gap-2">
+              {t("profitLoss.subtitle")}
+              {selectedSeason && (
+                <span className="inline-flex items-center gap-1 bg-primary-foreground/15 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-xs font-medium border border-primary-foreground/10">
+                  <Leaf className="h-3 w-3" />{selectedSeason.name}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="group hover:shadow-md transition-all overflow-hidden">
+        <Card className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5">
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-                <TrendingUp className="h-5 w-5 text-primary" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg group-hover:scale-110 transition-transform duration-500">
+                <TrendingUp className="h-5 w-5 text-primary-foreground" />
               </div>
-              <ArrowUpRight className="h-4 w-4 text-primary" />
+              <ArrowUpRight className="h-4 w-4 text-primary/60" />
             </div>
-            <div className="text-2xl sm:text-3xl font-bold text-foreground font-mono">₨ {data.income.toLocaleString()}</div>
+            <div className="text-2xl sm:text-3xl font-bold text-primary font-mono">₨ {data.income.toLocaleString()}</div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.totalIncome")}</p>
           </CardContent>
         </Card>
 
-        <Card className="group hover:shadow-md transition-all overflow-hidden">
+        <Card className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-destructive/20 bg-gradient-to-br from-destructive/10 to-destructive/5">
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-destructive/10">
-                <TrendingDown className="h-5 w-5 text-destructive" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-destructive to-destructive/70 shadow-lg group-hover:scale-110 transition-transform duration-500">
+                <TrendingDown className="h-5 w-5 text-destructive-foreground" />
               </div>
-              <ArrowDownRight className="h-4 w-4 text-destructive" />
+              <ArrowDownRight className="h-4 w-4 text-destructive/60" />
             </div>
-            <div className="text-2xl sm:text-3xl font-bold text-foreground font-mono">₨ {data.expenses.toLocaleString()}</div>
+            <div className="text-2xl sm:text-3xl font-bold text-destructive font-mono">₨ {data.expenses.toLocaleString()}</div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.totalExpenses")}</p>
           </CardContent>
         </Card>
 
-        <Card className={`group hover:shadow-md transition-all overflow-hidden border-2 ${profit >= 0 ? "border-primary/30" : "border-destructive/30"}`}>
+        <Card className={`group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-2 ${profit >= 0 ? "border-chart-5/30 bg-gradient-to-br from-chart-5/10 to-chart-5/5" : "border-destructive/30 bg-gradient-to-br from-destructive/10 to-destructive/5"}`}>
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-4">
-              <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${profit >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-                <DollarSign className={`h-5 w-5 ${profit >= 0 ? "text-primary" : "text-destructive"}`} />
+              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-500 ${profit >= 0 ? "bg-gradient-to-br from-chart-5 to-chart-5/70" : "bg-gradient-to-br from-destructive to-destructive/70"}`}>
+                <DollarSign className="h-5 w-5 text-primary-foreground" />
               </div>
             </div>
-            <div className={`text-2xl sm:text-3xl font-bold font-mono ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
+            <div className={`text-2xl sm:text-3xl font-bold font-mono ${profit >= 0 ? "text-chart-5" : "text-destructive"}`}>
               ₨ {Math.abs(profit).toLocaleString()}
             </div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.netProfit")}</p>
