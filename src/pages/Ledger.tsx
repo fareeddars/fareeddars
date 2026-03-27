@@ -182,16 +182,24 @@ const Ledger = () => {
           {t("seasons.noActiveSeason")}
         </div>
       )}
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">{t("ledger.title")}</h1>
-          <p className="text-muted-foreground text-sm">{t("ledger.subtitle")} {selectedSeason ? `— ${selectedSeason.name}` : ""}</p>
-        </div>
+      {/* Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent/80 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
+        <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
+              <BookOpen className="h-7 w-7" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("ledger.title")}</h1>
+              <p className="text-primary-foreground/70 text-sm mt-0.5">{t("ledger.subtitle")} {selectedSeason ? `— ${selectedSeason.name}` : ""}</p>
+            </div>
+          </div>
         {canCreate && !isSeasonClosed && selectedSeason && (
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5">
+              <Button className="bg-primary-foreground/15 hover:bg-primary-foreground/25 backdrop-blur-sm border border-primary-foreground/10 text-primary-foreground shadow-lg transition-all duration-300 hover:-translate-y-0.5">
                 <Plus className="mr-2 h-4 w-4" />{t("ledger.newTransaction")}
               </Button>
             </DialogTrigger>
@@ -361,6 +369,7 @@ const Ledger = () => {
             </DialogContent>
           </Dialog>
         )}
+        </div>
       </div>
 
       {/* Summary Cards */}

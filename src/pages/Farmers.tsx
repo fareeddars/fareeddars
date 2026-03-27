@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Phone, MapPin, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Phone, MapPin, Pencil, Trash2, Users, UserPlus } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 const Farmers = () => {
@@ -69,52 +69,74 @@ const Farmers = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-serif font-bold text-foreground">{t("farmers.title")}</h1>
-          <p className="text-muted-foreground">{t("farmers.subtitle")}</p>
+      {/* Page Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent via-accent/90 to-chart-5/80 p-6 sm:p-8 text-accent-foreground shadow-xl shadow-accent/20">
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-accent-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
+        <div className="absolute bottom-0 left-1/2 w-32 h-32 rounded-full bg-accent-foreground/10 translate-y-1/2 blur-xl" />
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-foreground/15 backdrop-blur-md border border-accent-foreground/10">
+              <Users className="h-7 w-7" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("farmers.title")}</h1>
+              <p className="text-accent-foreground/70 text-sm mt-0.5">{t("farmers.subtitle")}</p>
+            </div>
+          </div>
+          {isManagerOrAdmin && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-accent-foreground/15 hover:bg-accent-foreground/25 backdrop-blur-sm border border-accent-foreground/10 text-accent-foreground shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+                  <Plus className="mr-2 h-4 w-4" />{t("farmers.addFarmer")}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>{t("farmers.addNew")}</DialogTitle><DialogDescription>{t("farmers.enterDetails")}</DialogDescription></DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2"><Label>{t("common.name")} *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
+                  <div className="space-y-2"><Label>{t("common.phone")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("common.address")}</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("farmers.farmDetails")}</Label><Textarea value={form.farm_details} onChange={(e) => setForm({ ...form, farm_details: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("farmers.initialBalance")} (₨)</Label><Input type="number" value={form.initial_balance} onChange={(e) => setForm({ ...form, initial_balance: e.target.value })} /></div>
+                </div>
+                <DialogFooter>
+                  <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                    <DialogTrigger asChild><Button disabled={!form.name} className="bg-gradient-to-r from-primary to-accent">{t("farmers.saveFarmer")}</Button></DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>{t("common.confirm")}</DialogTitle><DialogDescription>{t("farmers.deleteConfirm")} {form.name}?</DialogDescription></DialogHeader>
+                      <DialogFooter><Button variant="outline" onClick={() => setConfirmOpen(false)}>{t("common.cancel")}</Button><Button onClick={handleSave}>{t("common.confirm")}</Button></DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
-        {isManagerOrAdmin && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />{t("farmers.addFarmer")}</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>{t("farmers.addNew")}</DialogTitle><DialogDescription>{t("farmers.enterDetails")}</DialogDescription></DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2"><Label>{t("common.name")} *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-                <div className="space-y-2"><Label>{t("common.phone")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-                <div className="space-y-2"><Label>{t("common.address")}</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-                <div className="space-y-2"><Label>{t("farmers.farmDetails")}</Label><Textarea value={form.farm_details} onChange={(e) => setForm({ ...form, farm_details: e.target.value })} /></div>
-                <div className="space-y-2"><Label>{t("farmers.initialBalance")} (₨)</Label><Input type="number" value={form.initial_balance} onChange={(e) => setForm({ ...form, initial_balance: e.target.value })} /></div>
-              </div>
-              <DialogFooter>
-                <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                  <DialogTrigger asChild><Button disabled={!form.name}>{t("farmers.saveFarmer")}</Button></DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>{t("common.confirm")}</DialogTitle><DialogDescription>{t("farmers.deleteConfirm")} {form.name}?</DialogDescription></DialogHeader>
-                    <DialogFooter><Button variant="outline" onClick={() => setConfirmOpen(false)}>{t("common.cancel")}</Button><Button onClick={handleSave}>{t("common.confirm")}</Button></DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
       </div>
 
+      {/* Search Bar */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder={t("farmers.searchFarmers")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        <Input placeholder={t("farmers.searchFarmers")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-11 rounded-xl border-border/50 focus:border-primary/50 transition-colors" />
       </div>
 
+      {/* Farmer Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((farmer) => (
-          <Card key={farmer.id} className="hover:shadow-md transition-shadow">
+        {filtered.map((farmer, i) => (
+          <Card key={farmer.id} className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-border/50 animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
+            <div className="h-1.5 bg-gradient-to-r from-accent to-chart-5" />
             <CardHeader className="pb-2 flex flex-row items-start justify-between">
-              <CardTitle className="text-lg">{farmer.name}</CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/70 text-accent-foreground text-sm font-bold shadow-md">
+                  {farmer.name.charAt(0).toUpperCase()}
+                </div>
+                <CardTitle className="text-lg">{farmer.name}</CardTitle>
+              </div>
               <div className="flex gap-1">
-                {isManagerOrAdmin && (<Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(farmer)}><Pencil className="h-3.5 w-3.5" /></Button>)}
+                {isManagerOrAdmin && (<Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => openEdit(farmer)}><Pencil className="h-3.5 w-3.5" /></Button>)}
                 {isAdmin && (
                   <AlertDialog>
-                    <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
+                    <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader><AlertDialogTitle>{t("farmers.deleteFarmer")}</AlertDialogTitle>
                         <AlertDialogDescription>{t("farmers.deleteConfirm")} <strong>{farmer.name}</strong>? {t("farmers.deleteWarning")}</AlertDialogDescription>
@@ -129,15 +151,20 @@ const Farmers = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
-              {farmer.phone && <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{farmer.phone}</div>}
-              {farmer.address && <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" />{farmer.address}</div>}
-              <div className="pt-2 border-t border-border">
-                <span className="text-foreground font-medium">{t("farmers.balance")}: ₨ {Number(farmer.initial_balance).toLocaleString()}</span>
+              {farmer.phone && <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-accent" />{farmer.phone}</div>}
+              {farmer.address && <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-primary" />{farmer.address}</div>}
+              <div className="pt-3 border-t border-border/50">
+                <span className="text-foreground font-bold font-mono text-base">{t("farmers.balance")}: ₨ {Number(farmer.initial_balance).toLocaleString()}</span>
               </div>
             </CardContent>
           </Card>
         ))}
-        {filtered.length === 0 && (<div className="col-span-full text-center py-12 text-muted-foreground">{t("farmers.noFarmers")}</div>)}
+        {filtered.length === 0 && (
+          <div className="col-span-full text-center py-16 text-muted-foreground">
+            <UserPlus className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+            <p className="font-medium">{t("farmers.noFarmers")}</p>
+          </div>
+        )}
       </div>
 
       {/* Edit Dialog */}
@@ -153,7 +180,7 @@ const Farmers = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>{t("common.cancel")}</Button>
-            <Button onClick={handleUpdate} disabled={!editForm.name}>{t("farmers.updateFarmer")}</Button>
+            <Button onClick={handleUpdate} disabled={!editForm.name} className="bg-gradient-to-r from-primary to-accent">{t("farmers.updateFarmer")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
