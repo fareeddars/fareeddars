@@ -40,9 +40,6 @@ export const useAuth = () => {
   return ctx;
 };
 
-const SESSION_HIDDEN_KEY = "app_hidden_at";
-const AUTO_LOGOUT_SECONDS = 300; // 5 minutes
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -50,98 +47,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
   const dataFetchedRef = useRef(false);
+  const isReadyRef = useRef(false);
 
-  const fetchUserData = async (userId: string) => {
-    const [profileRes, roleRes] = await Promise.all([
-      supabase.from("profiles").select("full_name, email").eq("user_id", userId).single(),
-      supabase.from("user_roles").select("role, can_create, can_edit, can_delete, is_active").eq("user_id", userId).single(),
-    ]);
-    if (profileRes.data) setProfile(profileRes.data);
-    if (roleRes.data) setUserRole(roleRes.data);
-  };
-
-  const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
-    setUserRole(null);
-    localStorage.removeItem(SESSION_HIDDEN_KEY);
+  const fetchUserData = useCallback(async (userId: string) => {
+    try {
+      const [profileRes, roleRes] = await Promise.all([
+        supabase.from("profiles").select("full_name, email").eq("user_id", userId).single(),
+        supabase.from("user_roles").select("role, can_create, can_edit, can_delete, is_active").eq("user_id", userId).single(),
+      ]);
+      if (profileRes.data) setProfile(profileRes.data);
+      if (roleRes.data) setUserRole(roleRes.data);
+    } catch (err) {
+      console.error("Failed to fetch user data:", err);
+    }
   }, []);
 
-  // Auto-logout: track when app is hidden/closed
-  useEffect(() => {
-    // On mount, check if we were away for more than 10 seconds
-    const hiddenAt = localStorage.getItem(SESSION_HIDDEN_KEY);
-    if (hiddenAt) {
-      const elapsed = (Date.now() - Number(hiddenAt)) / 1000;
-      if (elapsed > AUTO_LOGOUT_SECONDS) {
-        // Force sign out
-        localStorage.removeItem(SESSION_HIDDEN_KEY);
-        supabase.auth.signOut();
-        return;
-      }
-      localStorage.removeItem(SESSION_HIDDEN_KEY);
-    }
+  const signOut = useCallback(async () => {
+    dataFetchedRef.current = false;
+    setProfile(null);
+    setUserRole(null);
+    setSession(null);
+    setUser(null);
+    await supabase.auth.signOut();
+  }, []);
 
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        localStorage.setItem(SESSION_HIDDEN_KEY, String(Date.now()));
-      } else {
-        const storedAt = localStorage.getItem(SESSION_HIDDEN_KEY);
-        if (storedAt) {
-          const elapsed = (Date.now() - Number(storedAt)) / 1000;
-          localStorage.removeItem(SESSION_HIDDEN_KEY);
-          if (elapsed > AUTO_LOGOUT_SECONDS) {
-            signOut();
-          }
+  useEffect(() => {
+    // IMPORTANT: Set up listener BEFORE calling getSession
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        // Skip INITIAL_SESSION if we haven't restored from getSession yet
+        if (event === 'INITIAL_SESSION' && !isReadyRef.current) {
+          return;
         }
-      }
-    };
 
-    const handleBeforeUnload = () => {
-      localStorage.setItem(SESSION_HIDDEN_KEY, String(Date.now()));
-    };
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [signOut]);
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        if (newSession?.user) {
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+            if (!dataFetchedRef.current) {
+              dataFetchedRef.current = true;
+              // Use setTimeout to avoid deadlock in onAuthStateChange
+              setTimeout(() => fetchUserData(newSession.user.id), 0);
+            }
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setProfile(null);
+          setUserRole(null);
           dataFetchedRef.current = false;
         }
-        if (!dataFetchedRef.current) {
-          dataFetchedRef.current = true;
-          setTimeout(() => fetchUserData(session.user.id), 0);
-        }
-      } else {
-        setProfile(null);
-        setUserRole(null);
-        dataFetchedRef.current = false;
-      }
-      setLoading(false);
-    });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user && !dataFetchedRef.current) {
-        dataFetchedRef.current = true;
-        fetchUserData(session.user.id);
+        setLoading(false);
       }
+    );
+
+    // Restore session from storage
+    supabase.auth.getSession().then(({ data: { session: restoredSession } }) => {
+      isReadyRef.current = true;
+      setSession(restoredSession);
+      setUser(restoredSession?.user ?? null);
+
+      if (restoredSession?.user && !dataFetchedRef.current) {
+        dataFetchedRef.current = true;
+        fetchUserData(restoredSession.user.id);
+      }
+
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchUserData]);
 
   const isAdmin = userRole?.role === "admin";
   const isManagerOrAdmin = userRole?.role === "admin" || userRole?.role === "manager";
