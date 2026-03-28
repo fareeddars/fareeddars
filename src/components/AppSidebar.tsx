@@ -20,12 +20,14 @@ const AppSidebar = () => {
   const { seasons, selectedSeason, setSelectedSeasonId } = useSeason();
   const navigate = useNavigate();
   const location = useLocation();
-  const { setOpenMobile, isMobile } = useSidebar();
+  const { setOpenMobile, setOpen, isMobile } = useSidebar();
 
   const handleNav = (path: string) => {
     navigate(path);
     if (isMobile) {
       setOpenMobile(false);
+    } else {
+      setOpen(false);
     }
   };
 
