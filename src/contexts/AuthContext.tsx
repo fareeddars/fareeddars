@@ -46,10 +46,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
-  const dataFetchedRef = useRef(false);
-  const isReadyRef = useRef(false);
+  const initializedRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
 
   const fetchUserData = useCallback(async (userId: string) => {
+    // Prevent duplicate fetches for the same user
+    if (currentUserIdRef.current === userId && profile && userRole) return;
+    currentUserIdRef.current = userId;
+    
     try {
       const [profileRes, roleRes] = await Promise.all([
         supabase.from("profiles").select("full_name, email").eq("user_id", userId).single(),
@@ -60,10 +64,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       console.error("Failed to fetch user data:", err);
     }
-  }, []);
+  }, [profile, userRole]);
 
   const signOut = useCallback(async () => {
-    dataFetchedRef.current = false;
+    currentUserIdRef.current = null;
     setProfile(null);
     setUserRole(null);
     setSession(null);
@@ -72,51 +76,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    // IMPORTANT: Set up listener BEFORE calling getSession
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        // Skip INITIAL_SESSION if we haven't restored from getSession yet
-        if (event === 'INITIAL_SESSION' && !isReadyRef.current) {
-          return;
-        }
+    if (initializedRef.current) return;
+    initializedRef.current = true;
 
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-
-        if (newSession?.user) {
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-            if (!dataFetchedRef.current) {
-              dataFetchedRef.current = true;
-              // Use setTimeout to avoid deadlock in onAuthStateChange
-              setTimeout(() => fetchUserData(newSession.user.id), 0);
-            }
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setUserRole(null);
-          dataFetchedRef.current = false;
-        }
-
-        setLoading(false);
-      }
-    );
-
-    // Restore session from storage
+    // Step 1: Restore session from storage FIRST
     supabase.auth.getSession().then(({ data: { session: restoredSession } }) => {
-      isReadyRef.current = true;
-      setSession(restoredSession);
-      setUser(restoredSession?.user ?? null);
-
-      if (restoredSession?.user && !dataFetchedRef.current) {
-        dataFetchedRef.current = true;
+      if (restoredSession?.user) {
+        setSession(restoredSession);
+        setUser(restoredSession.user);
         fetchUserData(restoredSession.user.id);
       }
-
       setLoading(false);
     });
 
+    // Step 2: Listen for FUTURE auth changes only
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        console.log("[Auth] Event:", event);
+
+        // Skip INITIAL_SESSION — we handle it via getSession above
+        if (event === "INITIAL_SESSION") return;
+
+        // TOKEN_REFRESHED: Only update session reference, don't trigger re-renders
+        // that would cascade into more API calls
+        if (event === "TOKEN_REFRESHED") {
+          if (newSession) {
+            setSession(newSession);
+            // Don't setUser or fetchUserData — user hasn't changed
+          }
+          return;
+        }
+
+        if (event === "SIGNED_IN") {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+          if (newSession?.user) {
+            // Defer to avoid deadlock inside onAuthStateChange
+            setTimeout(() => fetchUserData(newSession.user.id), 0);
+          }
+          setLoading(false);
+          return;
+        }
+
+        if (event === "SIGNED_OUT") {
+          currentUserIdRef.current = null;
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setUserRole(null);
+          setLoading(false);
+          return;
+        }
+
+        // USER_UPDATED
+        if (event === "USER_UPDATED" && newSession?.user) {
+          setSession(newSession);
+          setUser(newSession.user);
+        }
+      }
+    );
+
     return () => subscription.unsubscribe();
-  }, [fetchUserData]);
+  }, []); // Empty deps — runs once
 
   const isAdmin = userRole?.role === "admin";
   const isManagerOrAdmin = userRole?.role === "admin" || userRole?.role === "manager";
