@@ -26,6 +26,8 @@ const AppSidebar = () => {
     navigate(path);
     if (isMobile) {
       setOpenMobile(false);
+    } else {
+      setOpen(false);
     }
   };
 
