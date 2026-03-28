@@ -41,7 +41,7 @@ export const useAuth = () => {
 };
 
 const SESSION_HIDDEN_KEY = "app_hidden_at";
-const AUTO_LOGOUT_SECONDS = 10;
+const AUTO_LOGOUT_SECONDS = 300; // 5 minutes
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
