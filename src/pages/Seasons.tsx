@@ -89,6 +89,26 @@ const Seasons = () => {
     else { toast({ title: t("seasons.farmerLeft") }); await refreshFarmerSeasons(); }
   };
 
+  const handleFarmerReactivate = async (farmerSeasonId: string) => {
+    const { error } = await supabase.from("farmer_seasons").update({ status: "active" as any }).eq("id", farmerSeasonId);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: t("seasons.farmerActivated") }); await refreshFarmerSeasons(); }
+  };
+
+  const handleDeleteSeason = async (seasonId: string) => {
+    // First delete associated farmer_seasons, then the season itself
+    await supabase.from("farmer_seasons").delete().eq("season_id", seasonId);
+    await supabase.from("ledger_entries").delete().eq("season_id", seasonId);
+    await supabase.from("expense_categories").delete().eq("season_id", seasonId);
+    const { error } = await supabase.from("seasons").delete().eq("id", seasonId);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else {
+      toast({ title: t("seasons.deleted") });
+      if (selectedSeason?.id === seasonId) setSelectedSeasonId(null);
+      await refreshSeasons();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header Banner */}
