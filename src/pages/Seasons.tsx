@@ -288,6 +288,11 @@ const Seasons = () => {
                         {t("seasons.markLeft")}
                       </Button>
                     )}
+                    {fs.status === "left" && selectedSeason.status === "active" && isManagerOrAdmin && (
+                      <Button size="sm" variant="ghost" className="mt-2 text-xs text-chart-5 hover:text-chart-5 hover:bg-chart-5/10" onClick={() => handleFarmerReactivate(fs.id)}>
+                        <RotateCcw className="h-3 w-3 mr-1" />{t("seasons.markActive")}
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
