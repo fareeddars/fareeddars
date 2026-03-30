@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Leaf, Lock, Users, CalendarDays, CheckCircle2, ArrowRight, Sprout } from "lucide-react";
+import { Plus, Leaf, Lock, Users, CalendarDays, CheckCircle2, ArrowRight, Sprout, Trash2, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import { useEffect } from "react";
@@ -87,6 +87,26 @@ const Seasons = () => {
     const { error } = await supabase.from("farmer_seasons").update({ status: "left" as any }).eq("id", farmerSeasonId);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
     else { toast({ title: t("seasons.farmerLeft") }); await refreshFarmerSeasons(); }
+  };
+
+  const handleFarmerReactivate = async (farmerSeasonId: string) => {
+    const { error } = await supabase.from("farmer_seasons").update({ status: "active" as any }).eq("id", farmerSeasonId);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: t("seasons.farmerActivated") }); await refreshFarmerSeasons(); }
+  };
+
+  const handleDeleteSeason = async (seasonId: string) => {
+    // First delete associated farmer_seasons, then the season itself
+    await supabase.from("farmer_seasons").delete().eq("season_id", seasonId);
+    await supabase.from("ledger_entries").delete().eq("season_id", seasonId);
+    await supabase.from("expense_categories").delete().eq("season_id", seasonId);
+    const { error } = await supabase.from("seasons").delete().eq("id", seasonId);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else {
+      toast({ title: t("seasons.deleted") });
+      if (selectedSeason?.id === seasonId) setSelectedSeasonId(null);
+      await refreshSeasons();
+    }
   };
 
   return (
@@ -198,6 +218,24 @@ const Seasons = () => {
                     )}
                   </div>
                 )}
+                {isSelected && isAdmin && (
+                  <div className={`flex gap-2 ${isActive ? "mt-2" : "mt-3 pt-3 border-t border-border/50"}`}>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10" onClick={(e) => e.stopPropagation()}>
+                          <Trash2 className="h-3 w-3 mr-1" />{t("seasons.deleteSeason")}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>{t("seasons.deleteConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.deleteConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteSeason(season.id)} className="bg-destructive text-destructive-foreground">{t("seasons.deleteSeason")}</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
@@ -248,6 +286,11 @@ const Seasons = () => {
                     {fs.status === "active" && selectedSeason.status === "active" && isManagerOrAdmin && (
                       <Button size="sm" variant="ghost" className="mt-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleFarmerLeave(fs.id)}>
                         {t("seasons.markLeft")}
+                      </Button>
+                    )}
+                    {fs.status === "left" && selectedSeason.status === "active" && isManagerOrAdmin && (
+                      <Button size="sm" variant="ghost" className="mt-2 text-xs text-chart-5 hover:text-chart-5 hover:bg-chart-5/10" onClick={() => handleFarmerReactivate(fs.id)}>
+                        <RotateCcw className="h-3 w-3 mr-1" />{t("seasons.markActive")}
                       </Button>
                     )}
                   </div>
