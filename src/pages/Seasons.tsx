@@ -218,6 +218,24 @@ const Seasons = () => {
                     )}
                   </div>
                 )}
+                {isSelected && isAdmin && (
+                  <div className={`flex gap-2 ${isActive ? "mt-2" : "mt-3 pt-3 border-t border-border/50"}`}>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10" onClick={(e) => e.stopPropagation()}>
+                          <Trash2 className="h-3 w-3 mr-1" />{t("seasons.deleteSeason")}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>{t("seasons.deleteConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.deleteConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteSeason(season.id)} className="bg-destructive text-destructive-foreground">{t("seasons.deleteSeason")}</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
