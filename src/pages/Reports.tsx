@@ -108,90 +108,193 @@ const Reports = () => {
     const L = printLang;
     const isRTL = L !== "en";
     const dirAttr = isRTL ? 'dir="rtl"' : '';
-    const fontFamily = isRTL ? "'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif" : "Arial, sans-serif";
+    const fontFamily = isRTL ? "'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif" : "'Segoe UI', Arial, sans-serif";
     const textAlign = isRTL ? "right" : "left";
+    const textAlignOpp = isRTL ? "left" : "right";
 
     let html = "";
 
-    // Header
-    html += `<div class="report-header"><h1>${pt("print.title", L)}</h1>`;
-    html += `<p>${selectedFarmerName}${filterMonth ? ` — ${new Date(filterMonth + "-01").toLocaleString("en-PK", { month: "long", year: "numeric" })}` : ""}</p>`;
-    html += `<p>${pt("print.dateGenerated", L)}: ${new Date().toLocaleDateString("en-PK", { day: "2-digit", month: "long", year: "numeric" })}</p></div>`;
-
-    reportFarmerIds.forEach((farmerId) => {
+    reportFarmerIds.forEach((farmerId, idx) => {
       const { expenses, sales, payments, loans, totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, initialBalance, balanceOwed, netProfit } = calcSections(farmerId);
       const farmer = getFarmer(farmerId);
       if (!farmer) return;
+      const fs = farmerSeasons.find(f => f.farmer_id === farmerId);
+      const seasonName = selectedSeason?.name ?? "—";
+      const stmtNo = `${new Date().getFullYear()}/${String(idx + 1).padStart(3, "0")}`;
+      const totalNetWeight = sales.reduce((s, e) => s + (e.net_weight ?? 0), 0);
+      const totalPayable = initialBalance + totalFarmerExpenses + totalLandlordExpenses;
+      const refundOrDue = totalPayments - totalPayable;
 
-      html += `<div class="farmer-block">`;
-      if (selectedFarmerId === "all") {
-        html += `<div class="farmer-name">${farmer.name}${farmer.phone ? ` | ${farmer.phone}` : ""}${farmer.address ? ` | ${farmer.address}` : ""}</div>`;
-      }
+      if (idx > 0) html += `<div style="page-break-before:always"></div>`;
+
+      // Header
+      html += `<div class="header-block">
+        <h1>${pt("print.title", L)}</h1>
+        <div class="header-sub">
+          <span class="season-label">${pt("print.cropSeason", L)}: ${seasonName}</span>
+          <span class="stmt-no">${pt("print.statementNo", L)}: ${stmtNo}</span>
+        </div>
+      </div>`;
+
+      // Farmer & Landlord Info
+      html += `<div class="info-row">
+        <div class="info-col">
+          <div class="info-label">${pt("print.farmer", L)}:</div>
+          <div class="info-value">${farmer.name}</div>
+          ${farmer.phone ? `<div class="info-detail">${pt("common.phone", L)}: ${farmer.phone}</div>` : ""}
+          ${farmer.address ? `<div class="info-detail">${pt("print.village", L)}: ${farmer.address}</div>` : ""}
+        </div>
+        <div class="info-col">
+          <div class="info-label">${pt("print.landlord", L)}:</div>
+          <div class="info-value">${pt("print.landlordName", L)}</div>
+        </div>
+      </div>`;
+
+      // Green info bar
+      html += `<div class="info-bar">
+        ${pt("print.cropSeason", L)}: ${seasonName} &nbsp;|&nbsp; ${pt("print.profitSharing", L)}: 50% ${pt("print.farmer", L)} / 50% ${pt("print.landlord", L)}
+      </div>`;
 
       // Section 1: Expenses
-      html += `<div class="section-title">${pt("print.expensesBreakdown", L)}</div>`;
+      html += `<div class="section-title">1. ${pt("print.expensesDetails", L)}</div>`;
       if (expenses.length > 0) {
-        html += `<table class="print-table"><thead><tr><th>${pt("common.date", L)}</th><th>${pt("ledger.category", L)}</th><th>${pt("common.description", L)}</th><th class="text-right">${pt("print.farmerShare", L)} (₨)</th><th class="text-right">${pt("print.landlordShare", L)} (₨)</th><th class="text-right">${pt("common.total", L)} (₨)</th></tr></thead><tbody>`;
+        html += `<table class="bill-table"><thead><tr>
+          <th>${pt("common.date", L)}</th>
+          <th>${pt("ledger.category", L)}</th>
+          <th>${pt("common.description", L)}</th>
+          <th class="num">${pt("print.farmerShare", L)} (₨)</th>
+          <th class="num">${pt("print.landlordShare", L)} (₨)</th>
+          <th class="num">${pt("common.total", L)}</th>
+          <th class="num">${pt("common.total", L)} (₨)</th>
+        </tr></thead><tbody>`;
         expenses.forEach((e) => {
           const isLandlordOnly = e.payment_method === "landlord_only";
-          const fs = isLandlordOnly ? 0 : (e.is_shared ? (e.shared_amount ?? e.amount / 2) : e.amount);
-          const ls = isLandlordOnly ? e.amount : (e.is_shared ? (e.amount - (e.shared_amount ?? e.amount / 2)) : 0);
-          html += `<tr><td>${e.entry_date ?? "—"}</td><td>${e.category ?? "—"}</td><td>${e.description || "—"}</td><td class="text-right">${fs > 0 ? fmtNum(fs) : "—"}</td><td class="text-right">${ls > 0 ? fmtNum(ls) : "—"}</td><td class="text-right">${fmtNum(e.amount)}</td></tr>`;
+          const fShare = isLandlordOnly ? 0 : (e.is_shared ? (e.shared_amount ?? e.amount / 2) : e.amount);
+          const lShare = isLandlordOnly ? e.amount : (e.is_shared ? (e.amount - (e.shared_amount ?? e.amount / 2)) : 0);
+          html += `<tr>
+            <td>${e.entry_date ?? "—"}</td>
+            <td>${e.category ?? "—"}</td>
+            <td>${e.description || "—"}</td>
+            <td class="num">${fShare > 0 ? fmtNum(fShare) : "—"}</td>
+            <td class="num">${lShare > 0 ? fmtNum(lShare) : "—"}</td>
+            <td class="num">${fmtNum(e.amount)}</td>
+            <td class="num">${fmtNum(e.amount)}</td>
+          </tr>`;
         });
-        html += `</tbody><tfoot><tr><td colspan="3"><strong>${pt("common.total", L)}</strong></td><td class="text-right"><strong>${fmtNum(totalFarmerExpenses)}</strong></td><td class="text-right"><strong>${fmtNum(totalLandlordExpenses)}</strong></td><td class="text-right"><strong>${fmtNum(totalExpenses)}</strong></td></tr></tfoot></table>`;
-      } else { html += `<p style="font-size:11px;color:#666">${pt("print.noExpenses", L)}</p>`; }
+        html += `</tbody><tfoot><tr>
+          <td colspan="3"><strong>${pt("print.totalExpenses", L)}:</strong></td>
+          <td class="num"><strong>${fmtNum(totalFarmerExpenses)}</strong></td>
+          <td class="num"><strong>${fmtNum(totalLandlordExpenses)}</strong></td>
+          <td class="num"><strong>${fmtNum(totalExpenses)}</strong></td>
+          <td class="num total-highlight">₨ ${fmtNum(totalFarmerExpenses + totalLandlordExpenses)}</td>
+        </tr></tfoot></table>`;
+      } else { html += `<p class="no-data">${pt("print.noExpenses", L)}</p>`; }
 
       // Section 2: Sales
-      html += `<div class="section-title">${pt("print.salesSummary", L)}</div>`;
+      html += `<div class="section-title">2. ${pt("print.salesSummaryTitle", L)}</div>`;
       if (sales.length > 0) {
-        html += `<table class="print-table"><thead><tr><th>${pt("common.date", L)}</th><th>${pt("common.description", L)}</th><th class="text-right">${pt("print.grossWt", L)}</th><th class="text-right">${pt("print.deductionsKg", L)}</th><th class="text-right">${pt("print.netWt", L)}</th><th class="text-right">${pt("print.ratePerKg", L)}</th><th class="text-right">${pt("common.total", L)} (₨)</th></tr></thead><tbody>`;
+        html += `<table class="bill-table"><thead><tr>
+          <th>${pt("common.date", L)}</th>
+          <th>${pt("print.crop", L)}</th>
+          <th class="num">${pt("print.grossWt", L)}</th>
+          <th class="num">${pt("print.deductionsKg", L)}</th>
+          <th class="num">${pt("print.netWt", L)}</th>
+          <th class="num">${pt("print.ratePerKg", L)}</th>
+        </tr></thead><tbody>`;
         sales.forEach((e) => {
-          html += `<tr><td>${e.entry_date ?? "—"}</td><td>${e.description || "—"}</td><td class="text-right">${e.gross_weight != null ? fmtNum(e.gross_weight) : "—"}</td><td class="text-right">${e.deductions != null ? fmtNum(e.deductions) : "—"}</td><td class="text-right">${e.net_weight != null ? fmtNum(e.net_weight) : "—"}</td><td class="text-right">${e.rate != null ? fmtNum(e.rate) : "—"}</td><td class="text-right">${fmtNum(e.amount)}</td></tr>`;
+          html += `<tr>
+            <td>${e.entry_date ?? "—"}</td>
+            <td>${e.crop_type || e.description || "—"}</td>
+            <td class="num">${e.gross_weight != null ? fmtNum(e.gross_weight) + " kg" : "—"}</td>
+            <td class="num">${e.deductions != null ? fmtNum(e.deductions) + " kg" : "—"}</td>
+            <td class="num">${e.net_weight != null ? fmtNum(e.net_weight) + " kg" : "—"}</td>
+            <td class="num">₨ ${e.rate != null ? fmtNum(e.rate) + "/kg" : "—"}</td>
+          </tr>`;
         });
-        html += `</tbody><tfoot><tr><td colspan="4"><strong>${pt("common.total", L)}</strong></td><td class="text-right"><strong>${fmtNum(sales.reduce((s, e) => s + (e.net_weight ?? 0), 0))} kg</strong></td><td></td><td class="text-right"><strong>${fmtNum(totalSales)}</strong></td></tr></tfoot></table>`;
-      } else { html += `<p style="font-size:11px;color:#666">${pt("print.noSales", L)}</p>`; }
+        html += `</tbody></table>`;
+        html += `<div class="total-line">${pt("print.totalSalesLabel", L)}: ₨ ${fmtNum(totalSales)}</div>`;
+      } else { html += `<p class="no-data">${pt("print.noSales", L)}</p>`; }
 
       // Section 3: Payments
-      html += `<div class="section-title">${pt("print.paymentsReceived", L)}</div>`;
+      html += `<div class="section-title">3. ${pt("print.paymentsReceivedTitle", L)}</div>`;
       if (payments.length > 0) {
-        html += `<table class="print-table"><thead><tr><th>${pt("common.date", L)}</th><th>${pt("print.method", L)}</th><th>${pt("print.details", L)}</th><th class="text-right">${pt("common.amount", L)} (₨)</th></tr></thead><tbody>`;
+        html += `<table class="bill-table"><thead><tr>
+          <th>${pt("common.date", L)}</th>
+          <th>${pt("print.method", L)}</th>
+          <th>${pt("print.details", L)}</th>
+          <th class="num">${pt("common.amount", L)} (₨)</th>
+        </tr></thead><tbody>`;
         payments.forEach((e) => {
           const details = e.payment_method === "crop_return" && e.crop_type ? `${e.crop_type} ${e.crop_weight ?? ""}kg @ ₨${e.rate ?? ""}/kg` : "—";
-          html += `<tr><td>${e.entry_date ?? "—"}</td><td>${e.payment_method === "crop_return" ? pt("ledger.cropReturn", L) : pt("print.cash", L)}</td><td>${details}</td><td class="text-right">${fmtNum(e.amount)}</td></tr>`;
+          html += `<tr>
+            <td>${e.entry_date ?? "—"}</td>
+            <td>${e.payment_method === "crop_return" ? pt("ledger.cropReturn", L) : pt("print.cash", L)}</td>
+            <td>${details}</td>
+            <td class="num">${fmtNum(e.amount)}</td>
+          </tr>`;
         });
-        html += `</tbody><tfoot><tr><td colspan="3"><strong>${pt("print.totalReceived", L)}</strong></td><td class="text-right"><strong>${fmtNum(totalPayments)}</strong></td></tr></tfoot></table>`;
-      } else { html += `<p style="font-size:11px;color:#666">${pt("print.noPayments", L)}</p>`; }
+        html += `</tbody></table>`;
+        html += `<div class="total-line">${pt("print.totalReceived", L)}: ₨ ${fmtNum(totalPayments)}</div>`;
+      } else { html += `<p class="no-data">${pt("print.noPayments", L)}</p>`; }
 
       // Section 4: Loans
-      html += `<div class="section-title">${pt("print.personalLoans", L)}</div>`;
+      html += `<div class="section-title">4. ${pt("print.loansToFarmer", L)}</div>`;
       if (loans.length > 0) {
-        html += `<table class="print-table"><thead><tr><th>${pt("common.date", L)}</th><th>${pt("common.description", L)}</th><th class="text-right">${pt("common.amount", L)} (₨)</th></tr></thead><tbody>`;
+        html += `<table class="bill-table"><thead><tr>
+          <th>${pt("common.date", L)}</th>
+          <th>${pt("common.description", L)}</th>
+          <th class="num">${pt("common.amount", L)}</th>
+          <th class="num">${pt("common.total", L)}</th>
+        </tr></thead><tbody>`;
         loans.forEach((e) => {
-          html += `<tr><td>${e.entry_date ?? "—"}</td><td>${e.description || "—"}</td><td class="text-right">${fmtNum(e.amount)}</td></tr>`;
+          html += `<tr>
+            <td>${e.entry_date ?? "—"}</td>
+            <td>${e.description || "—"}</td>
+            <td class="num">${fmtNum(e.amount)}</td>
+            <td class="num">${fmtNum(e.amount)}</td>
+          </tr>`;
         });
-        html += `</tbody><tfoot><tr><td colspan="2"><strong>${pt("print.totalLoans", L)}</strong></td><td class="text-right"><strong>${fmtNum(totalLoans)}</strong></td></tr></tfoot></table>`;
-      } else { html += `<p style="font-size:11px;color:#666">${pt("print.noLoans", L)}</p>`; }
+        html += `</tbody></table>`;
+        html += `<div class="total-line">${pt("print.totalLoans", L)}: ₨ ${fmtNum(totalLoans)}</div>`;
+      } else { html += `<p class="no-data">${pt("print.noLoans", L)}</p>`; }
 
-      // Section 5 & 6: Summary
-      html += `<div class="summary-grid">`;
-      html += `<div class="summary-box"><h3>${pt("print.accountSummary", L)}</h3>`;
-      html += `<div class="summary-row"><span>${pt("print.openingBalance", L)}</span><span>${fmtNum(initialBalance)}</span></div>`;
-      html += `<div class="summary-row"><span>${pt("print.farmerExpenseShare", L)}</span><span>${fmtNum(totalFarmerExpenses)}</span></div>`;
-      html += `<div class="summary-row"><span>${pt("print.personalLoansFromLandlord", L)}</span><span>${fmtNum(totalLoans)}</span></div>`;
-      html += `<div class="summary-row" style="border-top:1px solid #ccc;margin-top:4px;padding-top:4px;font-weight:700"><span>${pt("print.totalAmountOwed", L)}</span><span>${fmtNum(initialBalance + totalFarmerExpenses + totalLoans)}</span></div>`;
-      html += `<div class="summary-row"><span>${pt("print.minusPayments", L)}</span><span>(${fmtNum(totalPayments)})</span></div>`;
-      html += `<div class="summary-total ${balanceOwed > 0 ? "loss" : "profit"}"><span>${pt("print.balanceStillDue", L)}</span><span>${balanceOwed <= 0 ? pt("reports.settled", L) : fmt(Math.abs(balanceOwed))}</span></div>`;
-      html += `</div>`;
+      // Section 5 & 6: Profit/Loss + Final Account Summary side by side
+      html += `<div class="bottom-grid">
+        <div class="bottom-box">
+          <div class="box-title">5. ${pt("print.profitLossSummary", L)}</div>
+          <div class="summary-row"><span>${pt("print.totalSalesIncome", L)}:</span><span>₨ ${fmtNum(totalSales)}</span></div>
+          <div class="summary-row"><span>+ ${pt("print.farmerShare", L)}:</span><span>− ${fmtNum(totalFarmerExpenses)}</span></div>
+          <div class="summary-row"><span>+ ${pt("print.landlordShare", L)}:</span><span>− ${fmtNum(totalLandlordExpenses)}</span></div>
+          <div class="summary-row bold-row"><span>${netProfit >= 0 ? pt("print.netProfit", L) : pt("print.netLoss", L)}:</span><span>₨ ${fmtNum(Math.abs(netProfit))}</span></div>
+        </div>
+        <div class="bottom-box">
+          <div class="box-title">6. ${pt("print.finalAccountSummary", L)}</div>
+          <div class="summary-row"><span>${pt("print.openingBalance", L)}</span><span>₨ ${fmtNum(initialBalance)}</span></div>
+          <div class="summary-row"><span>+ ${pt("print.farmerShare", L)}</span><span>− ${fmtNum(totalFarmerExpenses)}</span></div>
+          <div class="summary-row"><span>+ ${pt("print.landlordShare", L)}</span><span>− ${fmtNum(totalLandlordExpenses)}</span></div>
+          <div class="summary-row"><span>− ${pt("print.totalPayableLabel", L)}:</span><span>₨ ${fmtNum(totalPayable)}</span></div>
+          <div class="summary-row highlight-row ${refundOrDue >= 0 ? 'refund' : 'due'}">
+            <span>${refundOrDue >= 0 ? pt("print.refundDueToFarmer", L) : pt("print.balanceStillDue", L)}:</span>
+            <span>₨ ${fmtNum(Math.abs(refundOrDue))}</span>
+          </div>
+        </div>
+      </div>`;
 
-      html += `<div class="summary-box"><h3>${pt("print.profitLoss", L)}</h3>`;
-      html += `<div class="summary-row"><span>${pt("print.totalSalesIncome", L)}</span><span>${fmtNum(totalSales)}</span></div>`;
-      html += `<div class="summary-row"><span>${pt("print.minusFarmerShare", L)}</span><span>(${fmtNum(totalFarmerExpenses)})</span></div>`;
-      html += `<div class="summary-row"><span>${pt("print.minusLandlordShare", L)}</span><span>(${fmtNum(totalLandlordExpenses)})</span></div>`;
-      html += `<div class="summary-total ${netProfit >= 0 ? "profit" : "loss"}"><span>${netProfit >= 0 ? pt("print.netProfit", L) : pt("print.netLoss", L)}</span><span>${fmt(Math.abs(netProfit))}</span></div>`;
-      html += `</div></div>`;
+      // Date & Signatures
+      html += `<div class="date-line">${pt("common.date", L)}: ${new Date().toLocaleDateString("en-PK", { day: "2-digit", month: "2-digit", year: "numeric" })}</div>`;
+      html += `<div class="signature-row">
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div>${pt("print.farmerSignature", L)}</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div>${pt("print.landlordSignature", L)}</div>
+          <div class="sig-date">${pt("common.date", L)}: ________________</div>
+        </div>
+      </div>`;
 
-      if (selectedFarmerId === "all") html += `<div style="border-top:1px dashed #999;margin-top:24px"></div>`;
-      html += `</div>`;
+      html += `</div>`; // close farmer block wrapper (opened implicitly)
     });
 
     if (reportFarmerIds.length === 0) {
@@ -204,28 +307,191 @@ const Reports = () => {
     ${isRTL ? '<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">' : ''}
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: ${fontFamily}; font-size: 11px; color: #000; background: white; padding: 10mm; direction: ${isRTL ? 'rtl' : 'ltr'}; }
-      .print-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 11px; }
-      .print-table th { background: #f0f0f0; padding: 6px 8px; text-align: ${textAlign}; border: 1px solid #ccc; font-weight: 700; }
-      .print-table td { padding: 5px 8px; border: 1px solid #ccc; }
-      .print-table tfoot td { background: #e8e8e8; font-weight: 700; }
-      .print-table tr:nth-child(even) td { background: #fafafa; }
-      .section-title { font-size: 13px; font-weight: 700; margin: 12px 0 4px; border-bottom: 2px solid #333; padding-bottom: 3px; }
-      .report-header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 8px; }
-      .report-header h1 { font-size: 20px; margin: 0 0 4px; }
-      .report-header p { font-size: 11px; margin: 2px 0; color: #444; }
-      .farmer-block { margin-bottom: 20px; }
-      .farmer-name { font-size: 14px; font-weight: 700; background: #222; color: #fff; padding: 5px 10px; margin-bottom: 8px; }
-      .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-      .summary-box { border: 1px solid #ccc; padding: 8px; }
-      .summary-box h3 { font-size: 12px; font-weight: 700; margin: 0 0 6px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
-      .summary-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
-      .summary-total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; padding: 4px 0 0; border-top: 1px solid #000; margin-top: 3px; }
-      .profit { color: #166534; }
-      .loss { color: #991b1b; }
-      .text-right { text-align: ${isRTL ? 'left' : 'right'}; }
+      body { font-family: ${fontFamily}; font-size: 11px; color: #1a1a1a; background: white; padding: 8mm; direction: ${isRTL ? 'rtl' : 'ltr'}; }
+      
+      .header-block {
+        background: #1a3c40;
+        color: white;
+        text-align: center;
+        padding: 14px 20px 10px;
+        margin-bottom: 0;
+      }
+      .header-block h1 {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .header-sub {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        padding-top: 4px;
+      }
+      .season-label { font-size: 13px; font-weight: 700; }
+      .stmt-no { font-size: 11px; opacity: 0.85; }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border: 1px solid #ccc;
+        border-top: none;
+        background: #fafafa;
+      }
+      .info-col { flex: 1; }
+      .info-label { font-size: 10px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+      .info-value { font-size: 14px; font-weight: 700; color: #1a3c40; margin: 2px 0; }
+      .info-detail { font-size: 11px; color: #555; }
+
+      .info-bar {
+        background: #2d6a4f;
+        color: white;
+        text-align: center;
+        padding: 6px 16px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        letter-spacing: 0.3px;
+      }
+
+      .section-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: #1a3c40;
+        margin: 14px 0 5px;
+        padding-bottom: 2px;
+      }
+
+      .bill-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 4px;
+        font-size: 11px;
+      }
+      .bill-table th {
+        background: #e8eeec;
+        color: #1a3c40;
+        padding: 6px 8px;
+        text-align: ${textAlign};
+        border: 1px solid #c0ccc8;
+        font-weight: 700;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+      .bill-table td {
+        padding: 5px 8px;
+        border: 1px solid #d0d8d5;
+        font-size: 11px;
+      }
+      .bill-table tbody tr:nth-child(even) td { background: #f7faf9; }
+      .bill-table tfoot td {
+        background: #e8eeec;
+        font-weight: 700;
+        border: 1px solid #c0ccc8;
+      }
+      .bill-table .num { text-align: ${textAlignOpp}; }
+      .total-highlight {
+        background: #1a3c40 !important;
+        color: white !important;
+        font-weight: 800 !important;
+        font-size: 12px !important;
+      }
+
+      .total-line {
+        text-align: ${textAlignOpp};
+        font-weight: 700;
+        font-size: 12px;
+        padding: 4px 8px;
+        margin-bottom: 4px;
+        background: #f0f4f2;
+        border: 1px solid #c0ccc8;
+        border-top: none;
+        color: #1a3c40;
+      }
+
+      .no-data { font-size: 11px; color: #888; margin-bottom: 8px; font-style: italic; }
+
+      .bottom-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .bottom-box {
+        border: 1px solid #c0ccc8;
+        padding: 10px 12px;
+      }
+      .box-title {
+        font-size: 12px;
+        font-weight: 800;
+        color: #1a3c40;
+        margin-bottom: 6px;
+        border-bottom: 1px solid #c0ccc8;
+        padding-bottom: 4px;
+      }
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        padding: 3px 0;
+        border-bottom: 1px dotted #e0e0e0;
+      }
+      .bold-row {
+        font-weight: 800;
+        font-size: 12px;
+        border-top: 2px solid #1a3c40;
+        border-bottom: none;
+        margin-top: 4px;
+        padding-top: 4px;
+      }
+      .highlight-row {
+        font-weight: 800;
+        font-size: 12px;
+        padding: 6px 8px;
+        margin-top: 6px;
+        border: none;
+      }
+      .highlight-row.refund {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #28a745;
+      }
+      .highlight-row.due {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #dc3545;
+      }
+
+      .date-line {
+        text-align: center;
+        margin-top: 16px;
+        padding: 6px;
+        border-top: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+        font-size: 11px;
+        color: #555;
+      }
+
+      .signature-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+        padding: 0 10px;
+      }
+      .sig-block { text-align: ${textAlign}; font-size: 11px; color: #555; }
+      .sig-line {
+        width: 180px;
+        border-bottom: 1px solid #333;
+        margin-bottom: 4px;
+      }
+      .sig-date { margin-top: 4px; font-size: 10px; }
+
       @media print { body { padding: 0; } }
-      @page { margin: 12mm; size: A4; }
+      @page { margin: 10mm; size: A4; }
     </style></head><body>${html}</body></html>`);
     win.document.close();
     win.focus();
