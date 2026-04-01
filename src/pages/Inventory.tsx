@@ -281,6 +281,7 @@ const Inventory = () => {
             </DialogContent>
           </Dialog>
           )}
+          </div>
         </div>
       </div>
 
