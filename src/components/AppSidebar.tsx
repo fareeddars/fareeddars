@@ -47,7 +47,7 @@ const AppSidebar = () => {
   ];
 
   return (
-    <Sidebar className="border-none">
+    <Sidebar className="border-none bg-[var(--gradient-sidebar)]">
       <SidebarHeader className="border-b border-sidebar-border/30 p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sidebar-primary/20 backdrop-blur-sm shadow-lg">
@@ -90,7 +90,7 @@ const AppSidebar = () => {
                   <SidebarMenuButton
                     isActive={location.pathname === item.path}
                     onClick={() => handleNav(item.path)}
-                    className="rounded-xl h-10 px-3 transition-all duration-200"
+                    className={`rounded-xl h-10 px-3 transition-all duration-200 ${location.pathname === item.path ? "!bg-sidebar-accent !text-sidebar-accent-foreground shadow-lg shadow-sidebar-accent/40 border-l-4 border-primary-foreground" : ""}`}
                     style={{ animationDelay: `${i * 50}ms` }}
                   >
                     <item.icon className="h-4 w-4" />
@@ -112,7 +112,7 @@ const AppSidebar = () => {
                     <SidebarMenuButton
                       isActive={location.pathname === item.path}
                       onClick={() => handleNav(item.path)}
-                      className="rounded-xl h-10 px-3 transition-all duration-200"
+                      className={`rounded-xl h-10 px-3 transition-all duration-200 ${location.pathname === item.path ? "!bg-sidebar-accent !text-sidebar-accent-foreground shadow-lg shadow-sidebar-accent/40 border-l-4 border-primary-foreground" : ""}`}
                     >
                       <item.icon className="h-4 w-4" />
                       <span className="font-medium">{item.title}</span>
