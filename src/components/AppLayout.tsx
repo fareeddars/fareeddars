@@ -15,7 +15,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="min-h-screen flex w-full">
           <AppSidebar />
           <SidebarInset className="flex-1 flex flex-col">
-            <header className="flex h-14 items-center justify-between gap-4 border-b border-border/50 bg-card/60 backdrop-blur-xl px-4 lg:px-6 sticky top-0 z-10">
+            <header className="flex h-14 items-center justify-between gap-4 border-b border-border/30 bg-gradient-to-r from-primary via-primary/90 to-accent/80 text-primary-foreground px-4 lg:px-6 sticky top-0 z-10 shadow-lg shadow-primary/15">
               <div className="flex items-center gap-3">
                 <SidebarTrigger className="h-9 w-9 rounded-xl hover:bg-primary/10 transition-colors" />
                 <div className="hidden sm:block">
