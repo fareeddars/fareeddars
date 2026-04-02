@@ -303,196 +303,220 @@ const Reports = () => {
 
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) return;
+    const rtlFont = "'Noto Naskh Arabic', 'Scheherazade New', 'Tahoma', Arial, sans-serif";
+    const finalFont = isRTL ? rtlFont : "'Inter', 'Segoe UI', Arial, sans-serif";
     win.document.write(`<!DOCTYPE html><html ${dirAttr}><head><title>${pt("print.title", L)}</title>
-    ${isRTL ? '<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">' : ''}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    ${isRTL ? '<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">' : ''}
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: ${fontFamily}; font-size: 11px; color: #1a1a1a; background: white; padding: 8mm; direction: ${isRTL ? 'rtl' : 'ltr'}; }
-      
+      body { font-family: ${finalFont}; font-size: 12px; color: #222; background: white; padding: 10mm; direction: ${isRTL ? 'rtl' : 'ltr'}; line-height: 1.6; }
+
       .header-block {
-        background: #1a3c40;
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5f8a 50%, #1a4a6e 100%);
         color: white;
         text-align: center;
-        padding: 14px 20px 10px;
-        margin-bottom: 0;
+        padding: 18px 24px 14px;
+        border-radius: 6px 6px 0 0;
       }
       .header-block h1 {
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 4px;
+        font-size: ${isRTL ? '26px' : '20px'};
+        font-weight: 700;
+        letter-spacing: ${isRTL ? '0' : '1.5px'};
+        text-transform: ${isRTL ? 'none' : 'uppercase'};
+        margin-bottom: 6px;
       }
       .header-sub {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 11px;
+        font-size: ${isRTL ? '14px' : '11px'};
         padding-top: 4px;
+        opacity: 0.9;
+        border-top: 1px solid rgba(255,255,255,0.2);
       }
-      .season-label { font-size: 13px; font-weight: 700; }
-      .stmt-no { font-size: 11px; opacity: 0.85; }
+      .season-label { font-size: ${isRTL ? '15px' : '13px'}; font-weight: 600; }
+      .stmt-no { font-size: ${isRTL ? '13px' : '11px'}; opacity: 0.85; }
 
       .info-row {
         display: flex;
         justify-content: space-between;
-        padding: 12px 16px;
-        border: 1px solid #ccc;
+        padding: 14px 20px;
+        border: 1px solid #d0d7de;
         border-top: none;
-        background: #fafafa;
+        background: #f8fafb;
       }
       .info-col { flex: 1; }
-      .info-label { font-size: 10px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-      .info-value { font-size: 14px; font-weight: 700; color: #1a3c40; margin: 2px 0; }
-      .info-detail { font-size: 11px; color: #555; }
+      .info-label { font-size: ${isRTL ? '13px' : '10px'}; color: #5a6872; font-weight: 600; text-transform: ${isRTL ? 'none' : 'uppercase'}; letter-spacing: 0.5px; }
+      .info-value { font-size: ${isRTL ? '18px' : '15px'}; font-weight: 700; color: #1e3a5f; margin: 3px 0; }
+      .info-detail { font-size: ${isRTL ? '14px' : '11px'}; color: #4a5568; }
 
       .info-bar {
-        background: #2d6a4f;
+        background: linear-gradient(90deg, #27855a 0%, #2d9d6a 100%);
         color: white;
         text-align: center;
-        padding: 6px 16px;
-        font-size: 11px;
+        padding: 8px 16px;
+        font-size: ${isRTL ? '14px' : '11px'};
         font-weight: 600;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
+        border-radius: 0 0 6px 6px;
         letter-spacing: 0.3px;
       }
 
       .section-title {
-        font-size: 13px;
-        font-weight: 800;
-        color: #1a3c40;
-        margin: 14px 0 5px;
-        padding-bottom: 2px;
+        font-size: ${isRTL ? '16px' : '13px'};
+        font-weight: 700;
+        color: #1e3a5f;
+        margin: 18px 0 6px;
+        padding: 6px 10px;
+        background: #edf2f7;
+        border-${isRTL ? 'right' : 'left'}: 4px solid #2c5f8a;
+        border-radius: 2px;
       }
 
       .bill-table {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 4px;
-        font-size: 11px;
+        font-size: ${isRTL ? '13px' : '11px'};
       }
       .bill-table th {
-        background: #e8eeec;
-        color: #1a3c40;
-        padding: 6px 8px;
+        background: #1e3a5f;
+        color: white;
+        padding: 8px 10px;
         text-align: ${textAlign};
-        border: 1px solid #c0ccc8;
-        font-weight: 700;
-        font-size: 10px;
-        text-transform: uppercase;
+        font-weight: 600;
+        font-size: ${isRTL ? '13px' : '10px'};
+        text-transform: ${isRTL ? 'none' : 'uppercase'};
         letter-spacing: 0.3px;
+        border: 1px solid #1a3355;
       }
       .bill-table td {
-        padding: 5px 8px;
-        border: 1px solid #d0d8d5;
-        font-size: 11px;
+        padding: 6px 10px;
+        border: 1px solid #dce3ea;
+        font-size: ${isRTL ? '13px' : '11px'};
       }
-      .bill-table tbody tr:nth-child(even) td { background: #f7faf9; }
+      .bill-table tbody tr:nth-child(even) td { background: #f5f8fb; }
+      .bill-table tbody tr:hover td { background: #edf2f7; }
       .bill-table tfoot td {
-        background: #e8eeec;
+        background: #edf2f7;
         font-weight: 700;
-        border: 1px solid #c0ccc8;
+        border: 1px solid #c5cdd6;
       }
-      .bill-table .num { text-align: ${textAlignOpp}; }
+      .bill-table .num { text-align: ${textAlignOpp}; font-family: 'Inter', 'Tahoma', monospace; }
       .total-highlight {
-        background: #1a3c40 !important;
+        background: #1e3a5f !important;
         color: white !important;
-        font-weight: 800 !important;
+        font-weight: 700 !important;
         font-size: 12px !important;
       }
 
       .total-line {
         text-align: ${textAlignOpp};
         font-weight: 700;
-        font-size: 12px;
-        padding: 4px 8px;
+        font-size: ${isRTL ? '14px' : '12px'};
+        padding: 6px 10px;
         margin-bottom: 4px;
-        background: #f0f4f2;
-        border: 1px solid #c0ccc8;
+        background: #edf2f7;
+        border: 1px solid #c5cdd6;
         border-top: none;
-        color: #1a3c40;
+        color: #1e3a5f;
       }
 
-      .no-data { font-size: 11px; color: #888; margin-bottom: 8px; font-style: italic; }
+      .no-data { font-size: ${isRTL ? '14px' : '11px'}; color: #888; margin-bottom: 10px; font-style: italic; padding: 8px; }
 
       .bottom-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-top: 14px;
+        gap: 14px;
+        margin-top: 18px;
       }
       .bottom-box {
-        border: 1px solid #c0ccc8;
-        padding: 10px 12px;
+        border: 1px solid #c5cdd6;
+        padding: 12px 14px;
+        border-radius: 6px;
+        background: #fafcfd;
       }
       .box-title {
-        font-size: 12px;
-        font-weight: 800;
-        color: #1a3c40;
-        margin-bottom: 6px;
-        border-bottom: 1px solid #c0ccc8;
-        padding-bottom: 4px;
+        font-size: ${isRTL ? '15px' : '12px'};
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-bottom: 8px;
+        border-bottom: 2px solid #2c5f8a;
+        padding-bottom: 6px;
       }
       .summary-row {
         display: flex;
         justify-content: space-between;
-        font-size: 11px;
-        padding: 3px 0;
-        border-bottom: 1px dotted #e0e0e0;
+        font-size: ${isRTL ? '13px' : '11px'};
+        padding: 4px 0;
+        border-bottom: 1px dotted #dce3ea;
       }
+      .summary-row span:last-child { font-family: 'Inter', 'Tahoma', monospace; }
       .bold-row {
-        font-weight: 800;
-        font-size: 12px;
-        border-top: 2px solid #1a3c40;
+        font-weight: 700;
+        font-size: ${isRTL ? '15px' : '13px'};
+        border-top: 2px solid #1e3a5f;
         border-bottom: none;
-        margin-top: 4px;
-        padding-top: 4px;
+        margin-top: 6px;
+        padding-top: 6px;
+        color: #1e3a5f;
       }
       .highlight-row {
-        font-weight: 800;
-        font-size: 12px;
-        padding: 6px 8px;
-        margin-top: 6px;
+        font-weight: 700;
+        font-size: ${isRTL ? '15px' : '13px'};
+        padding: 8px 10px;
+        margin-top: 8px;
         border: none;
+        border-radius: 4px;
       }
       .highlight-row.refund {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #28a745;
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #34d399;
       }
       .highlight-row.due {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #dc3545;
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #f87171;
       }
 
       .date-line {
         text-align: center;
-        margin-top: 16px;
-        padding: 6px;
-        border-top: 1px solid #ccc;
-        border-bottom: 1px solid #ccc;
-        font-size: 11px;
-        color: #555;
+        margin-top: 20px;
+        padding: 8px;
+        border-top: 2px solid #dce3ea;
+        font-size: ${isRTL ? '13px' : '11px'};
+        color: #4a5568;
       }
 
       .signature-row {
         display: flex;
         justify-content: space-between;
-        margin-top: 30px;
-        padding: 0 10px;
+        margin-top: 36px;
+        padding: 0 16px;
       }
-      .sig-block { text-align: ${textAlign}; font-size: 11px; color: #555; }
+      .sig-block { text-align: ${textAlign}; font-size: ${isRTL ? '14px' : '11px'}; color: #4a5568; }
       .sig-line {
-        width: 180px;
-        border-bottom: 1px solid #333;
-        margin-bottom: 4px;
+        width: 200px;
+        border-bottom: 2px solid #1e3a5f;
+        margin-bottom: 6px;
       }
-      .sig-date { margin-top: 4px; font-size: 10px; }
+      .sig-date { margin-top: 4px; font-size: ${isRTL ? '12px' : '10px'}; color: #718096; }
+
+      .footer-note {
+        text-align: center;
+        margin-top: 24px;
+        padding-top: 10px;
+        border-top: 1px solid #e2e8f0;
+        font-size: ${isRTL ? '12px' : '9px'};
+        color: #a0aec0;
+        letter-spacing: 0.5px;
+      }
 
       @media print { body { padding: 0; } }
       @page { margin: 10mm; size: A4; }
-    </style></head><body>${html}</body></html>`);
+    </style></head><body>${html}<div class="footer-note">— ${pt("print.title", L)} —</div></body></html>`);
     win.document.close();
     win.focus();
     setTimeout(() => { win.print(); }, 600);
