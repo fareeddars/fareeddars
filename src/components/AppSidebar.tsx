@@ -112,7 +112,7 @@ const AppSidebar = () => {
                     <SidebarMenuButton
                       isActive={location.pathname === item.path}
                       onClick={() => handleNav(item.path)}
-                      className="rounded-xl h-10 px-3 transition-all duration-200"
+                      className={`rounded-xl h-10 px-3 transition-all duration-200 ${location.pathname === item.path ? "!bg-sidebar-accent !text-sidebar-accent-foreground shadow-lg shadow-sidebar-accent/40 border-l-4 border-primary-foreground" : ""}`}
                     >
                       <item.icon className="h-4 w-4" />
                       <span className="font-medium">{item.title}</span>

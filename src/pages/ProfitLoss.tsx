@@ -54,23 +54,25 @@ const ProfitLoss = () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5">
+        {/* Income Card - Soft Green */}
+        <Card className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-chart-5/30 bg-gradient-to-br from-chart-5/15 via-chart-5/10 to-chart-5/5 shadow-md">
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg group-hover:scale-110 transition-transform duration-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-chart-5 to-chart-5/70 shadow-lg shadow-chart-5/30 group-hover:scale-110 transition-transform duration-500">
                 <TrendingUp className="h-5 w-5 text-primary-foreground" />
               </div>
-              <ArrowUpRight className="h-4 w-4 text-primary/60" />
+              <ArrowUpRight className="h-4 w-4 text-chart-5/60" />
             </div>
-            <div className="text-2xl sm:text-3xl font-bold text-primary font-mono">₨ {data.income.toLocaleString()}</div>
+            <div className="text-2xl sm:text-3xl font-bold text-chart-5 font-mono">₨ {data.income.toLocaleString()}</div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.totalIncome")}</p>
           </CardContent>
         </Card>
 
-        <Card className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-destructive/20 bg-gradient-to-br from-destructive/10 to-destructive/5">
+        {/* Expenses Card - Soft Red */}
+        <Card className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-destructive/30 bg-gradient-to-br from-destructive/15 via-destructive/10 to-destructive/5 shadow-md">
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-destructive to-destructive/70 shadow-lg group-hover:scale-110 transition-transform duration-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-destructive to-destructive/70 shadow-lg shadow-destructive/30 group-hover:scale-110 transition-transform duration-500">
                 <TrendingDown className="h-5 w-5 text-destructive-foreground" />
               </div>
               <ArrowDownRight className="h-4 w-4 text-destructive/60" />
@@ -80,15 +82,16 @@ const ProfitLoss = () => {
           </CardContent>
         </Card>
 
-        <Card className={`group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-2 ${profit >= 0 ? "border-chart-5/30 bg-gradient-to-br from-chart-5/10 to-chart-5/5" : "border-destructive/30 bg-gradient-to-br from-destructive/10 to-destructive/5"}`}>
+        {/* Net Profit Card - Strong Blue */}
+        <Card className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/15 via-primary/10 to-primary/5 shadow-md shadow-primary/10">
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-4">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-500 ${profit >= 0 ? "bg-gradient-to-br from-chart-5 to-chart-5/70" : "bg-gradient-to-br from-destructive to-destructive/70"}`}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/30 group-hover:scale-110 transition-transform duration-500">
                 <DollarSign className="h-5 w-5 text-primary-foreground" />
               </div>
             </div>
-            <div className={`text-2xl sm:text-3xl font-bold font-mono ${profit >= 0 ? "text-chart-5" : "text-destructive"}`}>
-              ₨ {Math.abs(profit).toLocaleString()}
+            <div className={`text-2xl sm:text-3xl font-bold font-mono ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
+              {profit >= 0 ? "+" : "-"} ₨ {Math.abs(profit).toLocaleString()}
             </div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.netProfit")}</p>
           </CardContent>
