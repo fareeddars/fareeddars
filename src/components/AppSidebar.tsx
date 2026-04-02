@@ -47,7 +47,7 @@ const AppSidebar = () => {
   ];
 
   return (
-    <Sidebar className="border-none">
+    <Sidebar className="border-none bg-[var(--gradient-sidebar)]">
       <SidebarHeader className="border-b border-sidebar-border/30 p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sidebar-primary/20 backdrop-blur-sm shadow-lg">
