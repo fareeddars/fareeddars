@@ -33,20 +33,20 @@
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 250 84% 54%;
+    --ring: 230 80% 56%;
 
     --radius: 0.875rem;
 
-    --sidebar-background: 250 84% 54%;
-    --sidebar-foreground: 250 100% 97%;
+    --sidebar-background: 230 65% 18%;
+    --sidebar-foreground: 220 100% 97%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 250 84% 54%;
-    --sidebar-accent: 250 70% 62%;
+    --sidebar-primary-foreground: 230 80% 56%;
+    --sidebar-accent: 220 90% 56%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 250 70% 62%;
-    --sidebar-ring: 0 0% 100%;
+    --sidebar-border: 230 50% 28%;
+    --sidebar-ring: 220 90% 60%;
 
-    --chart-1: 250 84% 54%;
+    --chart-1: 230 80% 56%;
     --chart-2: 172 66% 50%;
     --chart-3: 340 82% 52%;
     --chart-4: 38 92% 50%;
