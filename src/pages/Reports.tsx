@@ -525,7 +525,7 @@ const Reports = () => {
   return (
     <div className="space-y-6">
       {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chart-1 via-chart-1/90 to-chart-3/80 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-chart-1/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
         <div className="relative z-10 flex items-center gap-4">
@@ -540,7 +540,7 @@ const Reports = () => {
       </div>
 
       <Card className="overflow-hidden shadow-lg border-border/50">
-        <div className="h-1 bg-gradient-to-r from-chart-1 to-chart-3" />
+        <div className="h-1 bg-gradient-to-r from-primary to-primary/70" />
         <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />{t("reports.generateReport")}</CardTitle></CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -571,11 +571,11 @@ const Reports = () => {
               </Select>
             </div>
             <div className="space-y-2 flex items-end gap-2">
-              <Button onClick={generateReport} disabled={loading} className="flex-1">
+              <Button onClick={generateReport} disabled={loading} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
                 {loading ? t("common.loading") : t("reports.generateReport")}
               </Button>
               {reportReady && (
-                <Button variant="outline" onClick={handlePrint}>
+                <Button onClick={handlePrint} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
                   <Printer className="h-4 w-4 mr-2" />{t("reports.printPdf")}
                 </Button>
               )}

@@ -32,7 +32,7 @@ const ProfitLoss = () => {
   return (
     <div className="space-y-6">
       {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chart-5 via-chart-5/90 to-accent/80 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-chart-5/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
         <div className="relative z-10 flex items-center gap-4">
@@ -63,7 +63,7 @@ const ProfitLoss = () => {
               </div>
               <ArrowUpRight className="h-4 w-4 text-chart-5/60" />
             </div>
-            <div className="text-2xl sm:text-3xl font-bold text-chart-5 font-mono">₨ {data.income.toLocaleString()}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-chart-5 font-mono">₨ {data.income.toLocaleString()}</div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.totalIncome")}</p>
           </CardContent>
         </Card>
@@ -77,7 +77,7 @@ const ProfitLoss = () => {
               </div>
               <ArrowDownRight className="h-4 w-4 text-destructive/60" />
             </div>
-            <div className="text-2xl sm:text-3xl font-bold text-destructive font-mono">₨ {data.expenses.toLocaleString()}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-destructive font-mono">₨ {data.expenses.toLocaleString()}</div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.totalExpenses")}</p>
           </CardContent>
         </Card>
@@ -90,7 +90,7 @@ const ProfitLoss = () => {
                 <DollarSign className="h-5 w-5 text-primary-foreground" />
               </div>
             </div>
-            <div className={`text-2xl sm:text-3xl font-bold font-mono ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
+            <div className={`text-2xl sm:text-3xl font-extrabold font-mono ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
               {profit >= 0 ? "+" : "-"} ₨ {Math.abs(profit).toLocaleString()}
             </div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.netProfit")}</p>

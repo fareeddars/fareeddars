@@ -112,7 +112,7 @@ const Seasons = () => {
   return (
     <div className="space-y-6">
       {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chart-4 via-chart-4/90 to-chart-3/80 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-chart-4/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -128,7 +128,7 @@ const Seasons = () => {
           {isAdmin && (
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary-foreground text-chart-4 hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+                <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl rounded-xl">
                   <Plus className="mr-2 h-4 w-4" />{t("seasons.createSeason")}
                 </Button>
               </DialogTrigger>
@@ -153,7 +153,7 @@ const Seasons = () => {
                   )}
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleCreateSeason} disabled={!form.name || !form.start_date} className="w-full h-11 bg-gradient-to-r from-chart-4 to-chart-3">
+                  <Button onClick={handleCreateSeason} disabled={!form.name || !form.start_date} className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
                     {t("seasons.createSeason")}
                   </Button>
                 </DialogFooter>
@@ -177,11 +177,11 @@ const Seasons = () => {
               style={{ animationDelay: `${i * 80}ms` }}
               onClick={() => setSelectedSeasonId(season.id)}
             >
-              <div className={`h-1.5 ${isActive ? "bg-gradient-to-r from-chart-4 to-chart-3" : "bg-muted"}`} />
+              <div className={`h-1.5 ${isActive ? "bg-gradient-to-r from-primary to-primary/70" : "bg-muted"}`} />
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl shadow-md ${isActive ? "bg-gradient-to-br from-chart-4 to-chart-3 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl shadow-md ${isActive ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                       <Leaf className="h-5 w-5" />
                     </div>
                     <div>
@@ -196,7 +196,7 @@ const Seasons = () => {
                 {isSelected && isActive && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
                     {isManagerOrAdmin && (
-                      <Button size="sm" variant="outline" className="flex-1 text-xs hover:bg-primary/10 hover:text-primary hover:border-primary/30" onClick={(e) => { e.stopPropagation(); openAssignDialog(); }}>
+                      <Button size="sm" className="flex-1 text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md rounded-xl" onClick={(e) => { e.stopPropagation(); openAssignDialog(); }}>
                         <Users className="h-3 w-3 mr-1" />{t("seasons.addFarmers")}
                       </Button>
                     )}
@@ -252,7 +252,7 @@ const Seasons = () => {
       {/* Selected Season's Farmers */}
       {selectedSeason && (
         <Card className="shadow-xl border-border/50 overflow-hidden">
-          <div className="h-1.5 bg-gradient-to-r from-primary to-accent" />
+          <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-serif flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />

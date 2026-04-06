@@ -70,23 +70,23 @@ const Farmers = () => {
   return (
     <div className="space-y-6">
       {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent via-accent/90 to-chart-5/80 p-6 sm:p-8 text-accent-foreground shadow-xl shadow-accent/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-accent-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
         <div className="absolute bottom-0 left-1/2 w-32 h-32 rounded-full bg-accent-foreground/10 translate-y-1/2 blur-xl" />
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-foreground/15 backdrop-blur-md border border-accent-foreground/10">
+            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
               <Users className="h-7 w-7" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("farmers.title")}</h1>
-              <p className="text-accent-foreground/70 text-sm mt-0.5">{t("farmers.subtitle")}</p>
+              <p className="text-primary-foreground/70 text-sm mt-0.5">{t("farmers.subtitle")}</p>
             </div>
           </div>
           {isManagerOrAdmin && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary-foreground text-accent hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+                <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl rounded-xl">
                   <Plus className="mr-2 h-4 w-4" />{t("farmers.addFarmer")}
                 </Button>
               </DialogTrigger>
@@ -101,7 +101,7 @@ const Farmers = () => {
                 </div>
                 <DialogFooter>
                   <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                    <DialogTrigger asChild><Button disabled={!form.name} className="bg-gradient-to-r from-primary to-accent">{t("farmers.saveFarmer")}</Button></DialogTrigger>
+                    <DialogTrigger asChild><Button disabled={!form.name} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">{t("farmers.saveFarmer")}</Button></DialogTrigger>
                     <DialogContent>
                       <DialogHeader><DialogTitle>{t("common.confirm")}</DialogTitle><DialogDescription>{t("farmers.deleteConfirm")} {form.name}?</DialogDescription></DialogHeader>
                       <DialogFooter><Button variant="outline" onClick={() => setConfirmOpen(false)}>{t("common.cancel")}</Button><Button onClick={handleSave}>{t("common.confirm")}</Button></DialogFooter>
@@ -124,10 +124,10 @@ const Farmers = () => {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((farmer, i) => (
           <Card key={farmer.id} className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-border/50 animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
-            <div className="h-1.5 bg-gradient-to-r from-accent to-chart-5" />
+            <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
             <CardHeader className="pb-2 flex flex-row items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/70 text-accent-foreground text-sm font-bold shadow-md">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm font-bold shadow-md">
                   {farmer.name.charAt(0).toUpperCase()}
                 </div>
                 <CardTitle className="text-lg">{farmer.name}</CardTitle>

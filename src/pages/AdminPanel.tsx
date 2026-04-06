@@ -112,7 +112,7 @@ const AdminPanel = () => {
   return (
     <div className="space-y-6">
       {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chart-3 via-chart-3/90 to-primary/80 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-chart-3/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -127,7 +127,7 @@ const AdminPanel = () => {
           </div>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-primary-foreground/15 hover:bg-primary-foreground/25 backdrop-blur-sm border border-primary-foreground/10 text-primary-foreground shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+              <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl rounded-xl">
                 <UserPlus className="mr-2 h-4 w-4" /> {t("admin.createUser")}
               </Button>
             </DialogTrigger>
@@ -162,7 +162,7 @@ const AdminPanel = () => {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("common.cancel")}</Button>
-                <Button onClick={handleCreateUser} disabled={creating || !form.email || !form.password} className="bg-gradient-to-r from-chart-3 to-primary">
+                <Button onClick={handleCreateUser} disabled={creating || !form.email || !form.password} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
                   {creating ? t("admin.creating") : t("admin.createUser")}
                 </Button>
               </DialogFooter>
@@ -210,7 +210,7 @@ const AdminPanel = () => {
 
       {/* User Table */}
       <Card className="overflow-hidden shadow-xl border-border/50">
-        <div className="h-1.5 bg-gradient-to-r from-chart-3 to-primary" />
+        <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> {t("admin.userManagement")}</CardTitle>
           <CardDescription>{t("admin.subtitle")}</CardDescription>
