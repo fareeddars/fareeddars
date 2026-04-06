@@ -127,7 +127,7 @@ const AdminPanel = () => {
           </div>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-primary-foreground/15 hover:bg-primary-foreground/25 backdrop-blur-sm border border-primary-foreground/10 text-primary-foreground shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+              <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl rounded-xl">
                 <UserPlus className="mr-2 h-4 w-4" /> {t("admin.createUser")}
               </Button>
             </DialogTrigger>
