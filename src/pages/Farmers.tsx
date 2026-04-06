@@ -86,7 +86,7 @@ const Farmers = () => {
           {isManagerOrAdmin && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary-foreground text-accent hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+                <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl rounded-xl">
                   <Plus className="mr-2 h-4 w-4" />{t("farmers.addFarmer")}
                 </Button>
               </DialogTrigger>
