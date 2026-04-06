@@ -210,7 +210,7 @@ const AdminPanel = () => {
 
       {/* User Table */}
       <Card className="overflow-hidden shadow-xl border-border/50">
-        <div className="h-1.5 bg-gradient-to-r from-chart-3 to-primary" />
+        <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> {t("admin.userManagement")}</CardTitle>
           <CardDescription>{t("admin.subtitle")}</CardDescription>

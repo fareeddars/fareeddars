@@ -128,7 +128,7 @@ const Seasons = () => {
           {isAdmin && (
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary-foreground text-chart-4 hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+                <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl rounded-xl">
                   <Plus className="mr-2 h-4 w-4" />{t("seasons.createSeason")}
                 </Button>
               </DialogTrigger>

@@ -571,11 +571,11 @@ const Reports = () => {
               </Select>
             </div>
             <div className="space-y-2 flex items-end gap-2">
-              <Button onClick={generateReport} disabled={loading} className="flex-1">
+              <Button onClick={generateReport} disabled={loading} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
                 {loading ? t("common.loading") : t("reports.generateReport")}
               </Button>
               {reportReady && (
-                <Button variant="outline" onClick={handlePrint}>
+                <Button onClick={handlePrint} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
                   <Printer className="h-4 w-4 mr-2" />{t("reports.printPdf")}
                 </Button>
               )}

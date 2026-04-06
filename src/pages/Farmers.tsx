@@ -124,7 +124,7 @@ const Farmers = () => {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((farmer, i) => (
           <Card key={farmer.id} className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-border/50 animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
-            <div className="h-1.5 bg-gradient-to-r from-accent to-chart-5" />
+            <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
             <CardHeader className="pb-2 flex flex-row items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/70 text-accent-foreground text-sm font-bold shadow-md">
