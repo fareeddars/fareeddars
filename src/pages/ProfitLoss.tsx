@@ -77,7 +77,7 @@ const ProfitLoss = () => {
               </div>
               <ArrowDownRight className="h-4 w-4 text-destructive/60" />
             </div>
-            <div className="text-2xl sm:text-3xl font-bold text-destructive font-mono">₨ {data.expenses.toLocaleString()}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-destructive font-mono">₨ {data.expenses.toLocaleString()}</div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.totalExpenses")}</p>
           </CardContent>
         </Card>
