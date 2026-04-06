@@ -112,7 +112,7 @@ const Seasons = () => {
   return (
     <div className="space-y-6">
       {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chart-4 via-chart-4/90 to-chart-3/80 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-chart-4/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
