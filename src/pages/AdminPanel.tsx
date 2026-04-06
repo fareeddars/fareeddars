@@ -162,7 +162,7 @@ const AdminPanel = () => {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("common.cancel")}</Button>
-                <Button onClick={handleCreateUser} disabled={creating || !form.email || !form.password} className="bg-gradient-to-r from-chart-3 to-primary">
+                <Button onClick={handleCreateUser} disabled={creating || !form.email || !form.password} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
                   {creating ? t("admin.creating") : t("admin.createUser")}
                 </Button>
               </DialogFooter>
