@@ -196,7 +196,7 @@ const Seasons = () => {
                 {isSelected && isActive && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
                     {isManagerOrAdmin && (
-                      <Button size="sm" variant="outline" className="flex-1 text-xs hover:bg-primary/10 hover:text-primary hover:border-primary/30" onClick={(e) => { e.stopPropagation(); openAssignDialog(); }}>
+                      <Button size="sm" className="flex-1 text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md rounded-xl" onClick={(e) => { e.stopPropagation(); openAssignDialog(); }}>
                         <Users className="h-3 w-3 mr-1" />{t("seasons.addFarmers")}
                       </Button>
                     )}
