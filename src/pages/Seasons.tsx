@@ -153,7 +153,7 @@ const Seasons = () => {
                   )}
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleCreateSeason} disabled={!form.name || !form.start_date} className="w-full h-11 bg-gradient-to-r from-chart-4 to-chart-3">
+                  <Button onClick={handleCreateSeason} disabled={!form.name || !form.start_date} className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
                     {t("seasons.createSeason")}
                   </Button>
                 </DialogFooter>
