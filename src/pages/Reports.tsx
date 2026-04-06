@@ -540,7 +540,7 @@ const Reports = () => {
       </div>
 
       <Card className="overflow-hidden shadow-lg border-border/50">
-        <div className="h-1 bg-gradient-to-r from-chart-1 to-chart-3" />
+        <div className="h-1 bg-gradient-to-r from-primary to-primary/70" />
         <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />{t("reports.generateReport")}</CardTitle></CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
