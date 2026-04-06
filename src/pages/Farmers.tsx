@@ -127,7 +127,7 @@ const Farmers = () => {
             <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
             <CardHeader className="pb-2 flex flex-row items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/70 text-accent-foreground text-sm font-bold shadow-md">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm font-bold shadow-md">
                   {farmer.name.charAt(0).toUpperCase()}
                 </div>
                 <CardTitle className="text-lg">{farmer.name}</CardTitle>

@@ -177,7 +177,7 @@ const Seasons = () => {
               style={{ animationDelay: `${i * 80}ms` }}
               onClick={() => setSelectedSeasonId(season.id)}
             >
-              <div className={`h-1.5 ${isActive ? "bg-gradient-to-r from-chart-4 to-chart-3" : "bg-muted"}`} />
+              <div className={`h-1.5 ${isActive ? "bg-gradient-to-r from-primary to-primary/70" : "bg-muted"}`} />
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
