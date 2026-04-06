@@ -228,8 +228,40 @@ const Seasons = () => {
                     )}
                   </div>
                 )}
-                {isSelected && isAdmin && (
-                  <div className={`flex gap-2 ${isActive ? "mt-2" : "mt-3 pt-3 border-t border-border/50"}`}>
+                {isSelected && !isActive && isAdmin && (
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" className="text-xs bg-chart-5/15 text-chart-5 hover:bg-chart-5/20 border border-chart-5/30 font-semibold rounded-xl" onClick={(e) => e.stopPropagation()}>
+                          <RotateCcw className="h-3 w-3 mr-1" />{t("seasons.reopenSeason")}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>{t("seasons.reopenConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.reopenConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleReopenSeason(season.id)} className="bg-primary text-primary-foreground">{t("seasons.reopenSeason")}</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10" onClick={(e) => e.stopPropagation()}>
+                          <Trash2 className="h-3 w-3 mr-1" />{t("seasons.deleteSeason")}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>{t("seasons.deleteConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.deleteConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteSeason(season.id)} className="bg-destructive text-destructive-foreground">{t("seasons.deleteSeason")}</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
+                {isSelected && isAdmin && isActive && (
+                  <div className="flex gap-2 mt-2">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button size="sm" variant="outline" className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10" onClick={(e) => e.stopPropagation()}>
