@@ -75,12 +75,12 @@ const Farmers = () => {
         <div className="absolute bottom-0 left-1/2 w-32 h-32 rounded-full bg-accent-foreground/10 translate-y-1/2 blur-xl" />
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-foreground/15 backdrop-blur-md border border-accent-foreground/10">
+            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
               <Users className="h-7 w-7" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("farmers.title")}</h1>
-              <p className="text-accent-foreground/70 text-sm mt-0.5">{t("farmers.subtitle")}</p>
+              <p className="text-primary-foreground/70 text-sm mt-0.5">{t("farmers.subtitle")}</p>
             </div>
           </div>
           {isManagerOrAdmin && (
