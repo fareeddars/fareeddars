@@ -181,7 +181,7 @@ const Seasons = () => {
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl shadow-md ${isActive ? "bg-gradient-to-br from-chart-4 to-chart-3 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl shadow-md ${isActive ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                       <Leaf className="h-5 w-5" />
                     </div>
                     <div>
