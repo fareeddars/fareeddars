@@ -90,7 +90,7 @@ const ProfitLoss = () => {
                 <DollarSign className="h-5 w-5 text-primary-foreground" />
               </div>
             </div>
-            <div className={`text-2xl sm:text-3xl font-bold font-mono ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
+            <div className={`text-2xl sm:text-3xl font-extrabold font-mono ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
               {profit >= 0 ? "+" : "-"} ₨ {Math.abs(profit).toLocaleString()}
             </div>
             <p className="text-sm text-muted-foreground mt-1">{t("profitLoss.netProfit")}</p>

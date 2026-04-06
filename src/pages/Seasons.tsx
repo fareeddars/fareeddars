@@ -252,7 +252,7 @@ const Seasons = () => {
       {/* Selected Season's Farmers */}
       {selectedSeason && (
         <Card className="shadow-xl border-border/50 overflow-hidden">
-          <div className="h-1.5 bg-gradient-to-r from-primary to-accent" />
+          <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-serif flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
