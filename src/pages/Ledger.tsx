@@ -260,7 +260,7 @@ const Ledger = () => {
                     <Label className="font-medium">{t("ledger.category")}</Label>
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger className="h-11"><SelectValue placeholder={t("ledger.selectCategory")} /></SelectTrigger>
-                      <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c} value={c.toLowerCase()}>{c}</SelectItem>)}</SelectContent>
+                      <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.key} value={c.key.toLowerCase()}>{t(c.label)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2"><Label className="font-medium">{t("common.description")}</Label><Input className="h-11" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
