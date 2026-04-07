@@ -114,6 +114,17 @@ export const translations: TranslationDict = {
   "farmers.personalInfo": { en: "Personal Information", ur: "ذاتی معلومات", sd: "ذاتي معلومات" },
   "farmers.financialInfo": { en: "Financial Details", ur: "مالی تفصیلات", sd: "مالي تفصيلات" },
 
+  // Expense Categories
+  "expense.seed": { en: "Seed (Beaj)", ur: "بیج", sd: "ٻج" },
+  "expense.fertilizer": { en: "Fertilizer", ur: "کھاد", sd: "کاد" },
+  "expense.pesticide": { en: "Pesticides", ur: "کیڑے مار دوا", sd: "ڪيڙن جي دوا" },
+  "expense.diesel": { en: "Diesel / Fuel", ur: "ڈیزل / ایندھن", sd: "ڊيزل / ايندهن" },
+  "expense.irrigation": { en: "Water / Irrigation", ur: "پانی / آبپاشی", sd: "پاڻي / آبپاشي" },
+  "expense.labor": { en: "Labor Cost", ur: "مزدوری", sd: "مزدوري" },
+  "expense.tractor": { en: "Tractor", ur: "ٹریکٹر", sd: "ٽريڪٽر" },
+  "expense.cash": { en: "Cash", ur: "نقد", sd: "نقد" },
+  "expense.other": { en: "Other", ur: "دیگر", sd: "ٻيو" },
+
   // Ledger
   "ledger.title": { en: "Ledger", ur: "حساب کتاب", sd: "حساب ڪتاب" },
   "ledger.subtitle": { en: "Track expenses, sales, and payments", ur: "خرچے، فروخت اور ادائیگی کا حساب رکھیں", sd: "خرچا، وڪري ۽ ادائگي جو حساب رکيو" },

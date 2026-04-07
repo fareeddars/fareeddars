@@ -22,7 +22,15 @@ import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
 const EXPENSE_CATEGORIES = [
-  "Seed", "Fertilizer", "Pesticide", "Labour", "Tractor", "Irrigation", "Cash", "Others",
+  { key: "Seed", label: "expense.seed" },
+  { key: "Fertilizer", label: "expense.fertilizer" },
+  { key: "Pesticide", label: "expense.pesticide" },
+  { key: "Diesel", label: "expense.diesel" },
+  { key: "Irrigation", label: "expense.irrigation" },
+  { key: "Labour", label: "expense.labor" },
+  { key: "Tractor", label: "expense.tractor" },
+  { key: "Cash", label: "expense.cash" },
+  { key: "Others", label: "expense.other" },
 ];
 
 type CostAllocation = "farmer" | "shared" | "landlord";
@@ -252,7 +260,7 @@ const Ledger = () => {
                     <Label className="font-medium">{t("ledger.category")}</Label>
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger className="h-11"><SelectValue placeholder={t("ledger.selectCategory")} /></SelectTrigger>
-                      <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c} value={c.toLowerCase()}>{c}</SelectItem>)}</SelectContent>
+                      <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.key} value={c.key.toLowerCase()}>{t(c.label)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2"><Label className="font-medium">{t("common.description")}</Label><Input className="h-11" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
@@ -436,7 +444,7 @@ const Ledger = () => {
                   <TableCell className="text-xs sm:text-sm py-3">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-xs sm:text-sm font-medium">{e.farmers?.name ?? "—"}</TableCell>
                   <TableCell>{typeBadge(e.entry_type)}</TableCell>
-                  <TableCell className="capitalize text-xs hidden sm:table-cell">{(e as any).category || "—"}</TableCell>
+                  <TableCell className="capitalize text-xs hidden sm:table-cell">{(() => { const cat = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase()); return cat ? t(cat.label) : ((e as any).category || "—"); })()}</TableCell>
                   <TableCell className="text-xs hidden md:table-cell max-w-[150px] truncate">{e.description || "—"}</TableCell>
                   <TableCell className="hidden sm:table-cell">{getAllocationLabel(e)}</TableCell>
                   <TableCell className="text-right font-mono font-semibold text-sm">₨ {Number(e.amount).toLocaleString()}</TableCell>
