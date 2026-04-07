@@ -103,34 +103,43 @@ export type Database = {
       farmers: {
         Row: {
           address: string | null
+          cnic: string | null
           created_at: string
           created_by: string
           farm_details: string | null
           id: string
           initial_balance: number
+          landlord: string | null
           name: string
+          notes: string | null
           phone: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          cnic?: string | null
           created_at?: string
           created_by: string
           farm_details?: string | null
           id?: string
           initial_balance?: number
+          landlord?: string | null
           name: string
+          notes?: string | null
           phone?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          cnic?: string | null
           created_at?: string
           created_by?: string
           farm_details?: string | null
           id?: string
           initial_balance?: number
+          landlord?: string | null
           name?: string
+          notes?: string | null
           phone?: string | null
           updated_at?: string
         }
