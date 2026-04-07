@@ -444,7 +444,7 @@ const Ledger = () => {
                   <TableCell className="text-xs sm:text-sm py-3">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-xs sm:text-sm font-medium">{e.farmers?.name ?? "—"}</TableCell>
                   <TableCell>{typeBadge(e.entry_type)}</TableCell>
-                  <TableCell className="capitalize text-xs hidden sm:table-cell">{(e as any).category || "—"}</TableCell>
+                  <TableCell className="capitalize text-xs hidden sm:table-cell">{(() => { const cat = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase()); return cat ? t(cat.label) : ((e as any).category || "—"); })()}</TableCell>
                   <TableCell className="text-xs hidden md:table-cell max-w-[150px] truncate">{e.description || "—"}</TableCell>
                   <TableCell className="hidden sm:table-cell">{getAllocationLabel(e)}</TableCell>
                   <TableCell className="text-right font-mono font-semibold text-sm">₨ {Number(e.amount).toLocaleString()}</TableCell>
