@@ -22,7 +22,15 @@ import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
 const EXPENSE_CATEGORIES = [
-  "Seed", "Fertilizer", "Pesticide", "Labour", "Tractor", "Irrigation", "Cash", "Others",
+  { key: "Seed", label: "expense.seed" },
+  { key: "Fertilizer", label: "expense.fertilizer" },
+  { key: "Pesticide", label: "expense.pesticide" },
+  { key: "Diesel", label: "expense.diesel" },
+  { key: "Irrigation", label: "expense.irrigation" },
+  { key: "Labour", label: "expense.labor" },
+  { key: "Tractor", label: "expense.tractor" },
+  { key: "Cash", label: "expense.cash" },
+  { key: "Others", label: "expense.other" },
 ];
 
 type CostAllocation = "farmer" | "shared" | "landlord";
