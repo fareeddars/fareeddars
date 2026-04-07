@@ -106,6 +106,13 @@ export const translations: TranslationDict = {
   "farmers.updateDetails": { en: "Update farmer details", ur: "کسان کی تفصیل بدلیں", sd: "هاري جي تفصيل بدليو" },
   "farmers.noFarmers": { en: "No farmers found.", ur: "کوئی کسان نہیں ملا۔", sd: "ڪو هاري نه مليو." },
   "farmers.deleteWarning": { en: "This will also delete all their ledger entries. This action cannot be undone.", ur: "اس سے ان کے تمام حساب کے ریکارڈ بھی مٹ جائیں گے۔ یہ واپس نہیں ہو سکتا۔", sd: "هن سان انهن جا سڀ حساب جا رڪارڊ به مٽجي ويندا. هي واپس نه ٿي سگهي." },
+  "farmers.cnic": { en: "CNIC / ID", ur: "شناختی کارڈ نمبر", sd: "سڃاتي ڪارڊ نمبر" },
+  "farmers.landlord": { en: "Associated Landlord", ur: "متعلقہ زمیندار", sd: "لاڳاپيل زميندار" },
+  "farmers.notes": { en: "Notes", ur: "نوٹس", sd: "نوٽس" },
+  "farmers.village": { en: "Village / Area", ur: "گاؤں / علاقہ", sd: "ڳوٺ / علائقو" },
+  "farmers.contactInfo": { en: "Contact Information", ur: "رابطے کی معلومات", sd: "رابطي جي معلومات" },
+  "farmers.personalInfo": { en: "Personal Information", ur: "ذاتی معلومات", sd: "ذاتي معلومات" },
+  "farmers.financialInfo": { en: "Financial Details", ur: "مالی تفصیلات", sd: "مالي تفصيلات" },
 
   // Ledger
   "ledger.title": { en: "Ledger", ur: "حساب کتاب", sd: "حساب ڪتاب" },
