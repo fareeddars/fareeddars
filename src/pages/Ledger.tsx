@@ -69,16 +69,38 @@ const Ledger = () => {
   const seasonFarmers = farmerSeasons.filter(fs => fs.status === "active");
 
   const fetchData = async () => {
-    let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false });
-    if (selectedSeason) {
-      entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+    if (isOnline()) {
+      let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false });
+      if (selectedSeason) {
+        entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+      }
+      const [entriesRes, inventoryRes] = await Promise.all([
+        entriesQuery,
+        supabase.from("inventory").select("*"),
+      ]);
+      if (entriesRes.data) {
+        setEntries(entriesRes.data);
+        await offlineRepo.hydrate("ledger_entries", entriesRes.data.map(({ farmers, ...rest }: any) => rest));
+      }
+      if (inventoryRes.data) {
+        setInventory(inventoryRes.data);
+        await offlineRepo.hydrate("inventory", inventoryRes.data);
+      }
+      return;
     }
-    const [entriesRes, inventoryRes] = await Promise.all([
-      entriesQuery,
-      supabase.from("inventory").select("*"),
+    // Offline: read from local cache, manually join farmer name
+    const [localEntries, localInv, localFarmers] = await Promise.all([
+      offlineRepo.listLocal("ledger_entries", (e) => !selectedSeason || e.season_id === selectedSeason.id),
+      offlineRepo.listLocal("inventory"),
+      offlineRepo.listLocal("farmers"),
     ]);
-    if (entriesRes.data) setEntries(entriesRes.data);
-    if (inventoryRes.data) setInventory(inventoryRes.data);
+    const farmerMap = new Map(localFarmers.map((f: any) => [f.id, f.name]));
+    const merged = localEntries
+      .map((e: any) => ({ ...e, farmers: farmerMap.has(e.farmer_id) ? { name: farmerMap.get(e.farmer_id) } : null }))
+      .sort((a: any, b: any) => (b.created_at || "").localeCompare(a.created_at || ""));
+    setEntries(merged as any);
+    setInventory(localInv as any);
+  };
   };
 
   useEffect(() => { fetchData(); }, [selectedSeason?.id]);
