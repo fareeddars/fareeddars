@@ -26,6 +26,9 @@ export const onNetworkChange = (l: Listener) => {
 
 export const useOnlineStatus = () => {
   const [online, setOnline] = useState(currentOnline);
-  useEffect(() => onNetworkChange(setOnline), []);
+  useEffect(() => {
+    const unsub = onNetworkChange(setOnline);
+    return () => { unsub; };
+  }, []);
   return online;
 };
