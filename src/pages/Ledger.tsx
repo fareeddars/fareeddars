@@ -163,15 +163,20 @@ const Ledger = () => {
       entryData = { ...entryData, amount, entry_type: "loan" };
     }
 
-    const { error } = await supabase.from("ledger_entries").insert(entryData as any);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    try {
+      await offlineRepo.insert("ledger_entries", entryData);
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" }); return;
+    }
 
     if (activeTab === "expense" && inventoryItemId && quantity) {
       const item = inventory.find((i) => i.id === inventoryItemId);
-      if (item) { await supabase.from("inventory").update({ current_stock: item.current_stock - Number(quantity) }).eq("id", inventoryItemId); }
+      if (item) {
+        await offlineRepo.update("inventory", inventoryItemId, { current_stock: item.current_stock - Number(quantity) });
+      }
     }
 
-    toast({ title: "Entry added successfully" });
+    toast({ title: isOnline() ? "Entry added successfully" : "Saved offline — will sync" });
     setOpen(false); resetForm(); fetchData();
   };
 
