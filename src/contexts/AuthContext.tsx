@@ -2,7 +2,12 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { initOfflineSync } from "@/lib/offline";
+
+const bootOfflineSync = () => {
+  import("@/lib/offline")
+    .then((m) => m.bootOfflineSync())
+    .catch((e) => console.warn("[Offline] init skipped:", e?.message));
+};
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -86,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(restoredSession);
         setUser(restoredSession.user);
         fetchUserData(restoredSession.user.id);
-        initOfflineSync();
+        bootOfflineSync();
       }
       setLoading(false);
     });
@@ -114,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(newSession?.user ?? null);
           if (newSession?.user) {
             // Defer to avoid deadlock inside onAuthStateChange
-            setTimeout(() => { fetchUserData(newSession.user.id); initOfflineSync(); }, 0);
+            setTimeout(() => { fetchUserData(newSession.user.id); bootOfflineSync(); }, 0);
           }
           setLoading(false);
           return;
