@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineRepo, isOnline } from "@/lib/offline";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,8 +26,17 @@ const Inventory = () => {
   const [editForm, setEditForm] = useState({ item_name: "", current_stock: "", unit: "bags", price_per_unit: "", low_stock_threshold: "5" });
 
   const fetchItems = async () => {
-    const { data } = await supabase.from("inventory").select("*").order("item_name");
-    if (data) setItems(data);
+    if (isOnline()) {
+      const { data } = await supabase.from("inventory").select("*").order("item_name");
+      if (data) {
+        setItems(data);
+        await offlineRepo.hydrate("inventory", data);
+        return;
+      }
+    }
+    const local = await offlineRepo.listLocal("inventory");
+    local.sort((a: any, b: any) => (a.item_name || "").localeCompare(b.item_name || ""));
+    setItems(local as Tables<"inventory">[]);
   };
 
   useEffect(() => { fetchItems(); }, []);
@@ -200,12 +210,16 @@ const Inventory = () => {
 
   const handleSave = async () => {
     if (!user) return;
-    const { error } = await supabase.from("inventory").insert({
-      item_name: form.item_name, current_stock: Number(form.current_stock), unit: form.unit,
-      price_per_unit: Number(form.price_per_unit), low_stock_threshold: Number(form.low_stock_threshold), created_by: user.id,
-    });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    else { toast({ title: "Item added" }); setOpen(false); setForm({ item_name: "", current_stock: "", unit: "bags", price_per_unit: "", low_stock_threshold: "5" }); fetchItems(); }
+    try {
+      await offlineRepo.insert("inventory", {
+        item_name: form.item_name, current_stock: Number(form.current_stock), unit: form.unit,
+        price_per_unit: Number(form.price_per_unit), low_stock_threshold: Number(form.low_stock_threshold), created_by: user.id,
+      });
+      toast({ title: isOnline() ? "Item added" : "Saved offline — will sync" });
+      setOpen(false); setForm({ item_name: "", current_stock: "", unit: "bags", price_per_unit: "", low_stock_threshold: "5" }); fetchItems();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const openEdit = (item: Tables<"inventory">) => {
@@ -216,18 +230,26 @@ const Inventory = () => {
 
   const handleUpdate = async () => {
     if (!editingItem) return;
-    const { error } = await supabase.from("inventory").update({
-      item_name: editForm.item_name, current_stock: Number(editForm.current_stock), unit: editForm.unit,
-      price_per_unit: Number(editForm.price_per_unit), low_stock_threshold: Number(editForm.low_stock_threshold),
-    }).eq("id", editingItem.id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    else { toast({ title: "Item updated" }); setEditOpen(false); setEditingItem(null); fetchItems(); }
+    try {
+      await offlineRepo.update("inventory", editingItem.id, {
+        item_name: editForm.item_name, current_stock: Number(editForm.current_stock), unit: editForm.unit,
+        price_per_unit: Number(editForm.price_per_unit), low_stock_threshold: Number(editForm.low_stock_threshold),
+      });
+      toast({ title: isOnline() ? "Item updated" : "Updated offline — will sync" });
+      setEditOpen(false); setEditingItem(null); fetchItems();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("inventory").delete().eq("id", id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    else { toast({ title: "Item deleted" }); fetchItems(); }
+    try {
+      await offlineRepo.remove("inventory", id);
+      toast({ title: isOnline() ? "Item deleted" : "Deleted offline — will sync" });
+      fetchItems();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const totalStock = items.reduce((s, i) => s + Number(i.current_stock), 0);
