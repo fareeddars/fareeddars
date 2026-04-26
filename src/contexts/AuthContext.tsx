@@ -114,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(newSession?.user ?? null);
           if (newSession?.user) {
             // Defer to avoid deadlock inside onAuthStateChange
-            setTimeout(() => fetchUserData(newSession.user.id), 0);
+            setTimeout(() => { fetchUserData(newSession.user.id); initOfflineSync(); }, 0);
           }
           setLoading(false);
           return;
