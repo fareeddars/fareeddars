@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineRepo, isOnline, useOnlineStatus } from "@/lib/offline";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,21 +46,36 @@ const Farmers = () => {
   const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
 
   const fetchFarmers = async () => {
-    const { data } = await supabase.from("farmers").select("*").order("created_at", { ascending: false });
-    if (data) setFarmers(data as unknown as Farmer[]);
+    if (isOnline()) {
+      const { data } = await supabase.from("farmers").select("*").order("created_at", { ascending: false });
+      if (data) {
+        setFarmers(data as unknown as Farmer[]);
+        // refresh cache
+        await offlineRepo.hydrate("farmers", data);
+        return;
+      }
+    }
+    // Offline fallback → read from local cache
+    const local = await offlineRepo.listLocal("farmers");
+    local.sort((a: any, b: any) => (b.created_at || "").localeCompare(a.created_at || ""));
+    setFarmers(local as Farmer[]);
   };
 
   useEffect(() => { fetchFarmers(); }, []);
 
   const handleSave = async () => {
     if (!user) return;
-    const { error } = await supabase.from("farmers").insert({
-      name: form.name, phone: form.phone || null, address: form.address || null,
-      farm_details: form.farm_details || null, initial_balance: Number(form.initial_balance) || 0, created_by: user.id,
-      cnic: form.cnic || null, landlord: form.landlord || null, notes: form.notes || null,
-    } as any);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    else { toast({ title: "Farmer added successfully" }); setForm({ ...emptyForm }); setOpen(false); setConfirmOpen(false); fetchFarmers(); }
+    try {
+      await offlineRepo.insert("farmers", {
+        name: form.name, phone: form.phone || null, address: form.address || null,
+        farm_details: form.farm_details || null, initial_balance: Number(form.initial_balance) || 0, created_by: user.id,
+        cnic: form.cnic || null, landlord: form.landlord || null, notes: form.notes || null,
+      });
+      toast({ title: isOnline() ? "Farmer added successfully" : "Saved offline — will sync" });
+      setForm({ ...emptyForm }); setOpen(false); setConfirmOpen(false); fetchFarmers();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const openEdit = (farmer: Farmer) => {
@@ -74,19 +90,27 @@ const Farmers = () => {
 
   const handleUpdate = async () => {
     if (!editingFarmer) return;
-    const { error } = await supabase.from("farmers").update({
-      name: editForm.name, phone: editForm.phone || null, address: editForm.address || null,
-      farm_details: editForm.farm_details || null, initial_balance: Number(editForm.initial_balance) || 0,
-      cnic: editForm.cnic || null, landlord: editForm.landlord || null, notes: editForm.notes || null,
-    } as any).eq("id", editingFarmer.id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    else { toast({ title: "Farmer updated successfully" }); setEditOpen(false); setEditingFarmer(null); fetchFarmers(); }
+    try {
+      await offlineRepo.update("farmers", editingFarmer.id, {
+        name: editForm.name, phone: editForm.phone || null, address: editForm.address || null,
+        farm_details: editForm.farm_details || null, initial_balance: Number(editForm.initial_balance) || 0,
+        cnic: editForm.cnic || null, landlord: editForm.landlord || null, notes: editForm.notes || null,
+      });
+      toast({ title: isOnline() ? "Farmer updated successfully" : "Updated offline — will sync" });
+      setEditOpen(false); setEditingFarmer(null); fetchFarmers();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("farmers").delete().eq("id", id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    else { toast({ title: "Farmer deleted" }); fetchFarmers(); }
+    try {
+      await offlineRepo.remove("farmers", id);
+      toast({ title: isOnline() ? "Farmer deleted" : "Deleted offline — will sync" });
+      fetchFarmers();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const filtered = farmers.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()) || (f.cnic && f.cnic.includes(search)) || (f.phone && f.phone.includes(search)));
