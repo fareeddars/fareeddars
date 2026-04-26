@@ -5,7 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 const bootOfflineSync = () => {
   import("@/lib/offline")
-    .then((m) => m.initOfflineSync())
+    .then((m) => m.bootOfflineSync())
     .catch((e) => console.warn("[Offline] init skipped:", e?.message));
 };
 
@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(restoredSession);
         setUser(restoredSession.user);
         fetchUserData(restoredSession.user.id);
-        initOfflineSync();
+        bootOfflineSync();
       }
       setLoading(false);
     });
@@ -119,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(newSession?.user ?? null);
           if (newSession?.user) {
             // Defer to avoid deadlock inside onAuthStateChange
-            setTimeout(() => { fetchUserData(newSession.user.id); initOfflineSync(); }, 0);
+            setTimeout(() => { fetchUserData(newSession.user.id); bootOfflineSync(); }, 0);
           }
           setLoading(false);
           return;
