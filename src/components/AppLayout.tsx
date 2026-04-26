@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
+import NetworkStatusBadge from "@/components/NetworkStatusBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, Menu } from "lucide-react";
@@ -28,6 +29,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <NetworkStatusBadge />
                 <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl relative hover:bg-primary-foreground/20 text-primary-foreground transition-colors">
                   <Bell className="h-4 w-4" />
                   <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive animate-pulse" />
