@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineRepo, isOnline } from "@/lib/offline";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
@@ -68,16 +69,37 @@ const Ledger = () => {
   const seasonFarmers = farmerSeasons.filter(fs => fs.status === "active");
 
   const fetchData = async () => {
-    let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false });
-    if (selectedSeason) {
-      entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+    if (isOnline()) {
+      let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false });
+      if (selectedSeason) {
+        entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+      }
+      const [entriesRes, inventoryRes] = await Promise.all([
+        entriesQuery,
+        supabase.from("inventory").select("*"),
+      ]);
+      if (entriesRes.data) {
+        setEntries(entriesRes.data);
+        await offlineRepo.hydrate("ledger_entries", entriesRes.data.map(({ farmers, ...rest }: any) => rest));
+      }
+      if (inventoryRes.data) {
+        setInventory(inventoryRes.data);
+        await offlineRepo.hydrate("inventory", inventoryRes.data);
+      }
+      return;
     }
-    const [entriesRes, inventoryRes] = await Promise.all([
-      entriesQuery,
-      supabase.from("inventory").select("*"),
+    // Offline: read from local cache, manually join farmer name
+    const [localEntries, localInv, localFarmers] = await Promise.all([
+      offlineRepo.listLocal("ledger_entries", (e) => !selectedSeason || e.season_id === selectedSeason.id),
+      offlineRepo.listLocal("inventory"),
+      offlineRepo.listLocal("farmers"),
     ]);
-    if (entriesRes.data) setEntries(entriesRes.data);
-    if (inventoryRes.data) setInventory(inventoryRes.data);
+    const farmerMap = new Map(localFarmers.map((f: any) => [f.id, f.name]));
+    const merged = localEntries
+      .map((e: any) => ({ ...e, farmers: farmerMap.has(e.farmer_id) ? { name: farmerMap.get(e.farmer_id) } : null }))
+      .sort((a: any, b: any) => (b.created_at || "").localeCompare(a.created_at || ""));
+    setEntries(merged as any);
+    setInventory(localInv as any);
   };
 
   useEffect(() => { fetchData(); }, [selectedSeason?.id]);
@@ -141,15 +163,20 @@ const Ledger = () => {
       entryData = { ...entryData, amount, entry_type: "loan" };
     }
 
-    const { error } = await supabase.from("ledger_entries").insert(entryData as any);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    try {
+      await offlineRepo.insert("ledger_entries", entryData);
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" }); return;
+    }
 
     if (activeTab === "expense" && inventoryItemId && quantity) {
       const item = inventory.find((i) => i.id === inventoryItemId);
-      if (item) { await supabase.from("inventory").update({ current_stock: item.current_stock - Number(quantity) }).eq("id", inventoryItemId); }
+      if (item) {
+        await offlineRepo.update("inventory", inventoryItemId, { current_stock: item.current_stock - Number(quantity) });
+      }
     }
 
-    toast({ title: "Entry added successfully" });
+    toast({ title: isOnline() ? "Entry added successfully" : "Saved offline — will sync" });
     setOpen(false); resetForm(); fetchData();
   };
 
