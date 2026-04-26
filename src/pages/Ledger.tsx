@@ -101,7 +101,6 @@ const Ledger = () => {
     setEntries(merged as any);
     setInventory(localInv as any);
   };
-  };
 
   useEffect(() => { fetchData(); }, [selectedSeason?.id]);
 
