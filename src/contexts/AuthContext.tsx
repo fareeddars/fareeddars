@@ -2,7 +2,12 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { initOfflineSync } from "@/lib/offline";
+
+const bootOfflineSync = () => {
+  import("@/lib/offline")
+    .then((m) => m.initOfflineSync())
+    .catch((e) => console.warn("[Offline] init skipped:", e?.message));
+};
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
