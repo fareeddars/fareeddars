@@ -204,19 +204,24 @@ const Ledger = () => {
     }
 
     try {
-      await offlineRepo.insert("ledger_entries", entryData);
+      if (editingId) {
+        const { created_by, ...patch } = entryData as any;
+        await offlineRepo.update("ledger_entries", editingId, patch);
+      } else {
+        await offlineRepo.insert("ledger_entries", entryData);
+      }
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" }); return;
     }
 
-    if (activeTab === "expense" && inventoryItemId && inventoryItemId !== "none" && quantity) {
+    if (!editingId && activeTab === "expense" && inventoryItemId && inventoryItemId !== "none" && quantity) {
       const item = inventory.find((i) => i.id === inventoryItemId);
       if (item) {
         await offlineRepo.update("inventory", inventoryItemId, { current_stock: item.current_stock - Number(quantity) });
       }
     }
 
-    toast({ title: isOnline() ? "Entry added successfully" : "Saved offline — will sync" });
+    toast({ title: editingId ? "Entry updated" : (isOnline() ? "Entry added successfully" : "Saved offline — will sync") });
     setOpen(false); resetForm(); fetchData();
   };
 
