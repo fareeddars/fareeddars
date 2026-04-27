@@ -105,7 +105,7 @@ const Ledger = () => {
   useEffect(() => { fetchData(); }, [selectedSeason?.id]);
 
   useEffect(() => {
-    if (inventoryItemId) {
+    if (inventoryItemId && inventoryItemId !== "none") {
       const item = inventory.find((i) => i.id === inventoryItemId);
       if (item) setPrice(String(item.price_per_unit));
     }
