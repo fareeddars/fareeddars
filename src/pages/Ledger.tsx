@@ -128,6 +128,44 @@ const Ledger = () => {
     setGrossWeight(""); setDeductionsVal(""); setSaleRate("");
     setPaymentMethod("cash"); setCashAmount(""); setCropType(""); setCropWeight(""); setCropRate("");
     setLoanAmount(""); setActiveTab("expense");
+    setEditingId(null);
+  };
+
+  const openEdit = (e: any) => {
+    setEditingId(e.id);
+    setActiveTab(e.entry_type || "expense");
+    setFarmerId(e.farmer_id || "");
+    setEntryDate(e.entry_date ? new Date(e.entry_date + "T00:00:00") : new Date());
+    setDescription(e.description || "");
+    if (e.entry_type === "expense") {
+      setCategory(e.category || "");
+      setInventoryItemId(e.inventory_item_id || "");
+      setPrice(e.rate != null ? String(e.rate) : "");
+      setQuantity(e.quantity != null ? String(e.quantity) : "");
+      setExpenseAmount(e.rate && e.quantity ? "" : String(e.amount ?? ""));
+      setCostAllocation(e.payment_method === "landlord_only" ? "landlord" : e.is_shared ? "shared" : "farmer");
+    } else if (e.entry_type === "sale") {
+      setGrossWeight(e.gross_weight != null ? String(e.gross_weight) : "");
+      setDeductionsVal(e.deductions != null ? String(e.deductions) : "");
+      setSaleRate(e.rate != null ? String(e.rate) : "");
+    } else if (e.entry_type === "payment") {
+      setPaymentMethod(e.payment_method || "cash");
+      if ((e.payment_method || "cash") === "cash") setCashAmount(String(e.amount ?? ""));
+      else { setCropType(e.crop_type || ""); setCropWeight(e.crop_weight != null ? String(e.crop_weight) : ""); setCropRate(e.rate != null ? String(e.rate) : ""); }
+    } else if (e.entry_type === "loan") {
+      setLoanAmount(String(e.amount ?? ""));
+    }
+    setOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await offlineRepo.remove("ledger_entries", id);
+      toast({ title: isOnline() ? "Entry deleted" : "Deleted offline — will sync" });
+      fetchData();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const handleSave = async () => {
