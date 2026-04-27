@@ -169,7 +169,7 @@ const Ledger = () => {
       toast({ title: "Error", description: e.message, variant: "destructive" }); return;
     }
 
-    if (activeTab === "expense" && inventoryItemId && quantity) {
+    if (activeTab === "expense" && inventoryItemId && inventoryItemId !== "none" && quantity) {
       const item = inventory.find((i) => i.id === inventoryItemId);
       if (item) {
         await offlineRepo.update("inventory", inventoryItemId, { current_stock: item.current_stock - Number(quantity) });
