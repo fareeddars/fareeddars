@@ -538,9 +538,48 @@ const Ledger = () => {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>{t("common.confirm")}</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Delete this {e.entry_type} entry of ₨{Number(e.amount).toLocaleString()} for <strong>{e.farmers?.name ?? "—"}</strong>? This cannot be undone.
+                                <AlertDialogTitle>Delete {e.entry_type === "expense" ? "Expense" : e.entry_type === "sale" ? "Sale" : e.entry_type === "payment" ? "Payment" : "Entry"}?</AlertDialogTitle>
+                                <AlertDialogDescription asChild>
+                                  <div className="space-y-2 text-sm">
+                                    <p>This action cannot be undone. Please review the details below:</p>
+                                    <div className="rounded-md border bg-muted/40 p-3 space-y-1">
+                                      <div className="flex justify-between gap-4">
+                                        <span className="text-muted-foreground">Farmer</span>
+                                        <span className="font-medium text-foreground">{e.farmers?.name ?? "—"}</span>
+                                      </div>
+                                      <div className="flex justify-between gap-4">
+                                        <span className="text-muted-foreground">Date</span>
+                                        <span className="font-medium text-foreground">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</span>
+                                      </div>
+                                      <div className="flex justify-between gap-4">
+                                        <span className="text-muted-foreground">Type</span>
+                                        <span className="font-medium capitalize text-foreground">{e.entry_type}</span>
+                                      </div>
+                                      {(e as any).category && (
+                                        <div className="flex justify-between gap-4">
+                                          <span className="text-muted-foreground">Category</span>
+                                          <span className="font-medium capitalize text-foreground">{(e as any).category}</span>
+                                        </div>
+                                      )}
+                                      {e.description && (
+                                        <div className="flex justify-between gap-4">
+                                          <span className="text-muted-foreground">Description</span>
+                                          <span className="font-medium text-foreground text-right max-w-[60%] truncate">{e.description}</span>
+                                        </div>
+                                      )}
+                                      <div className="flex justify-between gap-4 pt-1 border-t mt-1">
+                                        <span className="text-muted-foreground">
+                                          {e.entry_type === "expense" ? "Expense Amount" : e.entry_type === "sale" ? "Sale Amount" : e.entry_type === "payment" ? "Payment Amount" : "Amount"}
+                                        </span>
+                                        <span className={cn(
+                                          "font-mono font-bold",
+                                          e.entry_type === "expense" && "text-red-600 dark:text-red-400",
+                                          e.entry_type === "sale" && "text-green-600 dark:text-green-400",
+                                          e.entry_type === "payment" && "text-blue-600 dark:text-blue-400",
+                                        )}>₨ {Number(e.amount).toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
