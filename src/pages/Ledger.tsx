@@ -17,7 +17,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CalendarIcon, TrendingDown, TrendingUp, Wallet, HandCoins, Lock, BookOpen } from "lucide-react";
+import { Plus, CalendarIcon, TrendingDown, TrendingUp, Wallet, HandCoins, Lock, BookOpen, Pencil, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
@@ -37,7 +38,7 @@ const EXPENSE_CATEGORIES = [
 type CostAllocation = "farmer" | "shared" | "landlord";
 
 const Ledger = () => {
-  const { user, canCreate } = useAuth();
+  const { user, canCreate, canEdit, canDelete } = useAuth();
   const { t } = useLanguage();
   const { selectedSeason, farmerSeasons, isSeasonClosed } = useSeason();
   const { toast } = useToast();
@@ -45,6 +46,7 @@ const Ledger = () => {
   const [inventory, setInventory] = useState<Tables<"inventory">[]>([]);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("expense");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [farmerId, setFarmerId] = useState("");
   const [entryDate, setEntryDate] = useState<Date>(new Date());
@@ -126,6 +128,44 @@ const Ledger = () => {
     setGrossWeight(""); setDeductionsVal(""); setSaleRate("");
     setPaymentMethod("cash"); setCashAmount(""); setCropType(""); setCropWeight(""); setCropRate("");
     setLoanAmount(""); setActiveTab("expense");
+    setEditingId(null);
+  };
+
+  const openEdit = (e: any) => {
+    setEditingId(e.id);
+    setActiveTab(e.entry_type || "expense");
+    setFarmerId(e.farmer_id || "");
+    setEntryDate(e.entry_date ? new Date(e.entry_date + "T00:00:00") : new Date());
+    setDescription(e.description || "");
+    if (e.entry_type === "expense") {
+      setCategory(e.category || "");
+      setInventoryItemId(e.inventory_item_id || "");
+      setPrice(e.rate != null ? String(e.rate) : "");
+      setQuantity(e.quantity != null ? String(e.quantity) : "");
+      setExpenseAmount(e.rate && e.quantity ? "" : String(e.amount ?? ""));
+      setCostAllocation(e.payment_method === "landlord_only" ? "landlord" : e.is_shared ? "shared" : "farmer");
+    } else if (e.entry_type === "sale") {
+      setGrossWeight(e.gross_weight != null ? String(e.gross_weight) : "");
+      setDeductionsVal(e.deductions != null ? String(e.deductions) : "");
+      setSaleRate(e.rate != null ? String(e.rate) : "");
+    } else if (e.entry_type === "payment") {
+      setPaymentMethod(e.payment_method || "cash");
+      if ((e.payment_method || "cash") === "cash") setCashAmount(String(e.amount ?? ""));
+      else { setCropType(e.crop_type || ""); setCropWeight(e.crop_weight != null ? String(e.crop_weight) : ""); setCropRate(e.rate != null ? String(e.rate) : ""); }
+    } else if (e.entry_type === "loan") {
+      setLoanAmount(String(e.amount ?? ""));
+    }
+    setOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await offlineRepo.remove("ledger_entries", id);
+      toast({ title: isOnline() ? "Entry deleted" : "Deleted offline — will sync" });
+      fetchData();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const handleSave = async () => {
@@ -164,19 +204,24 @@ const Ledger = () => {
     }
 
     try {
-      await offlineRepo.insert("ledger_entries", entryData);
+      if (editingId) {
+        const { created_by, ...patch } = entryData as any;
+        await offlineRepo.update("ledger_entries", editingId, patch);
+      } else {
+        await offlineRepo.insert("ledger_entries", entryData);
+      }
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" }); return;
     }
 
-    if (activeTab === "expense" && inventoryItemId && inventoryItemId !== "none" && quantity) {
+    if (!editingId && activeTab === "expense" && inventoryItemId && inventoryItemId !== "none" && quantity) {
       const item = inventory.find((i) => i.id === inventoryItemId);
       if (item) {
         await offlineRepo.update("inventory", inventoryItemId, { current_stock: item.current_stock - Number(quantity) });
       }
     }
 
-    toast({ title: isOnline() ? "Entry added successfully" : "Saved offline — will sync" });
+    toast({ title: editingId ? "Entry updated" : (isOnline() ? "Entry added successfully" : "Saved offline — will sync") });
     setOpen(false); resetForm(); fetchData();
   };
 
@@ -240,7 +285,7 @@ const Ledger = () => {
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle className="text-xl font-serif">{t("ledger.newTransaction")}</DialogTitle>
+                <DialogTitle className="text-xl font-serif">{editingId ? "Edit Entry" : t("ledger.newTransaction")}</DialogTitle>
                 <DialogDescription>{t("ledger.addEntry")}</DialogDescription>
               </DialogHeader>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -463,6 +508,7 @@ const Ledger = () => {
                 <TableHead className="text-xs font-semibold hidden md:table-cell">{t("common.description")}</TableHead>
                 <TableHead className="text-xs font-semibold hidden sm:table-cell">{t("ledger.costAllocation")}</TableHead>
                 <TableHead className="text-right text-xs font-semibold">{t("common.amount")} (₨)</TableHead>
+                {(canEdit || canDelete) && !isSeasonClosed && <TableHead className="text-right text-xs font-semibold">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -475,9 +521,41 @@ const Ledger = () => {
                   <TableCell className="text-xs hidden md:table-cell max-w-[150px] truncate">{e.description || "—"}</TableCell>
                   <TableCell className="hidden sm:table-cell">{getAllocationLabel(e)}</TableCell>
                   <TableCell className="text-right font-mono font-semibold text-sm">₨ {Number(e.amount).toLocaleString()}</TableCell>
+                  {(canEdit || canDelete) && !isSeasonClosed && (
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {canEdit && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/10 hover:text-primary" onClick={() => openEdit(e)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t("common.confirm")}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Delete this {e.entry_type} entry of ₨{Number(e.amount).toLocaleString()} for <strong>{e.farmers?.name ?? "—"}</strong>? This cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(e.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
-              {entries.length === 0 && (<TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">{t("ledger.noEntries")}</TableCell></TableRow>)}
+              {entries.length === 0 && (<TableRow><TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="text-center text-muted-foreground py-12">{t("ledger.noEntries")}</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
