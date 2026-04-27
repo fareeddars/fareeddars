@@ -508,6 +508,7 @@ const Ledger = () => {
                 <TableHead className="text-xs font-semibold hidden md:table-cell">{t("common.description")}</TableHead>
                 <TableHead className="text-xs font-semibold hidden sm:table-cell">{t("ledger.costAllocation")}</TableHead>
                 <TableHead className="text-right text-xs font-semibold">{t("common.amount")} (₨)</TableHead>
+                {(canEdit || canDelete) && !isSeasonClosed && <TableHead className="text-right text-xs font-semibold">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -520,9 +521,41 @@ const Ledger = () => {
                   <TableCell className="text-xs hidden md:table-cell max-w-[150px] truncate">{e.description || "—"}</TableCell>
                   <TableCell className="hidden sm:table-cell">{getAllocationLabel(e)}</TableCell>
                   <TableCell className="text-right font-mono font-semibold text-sm">₨ {Number(e.amount).toLocaleString()}</TableCell>
+                  {(canEdit || canDelete) && !isSeasonClosed && (
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {canEdit && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/10 hover:text-primary" onClick={() => openEdit(e)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t("common.confirm")}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Delete this {e.entry_type} entry of ₨{Number(e.amount).toLocaleString()} for <strong>{e.farmers?.name ?? "—"}</strong>? This cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(e.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
-              {entries.length === 0 && (<TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">{t("ledger.noEntries")}</TableCell></TableRow>)}
+              {entries.length === 0 && (<TableRow><TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="text-center text-muted-foreground py-12">{t("ledger.noEntries")}</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
