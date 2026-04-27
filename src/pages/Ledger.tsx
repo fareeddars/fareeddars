@@ -105,7 +105,7 @@ const Ledger = () => {
   useEffect(() => { fetchData(); }, [selectedSeason?.id]);
 
   useEffect(() => {
-    if (inventoryItemId) {
+    if (inventoryItemId && inventoryItemId !== "none") {
       const item = inventory.find((i) => i.id === inventoryItemId);
       if (item) setPrice(String(item.price_per_unit));
     }
@@ -145,7 +145,7 @@ const Ledger = () => {
       const isShared = costAllocation === "shared";
       entryData = {
         ...entryData, amount, category,
-        inventory_item_id: inventoryItemId || null,
+        inventory_item_id: inventoryItemId && inventoryItemId !== "none" ? inventoryItemId : null,
         quantity: quantity ? Number(quantity) : null,
         rate: price ? Number(price) : null,
         is_shared: isShared,
@@ -169,7 +169,7 @@ const Ledger = () => {
       toast({ title: "Error", description: e.message, variant: "destructive" }); return;
     }
 
-    if (activeTab === "expense" && inventoryItemId && quantity) {
+    if (activeTab === "expense" && inventoryItemId && inventoryItemId !== "none" && quantity) {
       const item = inventory.find((i) => i.id === inventoryItemId);
       if (item) {
         await offlineRepo.update("inventory", inventoryItemId, { current_stock: item.current_stock - Number(quantity) });
