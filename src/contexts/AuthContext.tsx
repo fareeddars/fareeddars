@@ -5,7 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 const bootOfflineSync = () => {
   import("@/lib/offline")
-    .then((m) => m.bootOfflineSync())
+    .then((m) => m.initOfflineSync())
     .catch((e) => console.warn("[Offline] init skipped:", e?.message));
 };
 
