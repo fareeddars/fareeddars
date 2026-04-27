@@ -38,7 +38,7 @@ const EXPENSE_CATEGORIES = [
 type CostAllocation = "farmer" | "shared" | "landlord";
 
 const Ledger = () => {
-  const { user, canCreate } = useAuth();
+  const { user, canCreate, canEdit, canDelete } = useAuth();
   const { t } = useLanguage();
   const { selectedSeason, farmerSeasons, isSeasonClosed } = useSeason();
   const { toast } = useToast();
@@ -46,6 +46,7 @@ const Ledger = () => {
   const [inventory, setInventory] = useState<Tables<"inventory">[]>([]);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("expense");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [farmerId, setFarmerId] = useState("");
   const [entryDate, setEntryDate] = useState<Date>(new Date());
