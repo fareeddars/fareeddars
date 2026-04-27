@@ -115,7 +115,7 @@ const Farmers = () => {
 
   const filtered = farmers.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()) || (f.cnic && f.cnic.includes(search)) || (f.phone && f.phone.includes(search)));
 
-  const FarmerFormFields = ({ formData, setFormData }: { formData: typeof form; setFormData: (v: typeof form) => void }) => (
+  const renderFarmerFormFields = (formData: typeof form, setFormData: (v: typeof form) => void) => (
     <div className="space-y-5">
       {/* Personal Info */}
       <div>
@@ -223,7 +223,7 @@ const Farmers = () => {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
                   <DialogHeader><DialogTitle>{t("farmers.addNew")}</DialogTitle><DialogDescription>{t("farmers.enterDetails")}</DialogDescription></DialogHeader>
-                  <FarmerFormFields formData={form} setFormData={setForm} />
+                  {renderFarmerFormFields(form, setForm)}
                   <DialogFooter>
                     <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                       <DialogTrigger asChild><Button disabled={!form.name} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">{t("farmers.saveFarmer")}</Button></DialogTrigger>
@@ -360,7 +360,7 @@ const Farmers = () => {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{t("farmers.editFarmer")}</DialogTitle><DialogDescription>{t("farmers.updateDetails")}</DialogDescription></DialogHeader>
-          <FarmerFormFields formData={editForm} setFormData={setEditForm} />
+          {renderFarmerFormFields(editForm, setEditForm)}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleUpdate} disabled={!editForm.name} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">{t("farmers.updateFarmer")}</Button>
