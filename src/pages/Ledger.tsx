@@ -285,7 +285,7 @@ const Ledger = () => {
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle className="text-xl font-serif">{t("ledger.newTransaction")}</DialogTitle>
+                <DialogTitle className="text-xl font-serif">{editingId ? "Edit Entry" : t("ledger.newTransaction")}</DialogTitle>
                 <DialogDescription>{t("ledger.addEntry")}</DialogDescription>
               </DialogHeader>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
