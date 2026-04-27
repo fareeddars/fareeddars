@@ -115,7 +115,7 @@ const Farmers = () => {
 
   const filtered = farmers.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()) || (f.cnic && f.cnic.includes(search)) || (f.phone && f.phone.includes(search)));
 
-  const FarmerFormFields = ({ formData, setFormData }: { formData: typeof form; setFormData: (v: typeof form) => void }) => (
+  const renderFarmerFormFields = (formData: typeof form, setFormData: (v: typeof form) => void) => (
     <div className="space-y-5">
       {/* Personal Info */}
       <div>
