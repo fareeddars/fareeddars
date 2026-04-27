@@ -145,7 +145,7 @@ const Ledger = () => {
       const isShared = costAllocation === "shared";
       entryData = {
         ...entryData, amount, category,
-        inventory_item_id: inventoryItemId || null,
+        inventory_item_id: inventoryItemId && inventoryItemId !== "none" ? inventoryItemId : null,
         quantity: quantity ? Number(quantity) : null,
         rate: price ? Number(price) : null,
         is_shared: isShared,
