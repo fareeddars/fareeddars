@@ -47,6 +47,7 @@ const Ledger = () => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("expense");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [farmerId, setFarmerId] = useState("");
   const [entryDate, setEntryDate] = useState<Date>(new Date());
