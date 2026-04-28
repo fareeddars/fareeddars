@@ -330,7 +330,7 @@ const Ledger = () => {
             </div>
           </div>
         {canCreate && !isSeasonClosed && selectedSeason && (
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
+          <Dialog open={open} onOpenChange={(v) => { if (saving && !v) return; setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
                 <Plus className="mr-2 h-4 w-4" />{t("ledger.newTransaction")}
