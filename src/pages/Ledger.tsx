@@ -257,6 +257,33 @@ const Ledger = () => {
   const totalPayments = entries.filter(e => e.entry_type === "payment").reduce((s, e) => s + Number(e.amount), 0);
   const totalLoans = entries.filter(e => e.entry_type === "loan").reduce((s, e) => s + Number(e.amount), 0);
 
+  // Filtered entries
+  const filteredEntries = entries.filter((e) => {
+    if (filterFarmer !== "all" && e.farmer_id !== filterFarmer) return false;
+    if (filterType !== "all" && e.entry_type !== filterType) return false;
+    if (filterCategory !== "all" && ((e as any).category || "").toLowerCase() !== filterCategory.toLowerCase()) return false;
+    const d = e.entry_date ? new Date(e.entry_date + "T00:00:00") : new Date(e.created_at);
+    if (filterFromDate && d < new Date(filterFromDate.setHours(0, 0, 0, 0))) return false;
+    if (filterToDate) {
+      const to = new Date(filterToDate);
+      to.setHours(23, 59, 59, 999);
+      if (d > to) return false;
+    }
+    if (searchText.trim()) {
+      const q = searchText.trim().toLowerCase();
+      const hay = [e.farmers?.name, e.description, (e as any).category, e.entry_type].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const hasActiveFilters = searchText || filterFarmer !== "all" || filterType !== "all" || filterCategory !== "all" || filterFromDate || filterToDate;
+  const clearFilters = () => {
+    setSearchText(""); setFilterFarmer("all"); setFilterType("all"); setFilterCategory("all");
+    setFilterFromDate(undefined); setFilterToDate(undefined);
+  };
+
+
   return (
     <div className="space-y-6">
       {/* Season Closed Banner */}
