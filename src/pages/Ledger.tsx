@@ -246,6 +246,9 @@ const Ledger = () => {
       setActiveTab(keepTab);
     }
     fetchData();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const typeBadge = (type: string) => {
