@@ -179,6 +179,9 @@ const Ledger = () => {
 
   const handleSave = async () => {
     if (!user || !farmerId || !selectedSeason) return;
+    if (saving) return;
+    setSaving(true);
+    try {
     // Find the farmer_season record
     const fs = farmerSeasons.find(fs => fs.farmer_id === farmerId && fs.season_id === selectedSeason.id);
     let amount = 0;
