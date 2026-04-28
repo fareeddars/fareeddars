@@ -182,70 +182,112 @@ const Ledger = () => {
     if (saving) return;
     setSaving(true);
     try {
-    // Find the farmer_season record
-    const fs = farmerSeasons.find(fs => fs.farmer_id === farmerId && fs.season_id === selectedSeason.id);
-    let amount = 0;
-    let entryData: Record<string, unknown> = {
-      farmer_id: farmerId, entry_type: activeTab, description, created_by: user.id,
-      entry_date: format(entryDate, "yyyy-MM-dd"),
-      season_id: selectedSeason.id,
-      farmer_season_id: fs?.id || null,
-    };
-
-    if (activeTab === "expense") {
-      amount = computedExpenseAmount();
-      const isShared = costAllocation === "shared";
-      entryData = {
-        ...entryData, amount, category,
-        inventory_item_id: inventoryItemId && inventoryItemId !== "none" ? inventoryItemId : null,
-        quantity: quantity ? Number(quantity) : null,
-        rate: price ? Number(price) : null,
-        is_shared: isShared,
-        shared_amount: isShared ? amount / 2 : null,
-        payment_method: costAllocation === "landlord" ? "landlord_only" : null,
+      // Find the farmer_season record
+      const fs = farmerSeasons.find(fs => fs.farmer_id === farmerId && fs.season_id === selectedSeason.id);
+      let amount = 0;
+      let entryData: Record<string, unknown> = {
+        farmer_id: farmerId, entry_type: activeTab, description, created_by: user.id,
+        entry_date: format(entryDate, "yyyy-MM-dd"),
+        season_id: selectedSeason.id,
+        farmer_season_id: fs?.id || null,
       };
-    } else if (activeTab === "sale") {
-      amount = saleTotal();
-      entryData = { ...entryData, amount, gross_weight: grossWeight ? Number(grossWeight) : null, deductions: deductionsVal ? Number(deductionsVal) : null, net_weight: netWeight() || null, rate: saleRate ? Number(saleRate) : null };
-    } else if (activeTab === "payment") {
-      amount = paymentMethod === "cash" ? (Number(cashAmount) || 0) : cropTotal();
-      entryData = { ...entryData, amount, payment_method: paymentMethod, crop_type: paymentMethod === "crop_return" ? cropType : null, crop_weight: paymentMethod === "crop_return" && cropWeight ? Number(cropWeight) : null, rate: paymentMethod === "crop_return" && cropRate ? Number(cropRate) : null };
-    } else if (activeTab === "loan") {
-      amount = Number(loanAmount) || 0;
-      entryData = { ...entryData, amount, entry_type: "loan" };
-    }
 
-    try {
+      if (activeTab === "expense") {
+        amount = computedExpenseAmount();
+        const isShared = costAllocation === "shared";
+        entryData = {
+          ...entryData, amount, category,
+          inventory_item_id: inventoryItemId && inventoryItemId !== "none" ? inventoryItemId : null,
+          quantity: quantity ? Number(quantity) : null,
+          rate: price ? Number(price) : null,
+          is_shared: isShared,
+          shared_amount: isShared ? amount / 2 : null,
+          payment_method: costAllocation === "landlord" ? "landlord_only" : null,
+        };
+      } else if (activeTab === "sale") {
+        amount = saleTotal();
+        entryData = { ...entryData, amount, gross_weight: grossWeight ? Number(grossWeight) : null, deductions: deductionsVal ? Number(deductionsVal) : null, net_weight: netWeight() || null, rate: saleRate ? Number(saleRate) : null };
+      } else if (activeTab === "payment") {
+        amount = paymentMethod === "cash" ? (Number(cashAmount) || 0) : cropTotal();
+        entryData = { ...entryData, amount, payment_method: paymentMethod, crop_type: paymentMethod === "crop_return" ? cropType : null, crop_weight: paymentMethod === "crop_return" && cropWeight ? Number(cropWeight) : null, rate: paymentMethod === "crop_return" && cropRate ? Number(cropRate) : null };
+      } else if (activeTab === "loan") {
+        amount = Number(loanAmount) || 0;
+        entryData = { ...entryData, amount, entry_type: "loan" };
+      }
+
+      // ===== Optimistic UI: update list instantly =====
+      const farmerName = (farmerSeasons.find((x: any) => x.farmer_id === farmerId) as any)?.farmers?.name || "";
+      const nowIso = new Date().toISOString();
+
       if (editingId) {
-        const { created_by, ...patch } = entryData as any;
-        await offlineRepo.update("ledger_entries", editingId, patch);
+        setEntries((prev) => prev.map((e: any) =>
+          e.id === editingId ? { ...e, ...entryData, updated_at: nowIso } : e
+        ));
       } else {
-        await offlineRepo.insert("ledger_entries", entryData);
-      }
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" }); return;
-    }
+        const tempId = (typeof crypto !== "undefined" && "randomUUID" in crypto)
+          ? crypto.randomUUID()
+          : `tmp-${Date.now()}`;
+        const optimisticEntry: any = {
+          ...entryData,
+          id: tempId,
+          created_at: nowIso,
+          updated_at: nowIso,
+          farmers: { name: farmerName },
+        };
+        (entryData as any).id = tempId;
+        setEntries((prev) => [optimisticEntry, ...prev]);
 
-    if (!editingId && activeTab === "expense" && inventoryItemId && inventoryItemId !== "none" && quantity) {
-      const item = inventory.find((i) => i.id === inventoryItemId);
-      if (item) {
-        await offlineRepo.update("inventory", inventoryItemId, { current_stock: item.current_stock - Number(quantity) });
+        // Optimistic inventory deduction
+        if (activeTab === "expense" && inventoryItemId && inventoryItemId !== "none" && quantity) {
+          const item = inventory.find((i) => i.id === inventoryItemId);
+          if (item) {
+            setInventory((prev) => prev.map((i: any) =>
+              i.id === inventoryItemId ? { ...i, current_stock: i.current_stock - Number(quantity) } : i
+            ));
+          }
+        }
       }
-    }
 
-    toast({ title: editingId ? "Entry updated" : (isOnline() ? "Entry added successfully" : "Saved offline — will sync") });
-    if (editingId) {
-      setOpen(false);
-      resetForm();
-    } else {
-      // Keep dialog open so user can add another entry without re-opening
-      const keepFarmer = farmerId;
-      const keepTab = activeTab;
-      resetForm();
-      setFarmerId(keepFarmer);
-      setActiveTab(keepTab);
-    }
-    fetchData();
+      // Reset/close UI immediately so it feels instant
+      const wasEditing = !!editingId;
+      const inventoryItemForBg = inventoryItemId;
+      const quantityForBg = quantity;
+      const activeTabForBg = activeTab;
+
+      if (wasEditing) {
+        setOpen(false);
+        resetForm();
+      } else {
+        const keepFarmer = farmerId;
+        const keepTab = activeTab;
+        resetForm();
+        setFarmerId(keepFarmer);
+        setActiveTab(keepTab);
+      }
+      toast({ title: wasEditing ? "Entry updated" : (isOnline() ? "Entry added successfully" : "Saved offline — will sync") });
+
+      // ===== Background persistence (don't block UI) =====
+      (async () => {
+        try {
+          if (wasEditing) {
+            const { created_by, ...patch } = entryData as any;
+            await offlineRepo.update("ledger_entries", editingId!, patch);
+          } else {
+            await offlineRepo.insert("ledger_entries", entryData);
+          }
+          if (!wasEditing && activeTabForBg === "expense" && inventoryItemForBg && inventoryItemForBg !== "none" && quantityForBg) {
+            const item = inventory.find((i) => i.id === inventoryItemForBg);
+            if (item) {
+              await offlineRepo.update("inventory", inventoryItemForBg, { current_stock: item.current_stock - Number(quantityForBg) });
+            }
+          }
+          // Quietly refresh in background to reconcile any server-side changes
+          fetchData();
+        } catch (e: any) {
+          toast({ title: "Sync error", description: e.message, variant: "destructive" });
+          fetchData();
+        }
+      })();
     } finally {
       setSaving(false);
     }
