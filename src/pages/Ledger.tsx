@@ -230,7 +230,18 @@ const Ledger = () => {
     }
 
     toast({ title: editingId ? "Entry updated" : (isOnline() ? "Entry added successfully" : "Saved offline — will sync") });
-    setOpen(false); resetForm(); fetchData();
+    if (editingId) {
+      setOpen(false);
+      resetForm();
+    } else {
+      // Keep dialog open so user can add another entry without re-opening
+      const keepFarmer = farmerId;
+      const keepTab = activeTab;
+      resetForm();
+      setFarmerId(keepFarmer);
+      setActiveTab(keepTab);
+    }
+    fetchData();
   };
 
   const typeBadge = (type: string) => {
