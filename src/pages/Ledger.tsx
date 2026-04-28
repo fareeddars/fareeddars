@@ -495,8 +495,8 @@ const Ledger = () => {
                 </TabsContent>
               </Tabs>
               <DialogFooter>
-                <Button onClick={handleSave} disabled={!farmerId} className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg transition-all duration-300">
-                  {t("ledger.saveEntry")}
+                <Button onClick={handleSave} disabled={!farmerId || saving} className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg transition-all duration-300">
+                  {saving ? (<><Loader2 className="animate-spin" /> {t("common.saving") || "Saving..."}</>) : t("ledger.saveEntry")}
                 </Button>
               </DialogFooter>
             </DialogContent>
