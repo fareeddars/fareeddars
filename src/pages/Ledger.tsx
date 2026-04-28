@@ -336,7 +336,18 @@ const Ledger = () => {
                 <Plus className="mr-2 h-4 w-4" />{t("ledger.newTransaction")}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full p-4 sm:p-6">
+            <DialogContent
+              className="max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full p-4 sm:p-6"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && saving) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
+              onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}
+              onPointerDownOutside={(e) => { if (saving) e.preventDefault(); }}
+              onInteractOutside={(e) => { if (saving) e.preventDefault(); }}
+            >
               <DialogHeader>
                 <DialogTitle className="text-xl font-serif">{editingId ? "Edit Entry" : t("ledger.newTransaction")}</DialogTitle>
                 <DialogDescription>{t("ledger.addEntry")}</DialogDescription>
