@@ -623,7 +623,7 @@ const Ledger = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {entries.map((e) => (
+              {filteredEntries.map((e) => (
                 <TableRow key={e.id} className="hover:bg-muted/20 transition-colors">
                   <TableCell className="text-xs sm:text-sm py-3">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-xs sm:text-sm font-medium">{e.farmers?.name ?? "—"}</TableCell>
