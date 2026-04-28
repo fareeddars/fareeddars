@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CalendarIcon, TrendingDown, TrendingUp, Wallet, HandCoins, Lock, BookOpen, Pencil, Trash2, Search, X } from "lucide-react";
+import { Plus, CalendarIcon, TrendingDown, TrendingUp, Wallet, HandCoins, Lock, BookOpen, Pencil, Trash2, Search, X, Loader2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,7 @@ const Ledger = () => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("expense");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [farmerId, setFarmerId] = useState("");
   const [entryDate, setEntryDate] = useState<Date>(new Date());
@@ -178,6 +179,9 @@ const Ledger = () => {
 
   const handleSave = async () => {
     if (!user || !farmerId || !selectedSeason) return;
+    if (saving) return;
+    setSaving(true);
+    try {
     // Find the farmer_season record
     const fs = farmerSeasons.find(fs => fs.farmer_id === farmerId && fs.season_id === selectedSeason.id);
     let amount = 0;
@@ -242,6 +246,9 @@ const Ledger = () => {
       setActiveTab(keepTab);
     }
     fetchData();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const typeBadge = (type: string) => {
@@ -488,8 +495,8 @@ const Ledger = () => {
                 </TabsContent>
               </Tabs>
               <DialogFooter>
-                <Button onClick={handleSave} disabled={!farmerId} className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg transition-all duration-300">
-                  {t("ledger.saveEntry")}
+                <Button onClick={handleSave} disabled={!farmerId || saving} className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg transition-all duration-300">
+                  {saving ? (<><Loader2 className="animate-spin" /> {t("common.saving") || "Saving..."}</>) : t("ledger.saveEntry")}
                 </Button>
               </DialogFooter>
             </DialogContent>
