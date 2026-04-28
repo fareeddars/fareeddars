@@ -216,7 +216,7 @@ const Ledger = () => {
       }
 
       // ===== Optimistic UI: update list instantly =====
-      const farmerName = farmers.find((f) => f.id === farmerId)?.name || "";
+      const farmerName = (farmerSeasons.find((x: any) => x.farmer_id === farmerId) as any)?.farmers?.name || "";
       const nowIso = new Date().toISOString();
 
       if (editingId) {
