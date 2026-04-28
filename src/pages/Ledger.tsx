@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CalendarIcon, TrendingDown, TrendingUp, Wallet, HandCoins, Lock, BookOpen, Pencil, Trash2 } from "lucide-react";
+import { Plus, CalendarIcon, TrendingDown, TrendingUp, Wallet, HandCoins, Lock, BookOpen, Pencil, Trash2, Search, X } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -66,6 +66,14 @@ const Ledger = () => {
   const [cropWeight, setCropWeight] = useState("");
   const [cropRate, setCropRate] = useState("");
   const [loanAmount, setLoanAmount] = useState("");
+
+  // Filters
+  const [searchText, setSearchText] = useState("");
+  const [filterFarmer, setFilterFarmer] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterFromDate, setFilterFromDate] = useState<Date | undefined>(undefined);
+  const [filterToDate, setFilterToDate] = useState<Date | undefined>(undefined);
 
   // Season farmers for dropdown (only active ones in selected season)
   const seasonFarmers = farmerSeasons.filter(fs => fs.status === "active");
@@ -248,6 +256,33 @@ const Ledger = () => {
   const totalSales = entries.filter(e => e.entry_type === "sale").reduce((s, e) => s + Number(e.amount), 0);
   const totalPayments = entries.filter(e => e.entry_type === "payment").reduce((s, e) => s + Number(e.amount), 0);
   const totalLoans = entries.filter(e => e.entry_type === "loan").reduce((s, e) => s + Number(e.amount), 0);
+
+  // Filtered entries
+  const filteredEntries = entries.filter((e) => {
+    if (filterFarmer !== "all" && e.farmer_id !== filterFarmer) return false;
+    if (filterType !== "all" && e.entry_type !== filterType) return false;
+    if (filterCategory !== "all" && ((e as any).category || "").toLowerCase() !== filterCategory.toLowerCase()) return false;
+    const d = e.entry_date ? new Date(e.entry_date + "T00:00:00") : new Date(e.created_at);
+    if (filterFromDate && d < new Date(filterFromDate.setHours(0, 0, 0, 0))) return false;
+    if (filterToDate) {
+      const to = new Date(filterToDate);
+      to.setHours(23, 59, 59, 999);
+      if (d > to) return false;
+    }
+    if (searchText.trim()) {
+      const q = searchText.trim().toLowerCase();
+      const hay = [e.farmers?.name, e.description, (e as any).category, e.entry_type].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const hasActiveFilters = searchText || filterFarmer !== "all" || filterType !== "all" || filterCategory !== "all" || filterFromDate || filterToDate;
+  const clearFilters = () => {
+    setSearchText(""); setFilterFarmer("all"); setFilterType("all"); setFilterCategory("all");
+    setFilterFromDate(undefined); setFilterToDate(undefined);
+  };
+
 
   return (
     <div className="space-y-6">
@@ -494,8 +529,84 @@ const Ledger = () => {
 
       {/* Entries Table */}
       <Card className="shadow-lg border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-serif">{t("ledger.recentEntries")}</CardTitle>
+        <CardHeader className="pb-3 space-y-4">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <CardTitle className="text-lg font-serif">{t("ledger.recentEntries")}</CardTitle>
+            <span className="text-xs text-muted-foreground">
+              {filteredEntries.length} of {entries.length}
+            </span>
+          </div>
+          {/* Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
+            <div className="relative lg:col-span-2">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search farmer, description…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="pl-8 h-9"
+              />
+            </div>
+            <Select value={filterFarmer} onValueChange={setFilterFarmer}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Farmer" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Farmers</SelectItem>
+                {seasonFarmers.map((fs) => (
+                  <SelectItem key={fs.farmer_id} value={fs.farmer_id}>{fs.farmers?.name || "—"}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterType} onValueChange={(v) => { setFilterType(v); if (v !== "expense") setFilterCategory("all"); }}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="expense">{t("ledger.expense")}</SelectItem>
+                <SelectItem value="sale">{t("ledger.sale")}</SelectItem>
+                <SelectItem value="payment">{t("ledger.payment")}</SelectItem>
+                <SelectItem value="loan">{t("ledger.loan")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterCategory} onValueChange={setFilterCategory} disabled={filterType !== "all" && filterType !== "expense"}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {EXPENSE_CATEGORIES.map((c) => (
+                  <SelectItem key={c.key} value={c.key}>{t(c.label)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex gap-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("h-9 flex-1 justify-start text-left font-normal text-xs", !filterFromDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-1 h-3.5 w-3.5" />
+                    {filterFromDate ? format(filterFromDate, "MMM d") : "From"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={filterFromDate} onSelect={setFilterFromDate} initialFocus className={cn("p-3 pointer-events-auto")} />
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("h-9 flex-1 justify-start text-left font-normal text-xs", !filterToDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-1 h-3.5 w-3.5" />
+                    {filterToDate ? format(filterToDate, "MMM d") : "To"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={filterToDate} onSelect={setFilterToDate} initialFocus className={cn("p-3 pointer-events-auto")} />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          {hasActiveFilters && (
+            <div className="flex justify-end">
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
+                <X className="h-3.5 w-3.5 mr-1" /> Clear filters
+              </Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="overflow-x-auto p-0 sm:p-6 sm:pt-0">
           <Table>
@@ -512,7 +623,7 @@ const Ledger = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {entries.map((e) => (
+              {filteredEntries.map((e) => (
                 <TableRow key={e.id} className="hover:bg-muted/20 transition-colors">
                   <TableCell className="text-xs sm:text-sm py-3">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-xs sm:text-sm font-medium">{e.farmers?.name ?? "—"}</TableCell>
@@ -594,7 +705,7 @@ const Ledger = () => {
                   )}
                 </TableRow>
               ))}
-              {entries.length === 0 && (<TableRow><TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="text-center text-muted-foreground py-12">{t("ledger.noEntries")}</TableCell></TableRow>)}
+              {filteredEntries.length === 0 && (<TableRow><TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="text-center text-muted-foreground py-12">{hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
