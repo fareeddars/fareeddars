@@ -705,7 +705,7 @@ const Ledger = () => {
                   )}
                 </TableRow>
               ))}
-              {entries.length === 0 && (<TableRow><TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="text-center text-muted-foreground py-12">{t("ledger.noEntries")}</TableCell></TableRow>)}
+              {filteredEntries.length === 0 && (<TableRow><TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="text-center text-muted-foreground py-12">{hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
