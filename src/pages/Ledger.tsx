@@ -67,6 +67,14 @@ const Ledger = () => {
   const [cropRate, setCropRate] = useState("");
   const [loanAmount, setLoanAmount] = useState("");
 
+  // Filters
+  const [searchText, setSearchText] = useState("");
+  const [filterFarmer, setFilterFarmer] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterFromDate, setFilterFromDate] = useState<Date | undefined>(undefined);
+  const [filterToDate, setFilterToDate] = useState<Date | undefined>(undefined);
+
   // Season farmers for dropdown (only active ones in selected season)
   const seasonFarmers = farmerSeasons.filter(fs => fs.status === "active");
 
