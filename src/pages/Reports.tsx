@@ -79,28 +79,53 @@ const Reports = () => {
     const payments = farmerEntries.filter((e) => e.entry_type === "payment");
     const loans = farmerEntries.filter((e) => e.entry_type === "loan");
 
+    // === Per-row expense split ===
+    // landlord_only -> 100% landlord
+    // is_shared    -> 50/50 (or stored shared_amount on farmer's side)
+    // else         -> 100% farmer
     const totalFarmerExpenses = expenses.reduce((sum, e) => {
       if (e.payment_method === "landlord_only") return sum;
-      if (e.is_shared) return sum + (e.shared_amount ?? e.amount / 2);
-      return sum + e.amount;
+      if (e.is_shared) return sum + Number(e.shared_amount ?? e.amount / 2);
+      return sum + Number(e.amount);
     }, 0);
     const totalLandlordExpenses = expenses.reduce((sum, e) => {
-      if (e.payment_method === "landlord_only") return sum + e.amount;
-      if (e.is_shared) return sum + (e.amount - (e.shared_amount ?? e.amount / 2));
+      if (e.payment_method === "landlord_only") return sum + Number(e.amount);
+      if (e.is_shared) return sum + (Number(e.amount) - Number(e.shared_amount ?? e.amount / 2));
       return sum;
     }, 0);
-    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalSales = sales.reduce((sum, e) => sum + e.amount, 0);
-    const totalPayments = payments.reduce((sum, e) => sum + e.amount, 0);
-    const totalLoans = loans.reduce((sum, e) => sum + e.amount, 0);
+    const totalExpenses = totalFarmerExpenses + totalLandlordExpenses; // === sum of every row
+
+    // Sales: amount is already net_weight * rate (validated in Ledger)
+    const totalSales = sales.reduce((sum, e) => sum + Number(e.amount), 0);
+    const totalPayments = payments.reduce((sum, e) => sum + Number(e.amount), 0);
+    const totalLoans = loans.reduce((sum, e) => sum + Number(e.amount), 0);
+
     const farmer = getFarmer(farmerId);
-    // Use farmer_season opening_balance if available, fallback to farmer's initial_balance
     const fs = farmerSeasons.find(f => f.farmer_id === farmerId);
     const initialBalance = fs ? Number(fs.opening_balance) : Number(farmer?.initial_balance ?? 0);
-    const balanceOwed = initialBalance + totalFarmerExpenses + totalLoans - totalPayments;
-    const netProfit = totalSales - totalFarmerExpenses - totalLandlordExpenses;
 
-    return { expenses, sales, payments, loans, totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, initialBalance, balanceOwed, netProfit };
+    // === PROFIT (only on net profit, NOT expenses) ===
+    const netProfit = totalSales - totalExpenses;
+    const farmerProfitShare = netProfit / 2;       // 50/50
+    const landlordProfitShare = netProfit / 2;
+
+    // === FARMER ACCOUNT (positive = farmer owes landlord) ===
+    // Opening Balance
+    // − Farmer's Profit Share (income for farmer reduces debt)
+    // + Loans Taken from landlord (increases debt)
+    // + Expenses Paid by Landlord on farmer's behalf (here we treat shared/landlord_only landlord-paid expenses already in landlord side; only farmer-allocated expenses stay on farmer's books)
+    // − Payments Made by farmer (reduces debt)
+    //
+    // Simplified: Final Balance = Opening + FarmerExpenses + Loans − FarmerProfitShare − Payments
+    const finalBalance = initialBalance + totalFarmerExpenses + totalLoans - farmerProfitShare - totalPayments;
+
+    return {
+      expenses, sales, payments, loans,
+      totalFarmerExpenses, totalLandlordExpenses, totalExpenses,
+      totalSales, totalPayments, totalLoans,
+      initialBalance, netProfit, farmerProfitShare, landlordProfitShare,
+      finalBalance,
+    };
   };
 
   const selectedFarmerName = selectedFarmerId === "all" ? t("reports.allFarmers") : getFarmerName(selectedFarmerId);
