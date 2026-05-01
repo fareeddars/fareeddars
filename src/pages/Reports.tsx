@@ -675,19 +675,20 @@ const Reports = () => {
       {reportReady && reportFarmerIds.length > 0 && (
         <div className="space-y-4">
           {reportFarmerIds.map((farmerId) => {
-            const { totalFarmerExpenses, totalLandlordExpenses, totalSales, totalPayments, totalLoans, balanceOwed, netProfit } = calcSections(farmerId);
+            const { totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, finalBalance, netProfit } = calcSections(farmerId);
             return (
               <Card key={farmerId}>
                 <CardHeader><CardTitle className="text-base">{getFarmerName(farmerId)}</CardTitle></CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                    <div><p className="text-muted-foreground">{t("reports.totalSales")}</p><p className="font-mono font-medium text-emerald-600">{fmt(totalSales)}</p></div>
                     <div><p className="text-muted-foreground">{t("reports.farmerExpenses")}</p><p className="font-mono font-medium">{fmt(totalFarmerExpenses)}</p></div>
                     <div><p className="text-muted-foreground">{t("reports.landlordExpenses")}</p><p className="font-mono font-medium">{fmt(totalLandlordExpenses)}</p></div>
-                    <div><p className="text-muted-foreground">{t("reports.totalSales")}</p><p className="font-mono font-medium">{fmt(totalSales)}</p></div>
+                    <div><p className="text-muted-foreground">Total Expenses</p><p className="font-mono font-medium text-red-600">{fmt(totalExpenses)}</p></div>
                     <div><p className="text-muted-foreground">{t("reports.personalLoans")}</p><p className="font-mono font-medium">{fmt(totalLoans)}</p></div>
                     <div><p className="text-muted-foreground">{t("reports.paymentsReceived")}</p><p className="font-mono font-medium">{fmt(totalPayments)}</p></div>
-                    <div><p className="text-muted-foreground">{t("reports.balanceDue")}</p><p className={`font-mono font-medium ${balanceOwed > 0 ? "text-destructive" : "text-primary"}`}>{balanceOwed <= 0 ? t("reports.settled") : fmt(Math.abs(balanceOwed))}</p></div>
-                    <div><p className="text-muted-foreground">{t("reports.netProfitLoss")}</p><p className={`font-mono font-medium ${netProfit >= 0 ? "text-primary" : "text-destructive"}`}>{fmt(Math.abs(netProfit))}</p></div>
+                    <div><p className="text-muted-foreground">{t("reports.netProfitLoss")}</p><p className={`font-mono font-medium ${netProfit >= 0 ? "text-blue-600" : "text-destructive"}`}>{netProfit >= 0 ? "+" : "−"} {fmt(Math.abs(netProfit))}</p></div>
+                    <div><p className="text-muted-foreground">{t("reports.balanceDue")}</p><p className={`font-mono font-bold ${finalBalance > 0 ? "text-destructive" : "text-primary"}`}>{Math.abs(finalBalance) < 0.5 ? t("reports.settled") : fmt(Math.abs(finalBalance))}</p></div>
                   </div>
                 </CardContent>
               </Card>
