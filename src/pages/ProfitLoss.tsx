@@ -12,16 +12,19 @@ const ProfitLoss = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      let query = supabase.from("ledger_entries").select("entry_type, amount, is_shared, shared_amount");
+      let query = supabase.from("ledger_entries").select("entry_type, amount");
       if (selectedSeason) query = query.eq("season_id", selectedSeason.id);
       const { data: entries } = await query;
       if (!entries) return;
       let income = 0, expenses = 0;
+      // Net Profit = Total Sales − Total Expenses (full expense, all parties combined)
+      // Payments are NOT income — they are settlements against farmer's account.
       entries.forEach((e) => {
-        const amt = Number(e.amount);
-        if (e.entry_type === "sale" || e.entry_type === "payment") income += amt;
-        else if (e.entry_type === "expense") expenses += e.is_shared ? Number(e.shared_amount ?? amt / 2) : amt;
+        const amt = Number(e.amount) || 0;
+        if (e.entry_type === "sale") income += amt;
+        else if (e.entry_type === "expense") expenses += amt;
       });
+      console.log("[ProfitLoss] sales:", income, "expenses:", expenses, "netProfit:", income - expenses);
       setData({ income, expenses });
     };
     fetch();

@@ -180,20 +180,62 @@ const Ledger = () => {
   const handleSave = async () => {
     if (!user || !farmerId || !selectedSeason) return;
     if (saving) return;
+
+    // === VALIDATION ===
+    const dateStr = format(entryDate, "yyyy-MM-dd");
+    let amount = 0;
+    if (activeTab === "expense") {
+      amount = computedExpenseAmount();
+      if (!category) { toast({ title: "Category required", variant: "destructive" }); return; }
+      if (amount <= 0) { toast({ title: "Amount must be greater than 0", variant: "destructive" }); return; }
+    } else if (activeTab === "sale") {
+      const gw = Number(grossWeight) || 0;
+      const dw = Number(deductionsVal) || 0;
+      const nw = netWeight();
+      const rt = Number(saleRate) || 0;
+      if (gw <= 0) { toast({ title: "Gross weight required", variant: "destructive" }); return; }
+      if (nw <= 0) { toast({ title: "Net weight must be > 0 (Gross − Deductions)", variant: "destructive" }); return; }
+      if (rt <= 0) { toast({ title: "Rate per kg required", variant: "destructive" }); return; }
+      if (dw < 0) { toast({ title: "Deductions cannot be negative", variant: "destructive" }); return; }
+      amount = saleTotal();
+    } else if (activeTab === "payment") {
+      amount = paymentMethod === "cash" ? (Number(cashAmount) || 0) : cropTotal();
+      if (paymentMethod === "crop_return" && !cropType.trim()) { toast({ title: "Crop name required", variant: "destructive" }); return; }
+      if (amount <= 0) { toast({ title: "Payment amount must be > 0", variant: "destructive" }); return; }
+    } else if (activeTab === "loan") {
+      amount = Number(loanAmount) || 0;
+      if (amount <= 0) { toast({ title: "Loan amount must be > 0", variant: "destructive" }); return; }
+    }
+
+    // === DUPLICATE CHECK (block) ===
+    const isDuplicate = entries.some((e: any) =>
+      e.id !== editingId &&
+      e.farmer_id === farmerId &&
+      e.entry_type === activeTab &&
+      e.entry_date === dateStr &&
+      Math.abs(Number(e.amount) - amount) < 0.01
+    );
+    if (isDuplicate) {
+      toast({
+        title: "Duplicate entry blocked",
+        description: `An entry with same farmer, type, date and amount (₨ ${amount.toLocaleString()}) already exists. Edit the existing one instead.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       // Find the farmer_season record
       const fs = farmerSeasons.find(fs => fs.farmer_id === farmerId && fs.season_id === selectedSeason.id);
-      let amount = 0;
       let entryData: Record<string, unknown> = {
         farmer_id: farmerId, entry_type: activeTab, description, created_by: user.id,
-        entry_date: format(entryDate, "yyyy-MM-dd"),
+        entry_date: dateStr,
         season_id: selectedSeason.id,
         farmer_season_id: fs?.id || null,
       };
 
       if (activeTab === "expense") {
-        amount = computedExpenseAmount();
         const isShared = costAllocation === "shared";
         entryData = {
           ...entryData, amount, category,
@@ -205,13 +247,10 @@ const Ledger = () => {
           payment_method: costAllocation === "landlord" ? "landlord_only" : null,
         };
       } else if (activeTab === "sale") {
-        amount = saleTotal();
-        entryData = { ...entryData, amount, gross_weight: grossWeight ? Number(grossWeight) : null, deductions: deductionsVal ? Number(deductionsVal) : null, net_weight: netWeight() || null, rate: saleRate ? Number(saleRate) : null };
+        entryData = { ...entryData, amount, gross_weight: Number(grossWeight), deductions: Number(deductionsVal) || 0, net_weight: netWeight(), rate: Number(saleRate), crop_type: cropType.trim() || description.trim() || null };
       } else if (activeTab === "payment") {
-        amount = paymentMethod === "cash" ? (Number(cashAmount) || 0) : cropTotal();
         entryData = { ...entryData, amount, payment_method: paymentMethod, crop_type: paymentMethod === "crop_return" ? cropType : null, crop_weight: paymentMethod === "crop_return" && cropWeight ? Number(cropWeight) : null, rate: paymentMethod === "crop_return" && cropRate ? Number(cropRate) : null };
       } else if (activeTab === "loan") {
-        amount = Number(loanAmount) || 0;
         entryData = { ...entryData, amount, entry_type: "loan" };
       }
 
