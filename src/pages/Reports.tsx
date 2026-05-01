@@ -410,15 +410,44 @@ const Reports = () => {
       }
 
       .section-title {
-        font-size: ${isRTL ? '16px' : '13px'};
+        font-size: 16px;
         font-weight: 700;
         color: #1e3a5f;
         margin: 18px 0 6px;
-        padding: 6px 10px;
+        padding: 8px 12px;
         background: #edf2f7;
-        border-${isRTL ? 'right' : 'left'}: 4px solid #2c5f8a;
-        border-radius: 2px;
+        border-right: 5px solid #2c5f8a;
+        border-radius: 4px;
       }
+      .section-title.sec-expenses { background: #fef2f2; border-right-color: #dc2626; color: #991b1b; }
+      .section-title.sec-sales    { background: #ecfdf5; border-right-color: #059669; color: #065f46; }
+      .section-title.sec-loans    { background: #eff6ff; border-right-color: #2563eb; color: #1e3a8a; }
+      .section-title.sec-payments { background: #fffbeb; border-right-color: #d97706; color: #92400e; }
+
+      /* Top summary cards */
+      .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin: 12px 0 18px;
+      }
+      .sc {
+        border-radius: 8px;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        text-align: center;
+      }
+      .sc-label { font-size: 12px; font-weight: 600; opacity: 0.85; margin-bottom: 4px; }
+      .sc-value { font-size: 16px; font-weight: 800; font-family: 'Inter', 'Tahoma', monospace; }
+      .sc-sales    { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+      .sc-expenses { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+      .sc-profit   { background: #eff6ff; border-color: #93c5fd; color: #1e3a8a; }
+      .sc-balance  { background: #fef3c7; border-color: #fcd34d; color: #78350f; font-weight: 800; }
+      .row-total { font-weight: 700; background: #f1f5f9; }
+
+      .box-profit .box-title { color: #1e3a8a; border-bottom-color: #2563eb; }
+      .box-balance .box-title { color: #78350f; border-bottom-color: #d97706; }
 
       .bill-table {
         width: 100%;
