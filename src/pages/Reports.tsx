@@ -131,29 +131,32 @@ const Reports = () => {
   const selectedFarmerName = selectedFarmerId === "all" ? t("reports.allFarmers") : getFarmerName(selectedFarmerId);
 
   const handlePrint = () => {
-    const L = printLang;
-    const isRTL = L !== "en";
-    const dirAttr = isRTL ? 'dir="rtl"' : '';
-    const fontFamily = isRTL ? "'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif" : "'Segoe UI', Arial, sans-serif";
-    const textAlign = isRTL ? "right" : "left";
-    const textAlignOpp = isRTL ? "left" : "right";
+    const L = printLang; // "ur" or "sd" only
+    const isRTL = true;
+    const dirAttr = 'dir="rtl"';
+    const textAlign = "right";
+    const textAlignOpp = "left";
+    const fmtSign = (n: number) => `${n < 0 ? "− " : ""}₨ ${fmtNum(Math.abs(n))}`;
 
     let html = "";
 
     reportFarmerIds.forEach((farmerId, idx) => {
-      const { expenses, sales, payments, loans, totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, initialBalance, balanceOwed, netProfit } = calcSections(farmerId);
+      const {
+        expenses, sales, payments, loans,
+        totalFarmerExpenses, totalLandlordExpenses, totalExpenses,
+        totalSales, totalPayments, totalLoans,
+        initialBalance, netProfit, farmerProfitShare, landlordProfitShare,
+        finalBalance,
+      } = calcSections(farmerId);
       const farmer = getFarmer(farmerId);
       if (!farmer) return;
-      const fs = farmerSeasons.find(f => f.farmer_id === farmerId);
       const seasonName = selectedSeason?.name ?? "—";
       const stmtNo = `${new Date().getFullYear()}/${String(idx + 1).padStart(3, "0")}`;
-      const totalNetWeight = sales.reduce((s, e) => s + (e.net_weight ?? 0), 0);
-      const totalPayable = initialBalance + totalFarmerExpenses + totalLandlordExpenses;
-      const refundOrDue = totalPayments - totalPayable;
+      const profitOrLossLabel = netProfit >= 0 ? pt("print.netProfit", L) : pt("print.netLoss", L);
 
       if (idx > 0) html += `<div style="page-break-before:always"></div>`;
 
-      // Header
+      // === HEADER ===
       html += `<div class="header-block">
         <h1>${pt("print.title", L)}</h1>
         <div class="header-sub">
@@ -162,7 +165,7 @@ const Reports = () => {
         </div>
       </div>`;
 
-      // Farmer & Landlord Info
+      // === FARMER & LANDLORD INFO ===
       html += `<div class="info-row">
         <div class="info-col">
           <div class="info-label">${pt("print.farmer", L)}:</div>
@@ -176,13 +179,21 @@ const Reports = () => {
         </div>
       </div>`;
 
-      // Green info bar
+      // === GREEN BAR ===
       html += `<div class="info-bar">
-        ${pt("print.cropSeason", L)}: ${seasonName} &nbsp;|&nbsp; ${pt("print.profitSharing", L)}: 50% ${pt("print.farmer", L)} / 50% ${pt("print.landlord", L)}
+        ${pt("print.profitSharing", L)}: 50% ${pt("print.farmer", L)} / 50% ${pt("print.landlord", L)}
       </div>`;
 
-      // Section 1: Expenses
-      html += `<div class="section-title">1. ${pt("print.expensesDetails", L)}</div>`;
+      // === SUMMARY CARDS (top of bill) ===
+      html += `<div class="summary-cards">
+        <div class="sc sc-sales"><div class="sc-label">${pt("print.cardSales", L)}</div><div class="sc-value">₨ ${fmtNum(totalSales)}</div></div>
+        <div class="sc sc-expenses"><div class="sc-label">${pt("print.cardExpenses", L)}</div><div class="sc-value">₨ ${fmtNum(totalExpenses)}</div></div>
+        <div class="sc sc-profit"><div class="sc-label">${profitOrLossLabel}</div><div class="sc-value">${fmtSign(netProfit)}</div></div>
+        <div class="sc sc-balance"><div class="sc-label">${pt("print.cardFinalBalance", L)}</div><div class="sc-value">${fmtSign(finalBalance)}</div></div>
+      </div>`;
+
+      // === SECTION 1: EXPENSES ===
+      html += `<div class="section-title sec-expenses">1. ${pt("print.expensesDetails", L)}</div>`;
       if (expenses.length > 0) {
         html += `<table class="bill-table"><thead><tr>
           <th>${pt("common.date", L)}</th>
@@ -190,34 +201,32 @@ const Reports = () => {
           <th>${pt("common.description", L)}</th>
           <th class="num">${pt("print.farmerShare", L)} (₨)</th>
           <th class="num">${pt("print.landlordShare", L)} (₨)</th>
-          <th class="num">${pt("common.total", L)}</th>
-          <th class="num">${pt("common.total", L)} (₨)</th>
+          <th class="num">${pt("print.lineRowTotal", L)} (₨)</th>
         </tr></thead><tbody>`;
         expenses.forEach((e) => {
           const isLandlordOnly = e.payment_method === "landlord_only";
-          const fShare = isLandlordOnly ? 0 : (e.is_shared ? (e.shared_amount ?? e.amount / 2) : e.amount);
-          const lShare = isLandlordOnly ? e.amount : (e.is_shared ? (e.amount - (e.shared_amount ?? e.amount / 2)) : 0);
+          const fShare = isLandlordOnly ? 0 : (e.is_shared ? Number(e.shared_amount ?? e.amount / 2) : Number(e.amount));
+          const lShare = isLandlordOnly ? Number(e.amount) : (e.is_shared ? Number(e.amount) - Number(e.shared_amount ?? e.amount / 2) : 0);
+          const rowTotal = fShare + lShare;
           html += `<tr>
             <td>${e.entry_date ?? "—"}</td>
             <td>${e.category ?? "—"}</td>
             <td>${e.description || "—"}</td>
-            <td class="num">${fShare > 0 ? fmtNum(fShare) : "—"}</td>
-            <td class="num">${lShare > 0 ? fmtNum(lShare) : "—"}</td>
-            <td class="num">${fmtNum(e.amount)}</td>
-            <td class="num">${fmtNum(e.amount)}</td>
+            <td class="num">${fmtNum(fShare)}</td>
+            <td class="num">${fmtNum(lShare)}</td>
+            <td class="num row-total">${fmtNum(rowTotal)}</td>
           </tr>`;
         });
         html += `</tbody><tfoot><tr>
           <td colspan="3"><strong>${pt("print.totalExpenses", L)}:</strong></td>
           <td class="num"><strong>${fmtNum(totalFarmerExpenses)}</strong></td>
           <td class="num"><strong>${fmtNum(totalLandlordExpenses)}</strong></td>
-          <td class="num"><strong>${fmtNum(totalExpenses)}</strong></td>
-          <td class="num total-highlight">₨ ${fmtNum(totalFarmerExpenses + totalLandlordExpenses)}</td>
+          <td class="num total-highlight">₨ ${fmtNum(totalExpenses)}</td>
         </tr></tfoot></table>`;
       } else { html += `<p class="no-data">${pt("print.noExpenses", L)}</p>`; }
 
-      // Section 2: Sales
-      html += `<div class="section-title">2. ${pt("print.salesSummaryTitle", L)}</div>`;
+      // === SECTION 2: SALES ===
+      html += `<div class="section-title sec-sales">2. ${pt("print.salesSummaryTitle", L)}</div>`;
       if (sales.length > 0) {
         html += `<table class="bill-table"><thead><tr>
           <th>${pt("common.date", L)}</th>
@@ -226,8 +235,12 @@ const Reports = () => {
           <th class="num">${pt("print.deductionsKg", L)}</th>
           <th class="num">${pt("print.netWt", L)}</th>
           <th class="num">${pt("print.ratePerKg", L)}</th>
+          <th class="num">${pt("print.lineRowTotal", L)} (₨)</th>
         </tr></thead><tbody>`;
         sales.forEach((e) => {
+          const nw = Number(e.net_weight ?? 0);
+          const rt = Number(e.rate ?? 0);
+          const rowTotal = nw * rt; // recomputed defensively; should equal e.amount
           html += `<tr>
             <td>${e.entry_date ?? "—"}</td>
             <td>${e.crop_type || e.description || "—"}</td>
@@ -235,14 +248,38 @@ const Reports = () => {
             <td class="num">${e.deductions != null ? fmtNum(e.deductions) + " kg" : "—"}</td>
             <td class="num">${e.net_weight != null ? fmtNum(e.net_weight) + " kg" : "—"}</td>
             <td class="num">₨ ${e.rate != null ? fmtNum(e.rate) + "/kg" : "—"}</td>
+            <td class="num row-total">${fmtNum(rowTotal)}</td>
           </tr>`;
         });
-        html += `</tbody></table>`;
-        html += `<div class="total-line">${pt("print.totalSalesLabel", L)}: ₨ ${fmtNum(totalSales)}</div>`;
+        html += `</tbody><tfoot><tr>
+          <td colspan="6"><strong>${pt("print.totalSalesLabel", L)}:</strong></td>
+          <td class="num total-highlight">₨ ${fmtNum(totalSales)}</td>
+        </tr></tfoot></table>`;
       } else { html += `<p class="no-data">${pt("print.noSales", L)}</p>`; }
 
-      // Section 3: Payments
-      html += `<div class="section-title">3. ${pt("print.paymentsReceivedTitle", L)}</div>`;
+      // === SECTION 3: LOANS GIVEN TO FARMER ===
+      html += `<div class="section-title sec-loans">3. ${pt("print.loansToFarmer", L)}</div>`;
+      if (loans.length > 0) {
+        html += `<table class="bill-table"><thead><tr>
+          <th>${pt("common.date", L)}</th>
+          <th>${pt("common.description", L)}</th>
+          <th class="num">${pt("common.amount", L)} (₨)</th>
+        </tr></thead><tbody>`;
+        loans.forEach((e) => {
+          html += `<tr>
+            <td>${e.entry_date ?? "—"}</td>
+            <td>${e.description || "—"}</td>
+            <td class="num row-total">${fmtNum(e.amount)}</td>
+          </tr>`;
+        });
+        html += `</tbody><tfoot><tr>
+          <td colspan="2"><strong>${pt("print.totalLoans", L)}:</strong></td>
+          <td class="num total-highlight">₨ ${fmtNum(totalLoans)}</td>
+        </tr></tfoot></table>`;
+      } else { html += `<p class="no-data">${pt("print.noLoans", L)}</p>`; }
+
+      // === SECTION 4: PAYMENTS RECEIVED FROM FARMER ===
+      html += `<div class="section-title sec-payments">4. ${pt("print.paymentsReceivedTitle", L)}</div>`;
       if (payments.length > 0) {
         html += `<table class="bill-table"><thead><tr>
           <th>${pt("common.date", L)}</th>
@@ -251,63 +288,48 @@ const Reports = () => {
           <th class="num">${pt("common.amount", L)} (₨)</th>
         </tr></thead><tbody>`;
         payments.forEach((e) => {
-          const details = e.payment_method === "crop_return" && e.crop_type ? `${e.crop_type} ${e.crop_weight ?? ""}kg @ ₨${e.rate ?? ""}/kg` : "—";
+          const details = e.payment_method === "crop_return" && e.crop_type
+            ? `${e.crop_type} ${e.crop_weight ?? ""}kg @ ₨${e.rate ?? ""}/kg`
+            : "—";
           html += `<tr>
             <td>${e.entry_date ?? "—"}</td>
             <td>${e.payment_method === "crop_return" ? pt("ledger.cropReturn", L) : pt("print.cash", L)}</td>
             <td>${details}</td>
-            <td class="num">${fmtNum(e.amount)}</td>
+            <td class="num row-total">${fmtNum(e.amount)}</td>
           </tr>`;
         });
-        html += `</tbody></table>`;
-        html += `<div class="total-line">${pt("print.totalReceived", L)}: ₨ ${fmtNum(totalPayments)}</div>`;
+        html += `</tbody><tfoot><tr>
+          <td colspan="3"><strong>${pt("print.totalReceived", L)}:</strong></td>
+          <td class="num total-highlight">₨ ${fmtNum(totalPayments)}</td>
+        </tr></tfoot></table>`;
       } else { html += `<p class="no-data">${pt("print.noPayments", L)}</p>`; }
 
-      // Section 4: Loans
-      html += `<div class="section-title">4. ${pt("print.loansToFarmer", L)}</div>`;
-      if (loans.length > 0) {
-        html += `<table class="bill-table"><thead><tr>
-          <th>${pt("common.date", L)}</th>
-          <th>${pt("common.description", L)}</th>
-          <th class="num">${pt("common.amount", L)}</th>
-          <th class="num">${pt("common.total", L)}</th>
-        </tr></thead><tbody>`;
-        loans.forEach((e) => {
-          html += `<tr>
-            <td>${e.entry_date ?? "—"}</td>
-            <td>${e.description || "—"}</td>
-            <td class="num">${fmtNum(e.amount)}</td>
-            <td class="num">${fmtNum(e.amount)}</td>
-          </tr>`;
-        });
-        html += `</tbody></table>`;
-        html += `<div class="total-line">${pt("print.totalLoans", L)}: ₨ ${fmtNum(totalLoans)}</div>`;
-      } else { html += `<p class="no-data">${pt("print.noLoans", L)}</p>`; }
-
-      // Section 5 & 6: Profit/Loss + Final Account Summary side by side
+      // === SECTION 5 & 6: PROFIT + FINAL BALANCE ===
       html += `<div class="bottom-grid">
-        <div class="bottom-box">
+        <div class="bottom-box box-profit">
           <div class="box-title">5. ${pt("print.profitLossSummary", L)}</div>
           <div class="summary-row"><span>${pt("print.totalSalesIncome", L)}:</span><span>₨ ${fmtNum(totalSales)}</span></div>
-          <div class="summary-row"><span>+ ${pt("print.farmerShare", L)}:</span><span>− ${fmtNum(totalFarmerExpenses)}</span></div>
-          <div class="summary-row"><span>+ ${pt("print.landlordShare", L)}:</span><span>− ${fmtNum(totalLandlordExpenses)}</span></div>
-          <div class="summary-row bold-row"><span>${netProfit >= 0 ? pt("print.netProfit", L) : pt("print.netLoss", L)}:</span><span>₨ ${fmtNum(Math.abs(netProfit))}</span></div>
+          <div class="summary-row"><span>− ${pt("print.cardExpenses", L)}:</span><span>${fmtSign(-totalExpenses)}</span></div>
+          <div class="summary-row bold-row"><span>${profitOrLossLabel}:</span><span>${fmtSign(netProfit)}</span></div>
+          <div class="summary-row"><span>${pt("print.profitShareFarmer", L)}:</span><span>${fmtSign(farmerProfitShare)}</span></div>
+          <div class="summary-row"><span>${pt("print.profitShareLandlord", L)}:</span><span>${fmtSign(landlordProfitShare)}</span></div>
         </div>
-        <div class="bottom-box">
+        <div class="bottom-box box-balance">
           <div class="box-title">6. ${pt("print.finalAccountSummary", L)}</div>
-          <div class="summary-row"><span>${pt("print.openingBalance", L)}</span><span>₨ ${fmtNum(initialBalance)}</span></div>
-          <div class="summary-row"><span>+ ${pt("print.farmerShare", L)}</span><span>− ${fmtNum(totalFarmerExpenses)}</span></div>
-          <div class="summary-row"><span>+ ${pt("print.landlordShare", L)}</span><span>− ${fmtNum(totalLandlordExpenses)}</span></div>
-          <div class="summary-row"><span>− ${pt("print.totalPayableLabel", L)}:</span><span>₨ ${fmtNum(totalPayable)}</span></div>
-          <div class="summary-row highlight-row ${refundOrDue >= 0 ? 'refund' : 'due'}">
-            <span>${refundOrDue >= 0 ? pt("print.refundDueToFarmer", L) : pt("print.balanceStillDue", L)}:</span>
-            <span>₨ ${fmtNum(Math.abs(refundOrDue))}</span>
+          <div class="summary-row"><span>${pt("print.openingBalance", L)}:</span><span>₨ ${fmtNum(initialBalance)}</span></div>
+          <div class="summary-row"><span>+ ${pt("print.farmerShare", L)} (${pt("print.cardExpenses", L)}):</span><span>+ ₨ ${fmtNum(totalFarmerExpenses)}</span></div>
+          <div class="summary-row"><span>${pt("print.minusLoans", L)}:</span><span>+ ₨ ${fmtNum(totalLoans)}</span></div>
+          <div class="summary-row"><span>− ${pt("print.profitShareFarmer", L)}:</span><span>− ₨ ${fmtNum(farmerProfitShare)}</span></div>
+          <div class="summary-row"><span>${pt("print.minusPaymentsMade", L)}:</span><span>− ₨ ${fmtNum(totalPayments)}</span></div>
+          <div class="summary-row highlight-row ${finalBalance > 0 ? 'due' : 'refund'}">
+            <span>${finalBalance > 0 ? pt("print.payable", L) : pt("print.receivable", L)}:</span>
+            <span>₨ ${fmtNum(Math.abs(finalBalance))}</span>
           </div>
         </div>
       </div>`;
 
-      // Date & Signatures
-      html += `<div class="date-line">${pt("common.date", L)}: ${new Date().toLocaleDateString("en-PK", { day: "2-digit", month: "2-digit", year: "numeric" })}</div>`;
+      // === DATE + SIGNATURES ===
+      html += `<div class="date-line">${pt("print.dateAndTime", L)}: ${new Date().toLocaleDateString("en-PK", { day: "2-digit", month: "2-digit", year: "numeric" })}</div>`;
       html += `<div class="signature-row">
         <div class="sig-block">
           <div class="sig-line"></div>
@@ -319,8 +341,6 @@ const Reports = () => {
           <div class="sig-date">${pt("common.date", L)}: ________________</div>
         </div>
       </div>`;
-
-      html += `</div>`; // close farmer block wrapper (opened implicitly)
     });
 
     if (reportFarmerIds.length === 0) {
