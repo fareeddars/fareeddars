@@ -636,12 +636,11 @@ const Reports = () => {
             </div>
             <div className="space-y-2">
               <Label>{t("reports.printLanguage")}</Label>
-              <Select value={printLang} onValueChange={(v) => setPrintLang(v as Language)}>
+              <Select value={printLang} onValueChange={(v) => setPrintLang(v as "ur" | "sd")}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="sd">سندھی (Sindhi)</SelectItem>
                   <SelectItem value="ur">اردو (Urdu)</SelectItem>
+                  <SelectItem value="sd">سندھی (Sindhi)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
