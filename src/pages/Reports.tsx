@@ -32,7 +32,8 @@ const Reports = () => {
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [reportReady, setReportReady] = useState(false);
-  const [printLang, setPrintLang] = useState<Language>("en");
+  // User picks Urdu OR Sindhi for printing (English UI is for the in-app preview only)
+  const [printLang, setPrintLang] = useState<Exclude<Language, "en">>("ur");
   const printRef = useRef<HTMLDivElement>(null);
 
   // Only show farmers in the current season
