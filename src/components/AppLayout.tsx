@@ -7,8 +7,10 @@ import { Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
-  const { dir } = useLanguage();
+  const { dir, language } = useLanguage();
   const { profile } = useAuth();
+  const localeMap: Record<string, string> = { en: "en-US", ur: "ur-PK", sd: "ur-PK" };
+  const dateLocale = localeMap[language] || "en-US";
 
   return (
     <div dir={dir}>
