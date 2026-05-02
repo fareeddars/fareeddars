@@ -174,7 +174,7 @@ const Farmers = () => {
             <Label className="text-sm">{t("farmers.initialBalance")} (₨)</Label>
             <div className="relative">
               <BadgeDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input type="number" value={formData.initial_balance} onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })} className="pl-9" />
+              <Input type="number" inputMode="decimal" min="0" step="0.01" value={formData.initial_balance} onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })} className="pl-9" />
             </div>
           </div>
           <div className="space-y-1.5">
