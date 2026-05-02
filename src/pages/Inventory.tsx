@@ -299,12 +299,12 @@ const Inventory = () => {
               <div className="space-y-4">
                 <div className="space-y-2"><Label>{t("inventory.itemName")} *</Label><Input className="h-11" value={form.item_name} onChange={(e) => setForm({ ...form, item_name: e.target.value })} /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input className="h-11" type="number" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input className="h-11" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input className="h-11" maxLength={20} value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input className="h-11" type="number" value={form.price_per_unit} onChange={(e) => setForm({ ...form, price_per_unit: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input className="h-11" type="number" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={form.price_per_unit} onChange={(e) => setForm({ ...form, price_per_unit: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input className="h-11" type="number" inputMode="numeric" min="0" step="1" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} /></div>
                 </div>
               </div>
               <DialogFooter><Button onClick={handleSave} disabled={!form.item_name} className="w-full h-11 bg-gradient-to-r from-primary to-purple-600">{t("inventory.saveItem")}</Button></DialogFooter>
