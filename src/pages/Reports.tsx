@@ -33,7 +33,7 @@ const Reports = () => {
   const [loading, setLoading] = useState(false);
   const [reportReady, setReportReady] = useState(false);
   // User picks Urdu OR Sindhi for printing (English UI is for the in-app preview only)
-  const [printLang, setPrintLang] = useState<Exclude<Language, "en">>("ur");
+  const [printLang, setPrintLang] = useState<Language>("ur");
   const printRef = useRef<HTMLDivElement>(null);
 
   // Only show farmers in the current season
