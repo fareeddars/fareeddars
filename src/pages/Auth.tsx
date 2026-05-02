@@ -20,17 +20,30 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
+      return;
+    }
+    if (password.length < 6) {
+      toast({ title: "Weak password", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    if (!isLogin && !fullName.trim()) {
+      toast({ title: "Name required", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
         if (error) throw error;
         navigate("/");
       } else {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: trimmedEmail,
           password,
-          options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
+          options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
         toast({ title: "Account created!", description: "You can now sign in." });
