@@ -94,7 +94,7 @@ const Auth = () => {
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" required className="h-11 rounded-xl" />
+                <Input id="email" type="email" inputMode="email" autoComplete={isLogin ? "username" : "email"} autoCapitalize="none" autoCorrect="off" maxLength={255} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" required className="h-11 rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
