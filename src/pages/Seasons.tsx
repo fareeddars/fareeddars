@@ -366,7 +366,7 @@ const Seasons = () => {
                     {alreadyAssigned && <span className="ml-2 text-xs text-muted-foreground">({t("seasons.alreadyAssigned")})</span>}
                   </div>
                   {isChecked && !alreadyAssigned && (
-                    <Input type="number" placeholder="₨ 0" className="w-24 h-8 text-xs" value={balances[farmer.id] || ""} onChange={(e) => setBalances({ ...balances, [farmer.id]: e.target.value })} />
+                    <Input type="number" inputMode="decimal" min="0" step="0.01" placeholder="₨ 0" className="w-24 h-9 text-xs" value={balances[farmer.id] || ""} onChange={(e) => setBalances({ ...balances, [farmer.id]: e.target.value })} />
                   )}
                 </div>
               );
