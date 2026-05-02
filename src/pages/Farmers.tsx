@@ -65,11 +65,18 @@ const Farmers = () => {
 
   const handleSave = async () => {
     if (!user) return;
+    const trimmedName = form.name.trim();
+    if (!trimmedName) { toast({ title: "Name is required", variant: "destructive" }); return; }
+    if (trimmedName.length > 100) { toast({ title: "Name too long (max 100 chars)", variant: "destructive" }); return; }
+    const bal = Number(form.initial_balance);
+    if (form.initial_balance !== "" && (Number.isNaN(bal) || bal < 0)) {
+      toast({ title: "Initial balance must be a positive number", variant: "destructive" }); return;
+    }
     try {
       await offlineRepo.insert("farmers", {
-        name: form.name, phone: form.phone || null, address: form.address || null,
-        farm_details: form.farm_details || null, initial_balance: Number(form.initial_balance) || 0, created_by: user.id,
-        cnic: form.cnic || null, landlord: form.landlord || null, notes: form.notes || null,
+        name: trimmedName, phone: form.phone.trim() || null, address: form.address.trim() || null,
+        farm_details: form.farm_details.trim() || null, initial_balance: bal || 0, created_by: user.id,
+        cnic: form.cnic.trim() || null, landlord: form.landlord.trim() || null, notes: form.notes.trim() || null,
       });
       toast({ title: isOnline() ? "Farmer added successfully" : "Saved offline — will sync" });
       setForm({ ...emptyForm }); setOpen(false); setConfirmOpen(false); fetchFarmers();
