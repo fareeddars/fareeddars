@@ -397,12 +397,12 @@ const Inventory = () => {
           <div className="space-y-4">
             <div className="space-y-2"><Label>{t("inventory.itemName")} *</Label><Input className="h-11" value={editForm.item_name} onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input className="h-11" type="number" value={editForm.current_stock} onChange={(e) => setEditForm({ ...editForm, current_stock: e.target.value })} /></div>
-              <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input className="h-11" value={editForm.unit} onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={editForm.current_stock} onChange={(e) => setEditForm({ ...editForm, current_stock: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input className="h-11" maxLength={20} value={editForm.unit} onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input className="h-11" type="number" value={editForm.price_per_unit} onChange={(e) => setEditForm({ ...editForm, price_per_unit: e.target.value })} /></div>
-              <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input className="h-11" type="number" value={editForm.low_stock_threshold} onChange={(e) => setEditForm({ ...editForm, low_stock_threshold: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={editForm.price_per_unit} onChange={(e) => setEditForm({ ...editForm, price_per_unit: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input className="h-11" type="number" inputMode="numeric" min="0" step="1" value={editForm.low_stock_threshold} onChange={(e) => setEditForm({ ...editForm, low_stock_threshold: e.target.value })} /></div>
             </div>
           </div>
           <DialogFooter>
