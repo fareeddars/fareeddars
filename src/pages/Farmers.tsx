@@ -65,11 +65,18 @@ const Farmers = () => {
 
   const handleSave = async () => {
     if (!user) return;
+    const trimmedName = form.name.trim();
+    if (!trimmedName) { toast({ title: "Name is required", variant: "destructive" }); return; }
+    if (trimmedName.length > 100) { toast({ title: "Name too long (max 100 chars)", variant: "destructive" }); return; }
+    const bal = Number(form.initial_balance);
+    if (form.initial_balance !== "" && (Number.isNaN(bal) || bal < 0)) {
+      toast({ title: "Initial balance must be a positive number", variant: "destructive" }); return;
+    }
     try {
       await offlineRepo.insert("farmers", {
-        name: form.name, phone: form.phone || null, address: form.address || null,
-        farm_details: form.farm_details || null, initial_balance: Number(form.initial_balance) || 0, created_by: user.id,
-        cnic: form.cnic || null, landlord: form.landlord || null, notes: form.notes || null,
+        name: trimmedName, phone: form.phone.trim() || null, address: form.address.trim() || null,
+        farm_details: form.farm_details.trim() || null, initial_balance: bal || 0, created_by: user.id,
+        cnic: form.cnic.trim() || null, landlord: form.landlord.trim() || null, notes: form.notes.trim() || null,
       });
       toast({ title: isOnline() ? "Farmer added successfully" : "Saved offline — will sync" });
       setForm({ ...emptyForm }); setOpen(false); setConfirmOpen(false); fetchFarmers();
@@ -125,14 +132,14 @@ const Farmers = () => {
             <Label className="text-sm">{t("common.name")} *</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="pl-9" placeholder="Muhammad Ali" required />
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="pl-9" placeholder="Muhammad Ali" required maxLength={100} autoComplete="name" />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label className="text-sm">{t("farmers.cnic")}</Label>
             <div className="relative">
               <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={formData.cnic} onChange={(e) => setFormData({ ...formData, cnic: e.target.value })} className="pl-9" placeholder="42101-1234567-1" />
+              <Input value={formData.cnic} onChange={(e) => setFormData({ ...formData, cnic: e.target.value })} className="pl-9" placeholder="42101-1234567-1" inputMode="numeric" maxLength={15} />
             </div>
           </div>
         </div>
@@ -146,7 +153,7 @@ const Farmers = () => {
             <Label className="text-sm">{t("common.phone")}</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="pl-9" placeholder="03XX-XXXXXXX" />
+              <Input type="tel" inputMode="tel" autoComplete="tel" maxLength={20} value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="pl-9" placeholder="03XX-XXXXXXX" />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -174,7 +181,7 @@ const Farmers = () => {
             <Label className="text-sm">{t("farmers.initialBalance")} (₨)</Label>
             <div className="relative">
               <BadgeDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input type="number" value={formData.initial_balance} onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })} className="pl-9" />
+              <Input type="number" inputMode="decimal" min="0" step="0.01" value={formData.initial_balance} onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })} className="pl-9" />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -228,7 +235,7 @@ const Farmers = () => {
                     <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                       <DialogTrigger asChild><Button disabled={!form.name} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">{t("farmers.saveFarmer")}</Button></DialogTrigger>
                       <DialogContent>
-                        <DialogHeader><DialogTitle>{t("common.confirm")}</DialogTitle><DialogDescription>{t("farmers.deleteConfirm")} {form.name}?</DialogDescription></DialogHeader>
+                        <DialogHeader><DialogTitle>{t("common.confirm")}</DialogTitle><DialogDescription>{t("farmers.saveFarmer")}: <strong>{form.name}</strong>?</DialogDescription></DialogHeader>
                         <DialogFooter><Button variant="outline" onClick={() => setConfirmOpen(false)}>{t("common.cancel")}</Button><Button onClick={handleSave}>{t("common.confirm")}</Button></DialogFooter>
                       </DialogContent>
                     </Dialog>

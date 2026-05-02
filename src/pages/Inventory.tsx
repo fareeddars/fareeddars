@@ -167,9 +167,8 @@ const Inventory = () => {
   <meta charset="utf-8" />
   <title>${tl("Inventory Report", "گودام کی رپورٹ", "گودام جي رپورٽ")}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', Arial, sans-serif; color: #1e293b; padding: 30px; background: #fff; font-size: 13px; line-height: 1.5; }
+    body { font-family: ${isRTL ? "'Jameel Noori Nastaleeq','Noto Naskh Arabic','Noto Nastaliq Urdu','Scheherazade New','Tahoma',Arial,sans-serif" : "'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif"}; color: #1e293b; padding: 30px; background: #fff; font-size: 13px; line-height: 1.5; }
     @media print { body { padding: 15px; } @page { margin: 15mm; } }
   </style>
 </head>
@@ -210,10 +209,18 @@ const Inventory = () => {
 
   const handleSave = async () => {
     if (!user) return;
+    const name = form.item_name.trim();
+    if (!name) { toast({ title: "Item name required", variant: "destructive" }); return; }
+    const stock = Number(form.current_stock);
+    const price = Number(form.price_per_unit);
+    const threshold = Number(form.low_stock_threshold);
+    if (Number.isNaN(stock) || stock < 0) { toast({ title: "Stock must be 0 or more", variant: "destructive" }); return; }
+    if (Number.isNaN(price) || price < 0) { toast({ title: "Price must be 0 or more", variant: "destructive" }); return; }
+    if (Number.isNaN(threshold) || threshold < 0) { toast({ title: "Low-stock alert must be 0 or more", variant: "destructive" }); return; }
     try {
       await offlineRepo.insert("inventory", {
-        item_name: form.item_name, current_stock: Number(form.current_stock), unit: form.unit,
-        price_per_unit: Number(form.price_per_unit), low_stock_threshold: Number(form.low_stock_threshold), created_by: user.id,
+        item_name: name, current_stock: stock, unit: form.unit.trim() || "bags",
+        price_per_unit: price, low_stock_threshold: threshold, created_by: user.id,
       });
       toast({ title: isOnline() ? "Item added" : "Saved offline — will sync" });
       setOpen(false); setForm({ item_name: "", current_stock: "", unit: "bags", price_per_unit: "", low_stock_threshold: "5" }); fetchItems();
@@ -291,12 +298,12 @@ const Inventory = () => {
               <div className="space-y-4">
                 <div className="space-y-2"><Label>{t("inventory.itemName")} *</Label><Input className="h-11" value={form.item_name} onChange={(e) => setForm({ ...form, item_name: e.target.value })} /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input className="h-11" type="number" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input className="h-11" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input className="h-11" maxLength={20} value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input className="h-11" type="number" value={form.price_per_unit} onChange={(e) => setForm({ ...form, price_per_unit: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input className="h-11" type="number" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={form.price_per_unit} onChange={(e) => setForm({ ...form, price_per_unit: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input className="h-11" type="number" inputMode="numeric" min="0" step="1" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} /></div>
                 </div>
               </div>
               <DialogFooter><Button onClick={handleSave} disabled={!form.item_name} className="w-full h-11 bg-gradient-to-r from-primary to-purple-600">{t("inventory.saveItem")}</Button></DialogFooter>
@@ -389,12 +396,12 @@ const Inventory = () => {
           <div className="space-y-4">
             <div className="space-y-2"><Label>{t("inventory.itemName")} *</Label><Input className="h-11" value={editForm.item_name} onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input className="h-11" type="number" value={editForm.current_stock} onChange={(e) => setEditForm({ ...editForm, current_stock: e.target.value })} /></div>
-              <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input className="h-11" value={editForm.unit} onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.currentStock")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={editForm.current_stock} onChange={(e) => setEditForm({ ...editForm, current_stock: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.unit")}</Label><Input className="h-11" maxLength={20} value={editForm.unit} onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input className="h-11" type="number" value={editForm.price_per_unit} onChange={(e) => setEditForm({ ...editForm, price_per_unit: e.target.value })} /></div>
-              <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input className="h-11" type="number" value={editForm.low_stock_threshold} onChange={(e) => setEditForm({ ...editForm, low_stock_threshold: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.pricePerUnit")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={editForm.price_per_unit} onChange={(e) => setEditForm({ ...editForm, price_per_unit: e.target.value })} /></div>
+              <div className="space-y-2"><Label>{t("inventory.lowStockAlert")}</Label><Input className="h-11" type="number" inputMode="numeric" min="0" step="1" value={editForm.low_stock_threshold} onChange={(e) => setEditForm({ ...editForm, low_stock_threshold: e.target.value })} /></div>
             </div>
           </div>
           <DialogFooter>

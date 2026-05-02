@@ -20,17 +20,30 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
+      return;
+    }
+    if (password.length < 6) {
+      toast({ title: "Weak password", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    if (!isLogin && !fullName.trim()) {
+      toast({ title: "Name required", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
         if (error) throw error;
         navigate("/");
       } else {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: trimmedEmail,
           password,
-          options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
+          options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
         toast({ title: "Account created!", description: "You can now sign in." });
@@ -81,12 +94,12 @@ const Auth = () => {
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" required className="h-11 rounded-xl" />
+                <Input id="email" type="email" inputMode="email" autoComplete={isLogin ? "username" : "email"} autoCapitalize="none" autoCorrect="off" maxLength={255} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" required className="h-11 rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Input id="password" type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="h-11 rounded-xl pr-10" />
+                  <Input id="password" type={showPw ? "text" : "password"} autoComplete={isLogin ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} maxLength={72} className="h-11 rounded-xl pr-10" />
                   <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
