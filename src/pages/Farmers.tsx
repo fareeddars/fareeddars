@@ -139,7 +139,7 @@ const Farmers = () => {
             <Label className="text-sm">{t("farmers.cnic")}</Label>
             <div className="relative">
               <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={formData.cnic} onChange={(e) => setFormData({ ...formData, cnic: e.target.value })} className="pl-9" placeholder="42101-1234567-1" />
+              <Input value={formData.cnic} onChange={(e) => setFormData({ ...formData, cnic: e.target.value })} className="pl-9" placeholder="42101-1234567-1" inputMode="numeric" maxLength={15} />
             </div>
           </div>
         </div>
