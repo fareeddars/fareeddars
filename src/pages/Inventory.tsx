@@ -210,10 +210,18 @@ const Inventory = () => {
 
   const handleSave = async () => {
     if (!user) return;
+    const name = form.item_name.trim();
+    if (!name) { toast({ title: "Item name required", variant: "destructive" }); return; }
+    const stock = Number(form.current_stock);
+    const price = Number(form.price_per_unit);
+    const threshold = Number(form.low_stock_threshold);
+    if (Number.isNaN(stock) || stock < 0) { toast({ title: "Stock must be 0 or more", variant: "destructive" }); return; }
+    if (Number.isNaN(price) || price < 0) { toast({ title: "Price must be 0 or more", variant: "destructive" }); return; }
+    if (Number.isNaN(threshold) || threshold < 0) { toast({ title: "Low-stock alert must be 0 or more", variant: "destructive" }); return; }
     try {
       await offlineRepo.insert("inventory", {
-        item_name: form.item_name, current_stock: Number(form.current_stock), unit: form.unit,
-        price_per_unit: Number(form.price_per_unit), low_stock_threshold: Number(form.low_stock_threshold), created_by: user.id,
+        item_name: name, current_stock: stock, unit: form.unit.trim() || "bags",
+        price_per_unit: price, low_stock_threshold: threshold, created_by: user.id,
       });
       toast({ title: isOnline() ? "Item added" : "Saved offline — will sync" });
       setOpen(false); setForm({ item_name: "", current_stock: "", unit: "bags", price_per_unit: "", low_stock_threshold: "5" }); fetchItems();
