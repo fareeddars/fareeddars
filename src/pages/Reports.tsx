@@ -131,11 +131,11 @@ const Reports = () => {
   const selectedFarmerName = selectedFarmerId === "all" ? t("reports.allFarmers") : getFarmerName(selectedFarmerId);
 
   const handlePrint = () => {
-    const L = printLang; // "ur" or "sd" only
-    const isRTL = true;
-    const dirAttr = 'dir="rtl"';
-    const textAlign = "right";
-    const textAlignOpp = "left";
+    const L = printLang; // "en" | "ur" | "sd"
+    const isRTL = L !== "en";
+    const dirAttr = isRTL ? 'dir="rtl"' : 'dir="ltr"';
+    const textAlign = isRTL ? "right" : "left";
+    const textAlignOpp = isRTL ? "left" : "right";
     const fmtSign = (n: number) => `${n < 0 ? "− " : ""}₨ ${fmtNum(Math.abs(n))}`;
 
     let html = "";
