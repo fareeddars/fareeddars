@@ -132,7 +132,7 @@ const Farmers = () => {
             <Label className="text-sm">{t("common.name")} *</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="pl-9" placeholder="Muhammad Ali" required />
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="pl-9" placeholder="Muhammad Ali" required maxLength={100} autoComplete="name" />
             </div>
           </div>
           <div className="space-y-1.5">
