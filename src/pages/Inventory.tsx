@@ -167,9 +167,8 @@ const Inventory = () => {
   <meta charset="utf-8" />
   <title>${tl("Inventory Report", "گودام کی رپورٹ", "گودام جي رپورٽ")}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', Arial, sans-serif; color: #1e293b; padding: 30px; background: #fff; font-size: 13px; line-height: 1.5; }
+    body { font-family: ${isRTL ? "'Jameel Noori Nastaleeq','Noto Naskh Arabic','Noto Nastaliq Urdu','Scheherazade New','Tahoma',Arial,sans-serif" : "'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif"}; color: #1e293b; padding: 30px; background: #fff; font-size: 13px; line-height: 1.5; }
     @media print { body { padding: 15px; } @page { margin: 15mm; } }
   </style>
 </head>
