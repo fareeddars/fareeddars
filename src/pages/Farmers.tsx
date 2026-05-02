@@ -228,7 +228,7 @@ const Farmers = () => {
                     <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                       <DialogTrigger asChild><Button disabled={!form.name} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">{t("farmers.saveFarmer")}</Button></DialogTrigger>
                       <DialogContent>
-                        <DialogHeader><DialogTitle>{t("common.confirm")}</DialogTitle><DialogDescription>{t("farmers.deleteConfirm")} {form.name}?</DialogDescription></DialogHeader>
+                        <DialogHeader><DialogTitle>{t("common.confirm")}</DialogTitle><DialogDescription>{t("farmers.saveFarmer")}: <strong>{form.name}</strong>?</DialogDescription></DialogHeader>
                         <DialogFooter><Button variant="outline" onClick={() => setConfirmOpen(false)}>{t("common.cancel")}</Button><Button onClick={handleSave}>{t("common.confirm")}</Button></DialogFooter>
                       </DialogContent>
                     </Dialog>
