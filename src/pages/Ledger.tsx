@@ -492,10 +492,10 @@ const Ledger = () => {
                     </Select>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label className="font-medium">{t("ledger.price")} (₨)</Label><Input className="h-11" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" /></div>
-                    <div className="space-y-2"><Label className="font-medium">{t("ledger.quantity")}</Label><Input className="h-11" type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" /></div>
+                    <div className="space-y-2"><Label className="font-medium">{t("ledger.price")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" /></div>
+                    <div className="space-y-2"><Label className="font-medium">{t("ledger.quantity")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" /></div>
                   </div>
-                  {(!price || !quantity) && (<div className="space-y-2"><Label className="font-medium">{t("common.amount")} (₨)</Label><Input className="h-11" type="number" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} placeholder={t("ledger.manualAmount")} /></div>)}
+                  {(!price || !quantity) && (<div className="space-y-2"><Label className="font-medium">{t("common.amount")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} placeholder={t("ledger.manualAmount")} /></div>)}
                   {(price && quantity) && (<div className="rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-3 text-sm font-semibold text-foreground">{t("common.total")}: ₨ {computedExpenseAmount().toLocaleString()}</div>)}
 
                   {/* Cost Allocation - 3 options */}
@@ -544,11 +544,11 @@ const Ledger = () => {
                 <TabsContent value="sale" className="space-y-4">
                   <div className="space-y-2"><Label className="font-medium">{t("common.description")}</Label><Input className="h-11" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label className="font-medium">{t("ledger.grossWeight")}</Label><Input className="h-11" type="number" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" /></div>
-                    <div className="space-y-2"><Label className="font-medium">{t("ledger.deductions")}</Label><Input className="h-11" type="number" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" /></div>
+                    <div className="space-y-2"><Label className="font-medium">{t("ledger.grossWeight")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" /></div>
+                    <div className="space-y-2"><Label className="font-medium">{t("ledger.deductions")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" /></div>
                   </div>
                   <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-3 text-sm"><span className="font-semibold text-emerald-700 dark:text-emerald-400">{t("ledger.netWeight")}:</span> <span className="text-emerald-600 dark:text-emerald-300">{netWeight().toLocaleString()} kg</span></div>
-                  <div className="space-y-2"><Label className="font-medium">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11" type="number" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
+                  <div className="space-y-2"><Label className="font-medium">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
                   <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-200 dark:border-emerald-800 p-3 text-sm font-bold text-emerald-700 dark:text-emerald-400">{t("ledger.totalAmount")}: ₨ {saleTotal().toLocaleString()}</div>
                 </TabsContent>
 
@@ -566,13 +566,13 @@ const Ledger = () => {
                     </Select>
                   </div>
                   {paymentMethod === "cash" ? (
-                    <div className="space-y-2"><Label className="font-medium">{t("common.amount")} (₨)</Label><Input className="h-11" type="number" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0" /></div>
+                    <div className="space-y-2"><Label className="font-medium">{t("common.amount")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0" /></div>
                   ) : (
                     <>
                       <div className="space-y-2"><Label className="font-medium">{t("ledger.cropType")}</Label><Input className="h-11" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="e.g. Wheat, Rice" /></div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-2"><Label className="font-medium">{t("ledger.cropWeight")}</Label><Input className="h-11" type="number" value={cropWeight} onChange={(e) => setCropWeight(e.target.value)} placeholder="0" /></div>
-                        <div className="space-y-2"><Label className="font-medium">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11" type="number" value={cropRate} onChange={(e) => setCropRate(e.target.value)} placeholder="0" /></div>
+                        <div className="space-y-2"><Label className="font-medium">{t("ledger.cropWeight")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={cropWeight} onChange={(e) => setCropWeight(e.target.value)} placeholder="0" /></div>
+                        <div className="space-y-2"><Label className="font-medium">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={cropRate} onChange={(e) => setCropRate(e.target.value)} placeholder="0" /></div>
                       </div>
                       <div className="rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-200 dark:border-amber-800 p-3 text-sm font-bold text-amber-700 dark:text-amber-400">{t("common.total")}: ₨ {cropTotal().toLocaleString()}</div>
                     </>
@@ -582,7 +582,7 @@ const Ledger = () => {
                 {/* LOAN TAB */}
                 <TabsContent value="loan" className="space-y-4">
                   <div className="space-y-2"><Label className="font-medium">{t("common.description")}</Label><Input className="h-11" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.loanPurpose")} /></div>
-                  <div className="space-y-2"><Label className="font-medium">{t("common.amount")} (₨)</Label><Input className="h-11" type="number" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} placeholder="0" /></div>
+                  <div className="space-y-2"><Label className="font-medium">{t("common.amount")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} placeholder="0" /></div>
                   {loanAmount && (<div className="rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200 dark:border-blue-800 p-3 text-sm font-bold text-blue-700 dark:text-blue-400">{t("ledger.loanAmount")}: ₨ {Number(loanAmount).toLocaleString()}</div>)}
                 </TabsContent>
               </Tabs>
