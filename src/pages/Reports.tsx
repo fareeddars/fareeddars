@@ -349,11 +349,11 @@ const Reports = () => {
 
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) return;
-    const rtlFont = "'Noto Naskh Arabic', 'Scheherazade New', 'Tahoma', Arial, sans-serif";
-    const finalFont = isRTL ? rtlFont : "'Inter', 'Segoe UI', Arial, sans-serif";
+    // Offline-safe: rely on system fonts only (no external Google Fonts).
+    const rtlFont = "'Jameel Noori Nastaleeq', 'Noto Naskh Arabic', 'Noto Nastaliq Urdu', 'Scheherazade New', 'Al Bayan', 'Geeza Pro', 'Tahoma', Arial, sans-serif";
+    const finalFont = isRTL ? rtlFont : "'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";
     win.document.write(`<!DOCTYPE html><html ${dirAttr}><head><title>${pt("print.title", L)}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    ${isRTL ? '<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">' : ''}
+    <meta charset="utf-8" />
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: ${finalFont}; font-size: 12px; color: #222; background: white; padding: 10mm; direction: ${isRTL ? 'rtl' : 'ltr'}; line-height: 1.6; }
