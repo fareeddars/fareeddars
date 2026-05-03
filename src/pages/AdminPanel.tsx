@@ -195,7 +195,7 @@ const AdminPanel = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="col-span-2 sm:col-span-1 overflow-hidden border-chart-5/20 bg-gradient-to-br from-chart-5/10 to-chart-5/5 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+        <Card className="overflow-hidden border-chart-5/20 bg-gradient-to-br from-chart-5/10 to-chart-5/5 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
           <CardContent className="pt-6 flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-chart-5 to-chart-5/70 shadow-md">
               <Users className="h-5 w-5 text-primary-foreground" />
