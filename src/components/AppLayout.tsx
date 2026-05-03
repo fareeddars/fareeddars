@@ -41,7 +41,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
             </header>
-            <main className="flex-1 p-4 lg:p-6 animate-fade-in">{children}</main>
+            <main className="flex-1 p-3 sm:p-4 lg:p-6 animate-fade-in overflow-x-hidden w-full max-w-full">{children}</main>
           </SidebarInset>
         </div>
       </SidebarProvider>
