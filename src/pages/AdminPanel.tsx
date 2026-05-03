@@ -215,76 +215,132 @@ const AdminPanel = () => {
           <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> {t("admin.userManagement")}</CardTitle>
           <CardDescription>{t("admin.subtitle")}</CardDescription>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead>{t("common.name")}</TableHead>
-                <TableHead className="hidden sm:table-cell">{t("admin.email")}</TableHead>
-                <TableHead>{t("admin.role")}</TableHead>
-                <TableHead className="hidden sm:table-cell">{t("admin.create")}</TableHead>
-                <TableHead className="hidden sm:table-cell">{t("common.edit")}</TableHead>
-                <TableHead className="hidden sm:table-cell">{t("common.delete")}</TableHead>
-                <TableHead>{t("admin.active")}</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.profile.user_id} className="hover:bg-muted/20 transition-colors">
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xs font-bold">
-                        {(u.profile.full_name || u.profile.email).charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-medium">{u.profile.full_name || "—"}</p>
-                        <p className="text-xs text-muted-foreground sm:hidden">{u.profile.email}</p>
-                      </div>
+        <CardContent className="p-0 sm:p-6">
+          {/* Mobile cards */}
+          <div className="sm:hidden divide-y divide-border">
+            {users.map((u) => (
+              <div key={u.profile.user_id} className="p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xs font-bold">
+                      {(u.profile.full_name || u.profile.email).charAt(0).toUpperCase()}
                     </div>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell text-sm">{u.profile.email}</TableCell>
-                  <TableCell>
-                    <Select value={u.role.role} onValueChange={(v) => updateRole(u.profile.user_id, "role", v)}>
-                      <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="staff">Staff</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell"><Switch checked={u.role.can_create} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_create", v)} /></TableCell>
-                  <TableCell className="hidden sm:table-cell"><Switch checked={u.role.can_edit} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_edit", v)} /></TableCell>
-                  <TableCell className="hidden sm:table-cell"><Switch checked={u.role.can_delete} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_delete", v)} /></TableCell>
-                  <TableCell><Switch checked={u.role.is_active} onCheckedChange={(v) => updateRole(u.profile.user_id, "is_active", v)} /></TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/10 hover:text-primary" onClick={() => {
-                        setResetPwUserId(u.profile.user_id);
-                        setResetPwName(u.profile.full_name || u.profile.email);
-                        setResetPwOpen(true);
-                      }}><KeyRound className="h-3.5 w-3.5" /></Button>
-                      {u.profile.user_id !== user?.id && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>{t("admin.deleteUser")}</AlertDialogTitle><AlertDialogDescription>{t("admin.deleteUserConfirm")}</AlertDialogDescription></AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteUser(u.profile.user_id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm truncate">{u.profile.full_name || "—"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{u.profile.email}</p>
                     </div>
-                  </TableCell>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary" onClick={() => {
+                      setResetPwUserId(u.profile.user_id);
+                      setResetPwName(u.profile.full_name || u.profile.email);
+                      setResetPwOpen(true);
+                    }}><KeyRound className="h-3.5 w-3.5" /></Button>
+                    {u.profile.user_id !== user?.id && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader><AlertDialogTitle>{t("admin.deleteUser")}</AlertDialogTitle><AlertDialogDescription>{t("admin.deleteUserConfirm")}</AlertDialogDescription></AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteUser(u.profile.user_id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={u.role.role} onValueChange={(v) => updateRole(u.profile.user_id, "role", v)}>
+                    <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="staff">Staff</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <label className="flex items-center gap-1.5 text-xs"><Switch checked={u.role.is_active} onCheckedChange={(v) => updateRole(u.profile.user_id, "is_active", v)} />{t("admin.active")}</label>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap text-xs">
+                  <label className="flex items-center gap-1.5"><Switch checked={u.role.can_create} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_create", v)} />{t("admin.create")}</label>
+                  <label className="flex items-center gap-1.5"><Switch checked={u.role.can_edit} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_edit", v)} />{t("common.edit")}</label>
+                  <label className="flex items-center gap-1.5"><Switch checked={u.role.can_delete} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_delete", v)} />{t("common.delete")}</label>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30">
+                  <TableHead>{t("common.name")}</TableHead>
+                  <TableHead>{t("admin.email")}</TableHead>
+                  <TableHead>{t("admin.role")}</TableHead>
+                  <TableHead>{t("admin.create")}</TableHead>
+                  <TableHead>{t("common.edit")}</TableHead>
+                  <TableHead>{t("common.delete")}</TableHead>
+                  <TableHead>{t("admin.active")}</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {users.map((u) => (
+                  <TableRow key={u.profile.user_id} className="hover:bg-muted/20 transition-colors">
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xs font-bold">
+                          {(u.profile.full_name || u.profile.email).charAt(0).toUpperCase()}
+                        </div>
+                        <p className="font-medium">{u.profile.full_name || "—"}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">{u.profile.email}</TableCell>
+                    <TableCell>
+                      <Select value={u.role.role} onValueChange={(v) => updateRole(u.profile.user_id, "role", v)}>
+                        <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="staff">Staff</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell><Switch checked={u.role.can_create} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_create", v)} /></TableCell>
+                    <TableCell><Switch checked={u.role.can_edit} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_edit", v)} /></TableCell>
+                    <TableCell><Switch checked={u.role.can_delete} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_delete", v)} /></TableCell>
+                    <TableCell><Switch checked={u.role.is_active} onCheckedChange={(v) => updateRole(u.profile.user_id, "is_active", v)} /></TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/10 hover:text-primary" onClick={() => {
+                          setResetPwUserId(u.profile.user_id);
+                          setResetPwName(u.profile.full_name || u.profile.email);
+                          setResetPwOpen(true);
+                        }}><KeyRound className="h-3.5 w-3.5" /></Button>
+                        {u.profile.user_id !== user?.id && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader><AlertDialogTitle>{t("admin.deleteUser")}</AlertDialogTitle><AlertDialogDescription>{t("admin.deleteUserConfirm")}</AlertDialogDescription></AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteUser(u.profile.user_id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
