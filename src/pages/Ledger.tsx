@@ -718,7 +718,69 @@ const Ledger = () => {
             </div>
           )}
         </CardHeader>
-        <CardContent className="overflow-x-auto p-0 sm:p-6 sm:pt-0">
+        <CardContent className="p-0 sm:p-6 sm:pt-0">
+          {/* Mobile card layout */}
+          <div className="sm:hidden divide-y divide-border">
+            {filteredEntries.map((e) => (
+              <div key={e.id} className="p-3 hover:bg-muted/20 transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {typeBadge(e.entry_type)}
+                      <span className="text-xs text-muted-foreground">
+                        {e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm font-medium truncate">{e.farmers?.name ?? "—"}</p>
+                    {e.description && (
+                      <p className="text-xs text-muted-foreground truncate">{e.description}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="font-mono font-semibold text-sm whitespace-nowrap">₨ {Number(e.amount).toLocaleString()}</span>
+                    {(canEdit || canDelete) && !isSeasonClosed && (
+                      <div className="flex items-center gap-1">
+                        {canEdit && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary" onClick={() => openEdit(e)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete entry?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {e.farmers?.name ?? "—"} • {e.entry_type} • ₨ {Number(e.amount).toLocaleString()}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(e.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filteredEntries.length === 0 && (
+              <div className="text-center text-muted-foreground py-12 text-sm">
+                {hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop/tablet table */}
+          <div className="hidden sm:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30">
@@ -818,6 +880,7 @@ const Ledger = () => {
               {filteredEntries.length === 0 && (<TableRow><TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="text-center text-muted-foreground py-12">{hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}</TableCell></TableRow>)}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
