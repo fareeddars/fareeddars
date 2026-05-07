@@ -37,9 +37,6 @@ const Seasons = () => {
 
   const handleCreateSeason = async () => {
     if (!user || !form.name || !form.start_date) return;
-    if (activeSeason) {
-      await supabase.from("seasons").update({ status: "closed" as any }).eq("id", activeSeason.id);
-    }
     const { error } = await supabase.from("seasons").insert({
       name: form.name, start_date: form.start_date, end_date: form.end_date || null,
       status: "active" as any, created_by: user.id,
