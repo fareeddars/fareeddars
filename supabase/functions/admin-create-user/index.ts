@@ -76,7 +76,11 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "Cannot delete yourself" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // Delete from auth (cascades to profiles and roles)
+      // Explicitly clean up app tables (no FK cascade configured)
+      await adminClient.from("user_roles").delete().eq("user_id", user_id);
+      await adminClient.from("profiles").delete().eq("user_id", user_id);
+
+      // Delete from auth
       const { error: deleteError } = await adminClient.auth.admin.deleteUser(user_id);
       if (deleteError) {
         return new Response(JSON.stringify({ error: deleteError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
