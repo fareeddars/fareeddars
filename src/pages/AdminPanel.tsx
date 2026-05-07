@@ -116,25 +116,43 @@ const AdminPanel = () => {
     );
   }
 
+  const filteredUsers = users.filter((u) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (u.profile.full_name || "").toLowerCase().includes(q) || (u.profile.email || "").toLowerCase().includes(q);
+  });
+
+  const stats = {
+    total: users.length,
+    admins: users.filter(u => u.role.role === "admin").length,
+    managers: users.filter(u => u.role.role === "manager").length,
+    active: users.filter(u => u.role.is_active).length,
+  };
+
   return (
     <div className="space-y-6">
-      {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-4 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
-        <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-primary to-blue-500 p-5 sm:p-8 text-primary-foreground shadow-2xl shadow-primary/30">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-24 -left-10 w-72 h-72 rounded-full bg-blue-300/20 blur-3xl" />
+        <div className="absolute top-4 right-4 opacity-20">
+          <Sparkles className="h-24 w-24" />
+        </div>
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
-              <Crown className="h-7 w-7" />
+            <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 shadow-inner">
+              <Crown className="h-7 w-7 sm:h-8 sm:w-8" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("admin.title")}</h1>
-              <p className="text-primary-foreground/70 text-sm mt-0.5">{t("admin.subtitle")}</p>
+              <p className="text-primary-foreground/80 text-sm mt-1 flex items-center gap-1.5">
+                <Shield className="h-3.5 w-3.5" /> {t("admin.subtitle")}
+              </p>
             </div>
           </div>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl rounded-xl">
+              <Button className="bg-white text-primary hover:bg-white/95 font-semibold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl h-11 px-5">
                 <UserPlus className="mr-2 h-4 w-4" /> {t("admin.createUser")}
               </Button>
             </DialogTrigger>
@@ -178,54 +196,47 @@ const AdminPanel = () => {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-          <CardContent className="pt-6 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-md">
-              <Users className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold font-mono text-primary">{users.length}</p>
-              <p className="text-xs text-muted-foreground">Total Users</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden border-chart-3/20 bg-gradient-to-br from-chart-3/10 to-chart-3/5 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-          <CardContent className="pt-6 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-chart-3 to-chart-3/70 shadow-md">
-              <Shield className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold font-mono text-chart-3">{users.filter(u => u.role.role === "admin").length}</p>
-              <p className="text-xs text-muted-foreground">Admins</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden border-chart-5/20 bg-gradient-to-br from-chart-5/10 to-chart-5/5 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-          <CardContent className="pt-6 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-chart-5 to-chart-5/70 shadow-md">
-              <Users className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold font-mono text-chart-5">{users.filter(u => u.role.is_active).length}</p>
-              <p className="text-xs text-muted-foreground">Active</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats — 4 colorful tiles */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Total Users", value: stats.total, icon: Users, from: "from-indigo-500", to: "to-blue-500", text: "text-indigo-600" },
+          { label: "Admins", value: stats.admins, icon: Crown, from: "from-amber-500", to: "to-orange-500", text: "text-amber-600" },
+          { label: "Managers", value: stats.managers, icon: UserCog, from: "from-emerald-500", to: "to-teal-500", text: "text-emerald-600" },
+          { label: "Active", value: stats.active, icon: Sparkles, from: "from-pink-500", to: "to-rose-500", text: "text-pink-600" },
+        ].map((s) => (
+          <Card key={s.label} className="overflow-hidden border-border/50 bg-card hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 group">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${s.from} ${s.to} shadow-md group-hover:scale-110 transition-transform`}>
+                <s.icon className="h-5 w-5 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className={`text-2xl font-bold font-mono ${s.text}`}>{s.value}</p>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wide truncate">{s.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* User Table */}
+      {/* User Management */}
       <Card className="overflow-hidden shadow-xl border-border/50">
-        <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> {t("admin.userManagement")}</CardTitle>
-          <CardDescription>{t("admin.subtitle")}</CardDescription>
+        <div className="h-1.5 bg-gradient-to-r from-indigo-500 via-primary to-blue-500" />
+        <CardHeader className="gap-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> {t("admin.userManagement")}</CardTitle>
+              <CardDescription>{t("admin.subtitle")}</CardDescription>
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search users..." className="pl-9 h-10 rounded-xl" />
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           {/* Mobile cards */}
           <div className="sm:hidden divide-y divide-border">
-            {users.map((u) => (
+            {filteredUsers.map((u) => (
               <div key={u.profile.user_id} className="p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
