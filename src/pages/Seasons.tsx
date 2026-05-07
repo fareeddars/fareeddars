@@ -52,10 +52,6 @@ const Seasons = () => {
   };
 
   const handleReopenSeason = async (seasonId: string) => {
-    // Close any currently active season first
-    if (activeSeason) {
-      await supabase.from("seasons").update({ status: "closed" as any }).eq("id", activeSeason.id);
-    }
     const { error } = await supabase.from("seasons").update({ status: "active" as any }).eq("id", seasonId);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
     else { toast({ title: t("seasons.reopened") }); await refreshSeasons(); }
