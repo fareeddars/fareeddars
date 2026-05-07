@@ -82,12 +82,17 @@ const AdminPanel = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
+    setDeletingId(userId);
     try {
       const { data, error } = await supabase.functions.invoke("admin-create-user", { body: { action: "delete", user_id: userId } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "User deleted" }); fetchUsers();
+      toast({ title: "User deleted" });
+      // Optimistic UI: remove immediately
+      setUsers((prev) => prev.filter((x) => x.profile.user_id !== userId));
+      fetchUsers();
     } catch (err: any) { toast({ title: "Error", description: err.message, variant: "destructive" }); }
+    finally { setDeletingId(null); }
   };
 
   const handleResetPassword = async () => {
