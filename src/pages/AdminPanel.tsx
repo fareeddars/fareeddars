@@ -29,6 +29,7 @@ const AdminPanel = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [resetPwOpen, setResetPwOpen] = useState(false);
   const [resetPwUserId, setResetPwUserId] = useState("");
@@ -36,6 +37,7 @@ const AdminPanel = () => {
   const [resetPwValue, setResetPwValue] = useState("");
   const [resettingPw, setResettingPw] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     email: "", password: "", full_name: "", role: "staff" as AppRole,
     can_create: false, can_edit: false, can_delete: false,
