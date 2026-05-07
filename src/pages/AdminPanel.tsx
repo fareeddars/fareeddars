@@ -306,7 +306,7 @@ const AdminPanel = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((u) => (
+                {filteredUsers.map((u) => (
                   <TableRow key={u.profile.user_id} className="hover:bg-muted/20 transition-colors">
                     <TableCell>
                       <div className="flex items-center gap-2">
