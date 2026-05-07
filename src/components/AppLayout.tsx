@@ -5,10 +5,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAutoLogout } from "@/hooks/useAutoLogout";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { dir, language } = useLanguage();
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
+  useAutoLogout(!!session);
   const localeMap: Record<string, string> = { en: "en-US", ur: "ur-PK", sd: "ur-PK" };
   const dateLocale = localeMap[language] || "en-US";
 
