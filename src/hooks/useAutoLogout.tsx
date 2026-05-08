@@ -27,13 +27,9 @@ export const useAutoLogout = (enabled: boolean) => {
       }
     };
 
-    // Check on mount: if sessionStorage flag is missing, the app was closed/reopened
-    if (!sessionStorage.getItem(SESSION_FLAG_KEY)) {
-      doLogout();
-      return;
-    }
-
-    // Also check inactivity gap since last activity (covers backgrounded tabs)
+    // Check inactivity gap since last activity. Only logout if we have a
+    // recorded last-activity timestamp that's older than the threshold.
+    // (A missing timestamp means a fresh login — do NOT auto-logout.)
     const last = Number(localStorage.getItem(LAST_ACTIVITY_KEY) || 0);
     if (last && Date.now() - last > INACTIVITY_MS) {
       doLogout();
