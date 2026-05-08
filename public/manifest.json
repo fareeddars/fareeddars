@@ -1,0 +1,17 @@
+{
+  "name": "Agri Ledger",
+  "short_name": "Agri Ledger",
+  "description": "Agri Ledger - Manage farm finances, transactions, and reports.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
