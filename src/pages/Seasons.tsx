@@ -19,7 +19,7 @@ import { useEffect } from "react";
 
 const Seasons = () => {
   const { user, isAdmin, isManagerOrAdmin } = useAuth();
-  const { seasons, activeSeason, selectedSeason, setSelectedSeasonId, farmerSeasons, refreshSeasons, refreshFarmerSeasons } = useSeason();
+  const { seasons, selectedSeason, setSelectedSeasonId, farmerSeasons, refreshSeasons, refreshFarmerSeasons } = useSeason();
   const { t } = useLanguage();
   const { toast } = useToast();
 
@@ -37,12 +37,12 @@ const Seasons = () => {
 
   const handleCreateSeason = async () => {
     if (!user || !form.name || !form.start_date) return;
-    const { error } = await supabase.from("seasons").insert({
+    const { data, error } = await supabase.from("seasons").insert({
       name: form.name, start_date: form.start_date, end_date: form.end_date || null,
       status: "active" as any, created_by: user.id,
-    } as any);
+    } as any).select("id").single();
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    else { toast({ title: t("seasons.created") }); setForm({ name: "", start_date: "", end_date: "" }); setCreateOpen(false); await refreshSeasons(); }
+    else { toast({ title: t("seasons.created") }); setForm({ name: "", start_date: "", end_date: "" }); setCreateOpen(false); if (data?.id) setSelectedSeasonId(data.id); await refreshSeasons(); }
   };
 
   const handleCloseSeason = async (seasonId: string) => {
@@ -149,11 +149,6 @@ const Seasons = () => {
                     <div className="space-y-2"><Label>{t("seasons.startDate")} *</Label><Input type="date" className="h-11" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>
                     <div className="space-y-2"><Label>{t("seasons.endDate")}</Label><Input type="date" className="h-11" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
                   </div>
-                  {activeSeason && (
-                    <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 text-xs text-amber-700 dark:text-amber-400">
-                      ⚠️ {t("seasons.activeWillClose")} <strong>{activeSeason.name}</strong>
-                    </div>
-                  )}
                 </div>
                 <DialogFooter>
                   <Button onClick={handleCreateSeason} disabled={!form.name || !form.start_date} className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
