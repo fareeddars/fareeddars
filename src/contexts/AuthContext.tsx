@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { Session, User } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -54,6 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const initializedRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
+  const navigate = useNavigate();
 
   const fetchUserData = useCallback(async (userId: string) => {
     // Prevent duplicate fetches for the same user
@@ -139,6 +141,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === "USER_UPDATED" && newSession?.user) {
           setSession(newSession);
           setUser(newSession.user);
+        }
+
+        // PASSWORD_RECOVERY: Redirect to reset password page
+        if (event === "PASSWORD_RECOVERY") {
+          navigate("/reset-password");
+          return;
         }
       }
     );

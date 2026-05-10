@@ -105,6 +105,13 @@ const Auth = () => {
                   </button>
                 </div>
               </div>
+              {isLogin && (
+                <div className="text-right">
+                  <button type="button" onClick={() => navigate("/forgot-password")} className="text-sm font-semibold text-primary hover:underline">
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
               <Button type="submit" className="w-full h-12 text-base rounded-xl font-semibold gap-2 group" disabled={loading}>
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

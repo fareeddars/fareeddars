@@ -22,6 +22,50 @@ const Dashboard = () => {
   });
   const [locationGranted, setLocationGranted] = useState<boolean>(false);
 
+  // Fetch dashboard stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        let entriesQuery = supabase.from("ledger_entries").select("id", { count: "exact", head: true });
+        let revenueQuery = supabase.from("ledger_entries").select("amount").eq("entry_type", "sale");
+        
+        if (selectedSeason) {
+          entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+          revenueQuery = revenueQuery.eq("season_id", selectedSeason.id);
+        }
+
+        const [entriesRes, inventoryRes, revenueRes] = await Promise.all([
+          entriesQuery,
+          supabase.from("inventory").select("id", { count: "exact", head: true }),
+          revenueQuery,
+        ]);
+
+        const farmersCount = farmerSeasons.length;
+        const entriesCount = entriesRes.count ?? 0;
+        const inventoryCount = inventoryRes.count ?? 0;
+        const revenueTotal = revenueRes.data?.reduce((sum, e) => sum + Number(e.amount), 0) ?? 0;
+
+        console.log("Dashboard stats fetched:", {
+          farmers: farmersCount,
+          entries: entriesCount,
+          inventory: inventoryCount,
+          revenue: revenueTotal
+        });
+
+        setStats({
+          farmers: farmersCount,
+          entries: entriesCount,
+          inventory: inventoryCount,
+          revenue: revenueTotal,
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      }
+    };
+    
+    fetchStats();
+  }, [selectedSeason?.id, farmerSeasons.length]);
+
   // Check location permission status
   useEffect(() => {
     const checkLocationPermission = async () => {

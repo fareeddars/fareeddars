@@ -17,6 +17,8 @@ import Reports from "@/pages/Reports";
 import AdminPanel from "@/pages/AdminPanel";
 import Settings from "@/pages/Settings";
 import Seasons from "@/pages/Seasons";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +48,8 @@ const App = () => (
           <SeasonProvider>
           <Routes>
             <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+            <Route path="/forgot-password" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/seasons" element={<ProtectedRoute><Seasons /></ProtectedRoute>} />
             <Route path="/farmers" element={<ProtectedRoute><Farmers /></ProtectedRoute>} />
