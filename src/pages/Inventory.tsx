@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, AlertTriangle, Pencil, Trash2, Download, FileText, Package, TrendingDown } from "lucide-react";
+import { Plus, AlertTriangle, Pencil, Trash2, FileText, Package, TrendingDown } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 const Inventory = () => {
@@ -40,16 +40,6 @@ const Inventory = () => {
   };
 
   useEffect(() => { fetchItems(); }, []);
-
-  const downloadCSV = () => {
-    const headers = ["Item Name", "Stock", "Unit", "Price/Unit (Rs)", "Low Stock Threshold"];
-    const rows = items.map(i => [i.item_name, i.current_stock, i.unit, i.price_per_unit, i.low_stock_threshold]);
-    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "inventory.csv"; a.click();
-    URL.revokeObjectURL(url);
-  };
 
   const downloadPDF = async () => {
     // Fetch ledger entries linked to inventory items
@@ -279,17 +269,14 @@ const Inventory = () => {
               <p className="text-primary-foreground/70 text-sm mt-0.5">{t("inventory.subtitle")}</p>
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" onClick={downloadCSV} disabled={items.length === 0} className="rounded-xl bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20">
-              <Download className="mr-2 h-4 w-4" />{t("inventory.downloadCSV")}
-            </Button>
-            <Button variant="outline" onClick={downloadPDF} disabled={items.length === 0} className="rounded-xl bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" onClick={downloadPDF} disabled={items.length === 0} className="rounded-2xl bg-white/95 text-primary shadow-sm border border-slate-200 hover:bg-white">
               <FileText className="mr-2 h-4 w-4" />{t("inventory.downloadPDF")}
             </Button>
             {isManagerOrAdmin && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+                <Button className="bg-gradient-to-r from-primary to-purple-600 text-white font-semibold shadow-lg shadow-primary/20 transition-transform duration-300 hover:-translate-y-0.5">
                   <Plus className="mr-2 h-4 w-4" />{t("inventory.addItem")}
                 </Button>
               </DialogTrigger>
@@ -315,77 +302,102 @@ const Inventory = () => {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Package className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-primary">{t("dashboard.inventoryItems")}</span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border border-slate-200 bg-white/95 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="rounded-2xl bg-slate-100 p-2">
+                <Package className="h-5 w-5 text-slate-700" />
+              </div>
+              <span className="text-xs uppercase tracking-[.24em] text-slate-500">{t("dashboard.inventoryItems")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground font-mono">{items.length}</p>
+            <p className="text-3xl font-bold text-slate-900 font-mono">{items.length}</p>
           </CardContent>
         </Card>
-        <Card className="border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingDown className="h-4 w-4 text-emerald-500" />
-              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t("inventory.stockValue")}</span>
+        <Card className="border border-emerald-200 bg-emerald-50/80 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="rounded-2xl bg-white p-2 shadow-sm">
+                <TrendingDown className="h-5 w-5 text-emerald-600" />
+              </div>
+              <span className="text-xs uppercase tracking-[.24em] text-emerald-700">{t("inventory.stockValue")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground font-mono">₨ {totalValue.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-slate-900 font-mono">₨ {totalValue.toLocaleString()}</p>
           </CardContent>
         </Card>
-        <Card className="border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{t("inventory.lowStockItems")}</span>
+        <Card className="border border-amber-200 bg-amber-50/80 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="rounded-2xl bg-white p-2 shadow-sm">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+              </div>
+              <span className="text-xs uppercase tracking-[.24em] text-amber-700">{t("inventory.lowStockItems")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground font-mono">{lowStockCount}</p>
+            <p className="text-3xl font-bold text-slate-900 font-mono">{lowStockCount}</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => (
-          <Card key={item.id} className="group hover:shadow-lg transition-all duration-300 border-border/50 overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-primary to-purple-600" />
-            <CardHeader className="pb-2 flex flex-row items-start justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className="text-lg font-serif">{item.item_name}</CardTitle>
-                {item.current_stock <= item.low_stock_threshold && (
-                  <Badge variant="destructive" className="flex items-center gap-1 text-[10px]"><AlertTriangle className="h-3 w-3" />{t("inventory.low")}</Badge>
-                )}
-              </div>
-              <div className="flex gap-1 shrink-0">
-                {isManagerOrAdmin && (<Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/10" onClick={() => openEdit(item)}><Pencil className="h-3.5 w-3.5" /></Button>)}
-                {isAdmin && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader><AlertDialogTitle>{t("inventory.deleteItem")}</AlertDialogTitle>
-                        <AlertDialogDescription>{t("inventory.deleteConfirm")} <strong>{item.item_name}</strong>?</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between items-center p-2 rounded-lg bg-muted/50">
-                <span className="text-muted-foreground">{t("ledger.stock")}:</span>
-                <span className="font-bold font-mono">{item.current_stock} {item.unit}</span>
-              </div>
-              <div className="flex justify-between items-center p-2 rounded-lg bg-muted/50">
-                <span className="text-muted-foreground">{t("ledger.price")}:</span>
-                <span className="font-mono font-semibold text-primary">₨ {Number(item.price_per_unit).toLocaleString()}/{item.unit}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {items.map((item, index) => {
+          const accent = index % 3 === 0 ? "from-sky-500 to-cyan-400" : index % 3 === 1 ? "from-emerald-500 to-lime-400" : "from-violet-500 to-fuchsia-500";
+          const lowStock = Number(item.current_stock) <= Number(item.low_stock_threshold);
+          return (
+            <Card key={item.id} className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl">
+              <div className={`h-1 bg-gradient-to-r ${accent}`} />
+              <CardHeader className="pb-3 flex flex-row items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle className="text-lg font-serif">{item.item_name}</CardTitle>
+                    <Badge variant={lowStock ? "destructive" : "secondary"} className="uppercase tracking-[.24em] text-[10px]">
+                      {lowStock ? t("inventory.low") : "In Stock"}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{item.unit}</p>
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  {isManagerOrAdmin && (<Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-100" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>)}
+                  {isAdmin && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>{t("inventory.deleteItem")}</AlertDialogTitle>
+                          <AlertDialogDescription>{t("inventory.deleteConfirm")} <strong>{item.item_name}</strong>?</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="grid gap-3 text-sm">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-[11px] uppercase tracking-[.24em] text-slate-500">{t("inventory.currentStock")}</p>
+                    <p className={`mt-2 text-xl font-semibold ${lowStock ? "text-destructive" : "text-slate-900"}`}>{item.current_stock} {item.unit}</p>
+                  </div>
+                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-[11px] uppercase tracking-[.24em] text-slate-500">{t("inventory.pricePerUnit")}</p>
+                    <p className="mt-2 text-xl font-semibold text-slate-900">₨ {Number(item.price_per_unit).toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-[11px] uppercase tracking-[.24em] text-slate-500">{t("inventory.lowStockAlert")}</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-900">{item.low_stock_threshold}</p>
+                  </div>
+                  <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-slate-700 p-4 text-white">
+                    <p className="text-[11px] uppercase tracking-[.24em] opacity-80">Stock Value</p>
+                    <p className="mt-2 text-xl font-semibold">₨ {(Number(item.current_stock) * Number(item.price_per_unit)).toLocaleString()}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
         {items.length === 0 && <div className="col-span-full text-center py-12 text-muted-foreground">{t("inventory.noItems")}</div>}
       </div>
 

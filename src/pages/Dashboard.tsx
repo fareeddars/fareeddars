@@ -5,37 +5,53 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, BookOpen, Package, TrendingUp, Activity, Zap, Leaf, Sparkles } from "lucide-react";
+import { fetchWeatherData, type WeatherData } from "@/lib/weatherUtils";
 
 const Dashboard = () => {
   const { profile } = useAuth();
   const { t } = useLanguage();
   const { selectedSeason, farmerSeasons } = useSeason();
   const [stats, setStats] = useState({ farmers: 0, entries: 0, inventory: 0, revenue: 0 });
+  const [weather, setWeather] = useState<WeatherData>({
+    temperature: null,
+    humidity: null,
+    rainChance: null,
+    condition: "",
+    location: "",
+    timestamp: null,
+  });
+  const [locationGranted, setLocationGranted] = useState<boolean>(false);
 
+  // Check location permission status
   useEffect(() => {
-    const fetchStats = async () => {
-      let entriesQuery = supabase.from("ledger_entries").select("id", { count: "exact", head: true });
-      let revenueQuery = supabase.from("ledger_entries").select("amount").eq("entry_type", "sale");
-      
-      if (selectedSeason) {
-        entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
-        revenueQuery = revenueQuery.eq("season_id", selectedSeason.id);
+    const checkLocationPermission = async () => {
+      if ('permissions' in navigator) {
+        try {
+          const permission = await navigator.permissions.query({ name: 'geolocation' });
+          setLocationGranted(permission.state === 'granted');
+          permission.addEventListener('change', () => {
+            setLocationGranted(permission.state === 'granted');
+          });
+        } catch (error) {
+          console.log('Permission API not supported');
+        }
       }
-
-      const [entriesRes, inventoryRes, revenueRes] = await Promise.all([
-        entriesQuery,
-        supabase.from("inventory").select("id", { count: "exact", head: true }),
-        revenueQuery,
-      ]);
-      setStats({
-        farmers: farmerSeasons.length,
-        entries: entriesRes.count ?? 0,
-        inventory: inventoryRes.count ?? 0,
-        revenue: revenueRes.data?.reduce((sum, e) => sum + Number(e.amount), 0) ?? 0,
-      });
     };
-    fetchStats();
-  }, [selectedSeason?.id, farmerSeasons.length]);
+    checkLocationPermission();
+  }, []);
+
+  // Fetch weather data when location is granted or on initial load
+  useEffect(() => {
+    const loadWeatherData = async () => {
+      console.log("Loading weather data, location granted:", locationGranted);
+      const weatherData = await fetchWeatherData();
+      console.log("Weather data loaded:", weatherData);
+      setWeather(weatherData);
+    };
+
+    // Always load on mount, and reload when location permission changes
+    loadWeatherData();
+  }, [locationGranted]);
 
   const cards = [
     {
@@ -80,6 +96,20 @@ const Dashboard = () => {
     },
   ];
 
+  const getWeatherIcon = (condition: string, rainChance: number | null) => {
+    const lowerCondition = condition.toLowerCase();
+    if (lowerCondition.includes("rain") || lowerCondition.includes("shower") || lowerCondition.includes("storm") || (rainChance ?? 0) > 50) {
+      return "🌧️";
+    }
+    if (lowerCondition.includes("cloud")) return "☁️";
+    return "☀️";
+  };
+
+  const weatherMessage = (rainChance: number | null) =>
+    (rainChance ?? 0) > 50
+      ? "🚨 Barish ka imkan hai, fasal sambhal lein!"
+      : "✅ Mausam saaf hai, kaam jari rakhen.";
+
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
@@ -111,7 +141,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
         {cards.map((card, i) => (
           <Card
             key={card.title}
@@ -130,6 +160,29 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="bg-blue-50 p-6 rounded-2xl shadow-lg border border-blue-100">
+        <div className="flex justify-between items-center gap-4 flex-wrap">
+          <div className="min-w-[220px]">
+            <h3 className="text-lg font-semibold text-blue-900">Mausam ki Sorathal</h3>
+            <p className="text-sm text-blue-700 mb-1">{weather.location || "Loading location..."}</p>
+            <p className="text-3xl font-bold text-blue-600">
+              {weather.temperature !== null ? `${weather.temperature.toFixed(1)}°C` : "—"}
+            </p>
+            <div className="mt-3 space-y-1 text-sm text-blue-800">
+              <p>Humidity: {weather.humidity !== null ? `${weather.humidity}%` : "—"}</p>
+              <p>Rain chance: {weather.rainChance !== null ? `${weather.rainChance}%` : "—"}</p>
+            </div>
+          </div>
+          <div className="text-6xl">{getWeatherIcon(weather.condition, weather.rainChance)}</div>
+        </div>
+
+        <div className="mt-5">
+          <p className={`font-medium ${(weather.rainChance ?? 0) > 50 ? "text-blue-700" : "text-green-600"}`}>
+            {weatherMessage(weather.rainChance)}
+          </p>
+        </div>
       </div>
     </div>
   );
