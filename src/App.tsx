@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SeasonProvider } from "@/contexts/SeasonContext";
@@ -39,12 +40,34 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const RecoveryRedirect = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const type = params.get("type");
+    const accessToken = params.get("access_token");
+    const hash = window.location.hash;
+    const isRecoveryHash = hash.includes("access_token=") && hash.includes("type=recovery");
+    const isRecoveryQuery = type === "recovery" || Boolean(accessToken);
+
+    if ((isRecoveryHash || isRecoveryQuery) && location.pathname !== "/reset-password") {
+      const redirectUrl = `${window.location.origin}/reset-password${location.search}${hash}`;
+      window.location.replace(redirectUrl);
+    }
+  }, [location]);
+
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <RecoveryRedirect />
         <AuthProvider>
           <LanguageProvider>
           <SeasonProvider>
