@@ -37,6 +37,7 @@ interface AuthContextType {
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  isPasswordRecovery: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -53,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const initializedRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
   const navigate = useNavigate();
@@ -116,9 +118,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
+        if (event === "PASSWORD_RECOVERY") {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+          setIsPasswordRecovery(true);
+          setLoading(false);
+          navigate("/reset-password");
+          return;
+        }
+
         if (event === "SIGNED_IN") {
           setSession(newSession);
           setUser(newSession?.user ?? null);
+          setIsPasswordRecovery(false);
           if (newSession?.user) {
             // Defer to avoid deadlock inside onAuthStateChange
             setTimeout(() => { fetchUserData(newSession.user.id); bootOfflineSync(); }, 0);
@@ -133,6 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
           setProfile(null);
           setUserRole(null);
+          setIsPasswordRecovery(false);
           setLoading(false);
           return;
         }
@@ -141,12 +154,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === "USER_UPDATED" && newSession?.user) {
           setSession(newSession);
           setUser(newSession.user);
-        }
-
-        // PASSWORD_RECOVERY: Redirect to reset password page
-        if (event === "PASSWORD_RECOVERY") {
-          navigate("/reset-password");
-          return;
         }
       }
     );
@@ -164,6 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       canCreate: userRole?.can_create ?? false,
       canEdit: userRole?.can_edit ?? false,
       canDelete: userRole?.can_delete ?? false,
+      isPasswordRecovery,
     }}>
       {children}
     </AuthContext.Provider>

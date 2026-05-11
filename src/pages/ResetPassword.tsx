@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Lock, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
 const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [hasSession, setHasSession] = useState(false);
@@ -82,27 +83,39 @@ const ResetPassword = () => {
                   <div className="relative">
                     <Input
                       id="new-password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••"
                       required
                       className="h-11 rounded-xl pr-10"
                     />
-                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((state) => !state)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm Password</Label>
                   <Input
                     id="confirm-password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
                     className="h-11 rounded-xl"
                   />
+                </div>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{showPassword ? "Hiding" : "Showing"} password text</span>
+                  <button type="button" onClick={() => setShowPassword((state) => !state)} className="font-medium text-primary hover:underline">
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
                 </div>
                 <Button type="submit" className="w-full h-12 font-semibold rounded-xl" disabled={loading}>
                   {loading ? "Updating..." : "Update Password"}

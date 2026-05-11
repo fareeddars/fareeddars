@@ -24,15 +24,17 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
+  const { session, loading, isPasswordRecovery } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading...</div>;
   if (!session) return <Navigate to="/auth" replace />;
+  if (isPasswordRecovery) return <Navigate to="/reset-password" replace />;
   return <AppLayout>{children}</AppLayout>;
 };
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
+  const { session, loading, isPasswordRecovery } = useAuth();
   if (loading) return null;
+  if (session && isPasswordRecovery) return <Navigate to="/reset-password" replace />;
   if (session) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
