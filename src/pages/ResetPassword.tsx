@@ -20,8 +20,22 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setHasSession(Boolean(data.session));
+      try {
+        const hasRecoveryToken = window.location.search.includes("type=recovery") || window.location.search.includes("access_token=") || window.location.hash.includes("type=recovery") || window.location.hash.includes("access_token=");
+        if (hasRecoveryToken) {
+          const { data: redirectData, error: redirectError } = await supabase.auth.getSessionFromUrl();
+          if (redirectError && redirectError.message !== "No auth session found.") {
+            console.warn("[ResetPassword] getSessionFromUrl failed:", redirectError.message);
+          }
+          setHasSession(Boolean(redirectData?.session));
+        } else {
+          const { data } = await supabase.auth.getSession();
+          setHasSession(Boolean(data.session));
+        }
+      } catch (error) {
+        console.error("[ResetPassword] session check failed:", error);
+        setHasSession(false);
+      }
       setSessionReady(true);
     };
     checkSession();

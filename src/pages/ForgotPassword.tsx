@@ -25,8 +25,9 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
+      const siteUrl = import.meta.env.VITE_PUBLIC_SITE_URL ?? window.location.origin;
       const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${siteUrl}/reset-password`,
       });
       if (error) throw error;
       setSent(true);

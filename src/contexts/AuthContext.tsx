@@ -89,8 +89,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    // Step 1: Restore session from storage FIRST
-    supabase.auth.getSession().then(({ data: { session: restoredSession } }) => {
+    const initializeAuth = async () => {
+      // Parse auth redirect from Supabase recovery link on first load.
+      try {
+        const { data: redirectData, error: redirectError } = await supabase.auth.getSessionFromUrl();
+        if (redirectError && redirectError.message !== "No auth session found.") {
+          console.warn("[Auth] getSessionFromUrl failed:", redirectError.message);
+        }
+        if (redirectData?.session?.user) {
+          setSession(redirectData.session);
+          setUser(redirectData.session.user);
+          fetchUserData(redirectData.session.user.id);
+          bootOfflineSync();
+        }
+      } catch (error) {
+        console.warn("[Auth] recovery redirect parse skipped:", error);
+      }
+
+      const { data: { session: restoredSession } } = await supabase.auth.getSession();
       if (restoredSession?.user) {
         setSession(restoredSession);
         setUser(restoredSession.user);
@@ -98,7 +114,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         bootOfflineSync();
       }
       setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     // Step 2: Listen for FUTURE auth changes only
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -130,10 +148,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === "SIGNED_IN") {
           setSession(newSession);
           setUser(newSession?.user ?? null);
-          setIsPasswordRecovery(false);
-          if (newSession?.user) {
+          if (!isPasswordRecovery && newSession?.user) {
             // Defer to avoid deadlock inside onAuthStateChange
             setTimeout(() => { fetchUserData(newSession.user.id); bootOfflineSync(); }, 0);
+          }
+          if (!isPasswordRecovery) {
+            setIsPasswordRecovery(false);
           }
           setLoading(false);
           return;
