@@ -14,35 +14,61 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
-  const [hasSession, setHasSession] = useState(false);
+  const [hasRecoveryLink, setHasRecoveryLink] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkSession = async () => {
+    const checkRecoverySession = async () => {
       try {
-        const hasRecoveryToken = window.location.search.includes("type=recovery") || window.location.search.includes("access_token=") || window.location.hash.includes("type=recovery") || window.location.hash.includes("access_token=");
-        if (hasRecoveryToken) {
-          const { data: redirectData, error: redirectError } = await supabase.auth.getSessionFromUrl();
-          if (redirectError && redirectError.message !== "No auth session found.") {
-            console.warn("[ResetPassword] getSessionFromUrl failed:", redirectError.message);
-          }
-          setHasSession(Boolean(redirectData?.session));
-        } else {
-          const { data } = await supabase.auth.getSession();
-          setHasSession(Boolean(data.session));
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = urlParams.get("access_token") || hashParams.get("access_token");
+        const isRecoveryType = urlParams.get("type") === "recovery" || hashParams.get("type") === "recovery";
+        const hasRecoveryToken = Boolean(accessToken || isRecoveryType);
+
+        if (!hasRecoveryToken) {
+          setRecoveryError("The reset link is missing or invalid. Please request a new password reset link.");
+          setSessionReady(true);
+          return;
         }
-      } catch (error) {
+
+        setHasRecoveryLink(true);
+
+        // Give Supabase a moment to hydrate the recovery session from the URL
+        let attempts = 0;
+        let sessionFound = false;
+        while (attempts < 5 && !sessionFound) {
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            sessionFound = true;
+          } else {
+            attempts += 1;
+            await new Promise((resolve) => setTimeout(resolve, 150));
+          }
+        }
+
+        if (!sessionFound) {
+          setRecoveryError("The reset link may have expired or is invalid. Please request a new password reset link.");
+        }
+      } catch (error: any) {
         console.error("[ResetPassword] session check failed:", error);
-        setHasSession(false);
+        setRecoveryError("Unable to validate the reset link. Please try again or request a new link.");
+      } finally {
+        setSessionReady(true);
       }
-      setSessionReady(true);
     };
-    checkSession();
+
+    checkRecoverySession();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasRecoveryLink) {
+      toast({ title: "Invalid recovery link", description: "Request a new reset link to continue.", variant: "destructive" });
+      return;
+    }
     if (newPassword !== confirmPassword) {
       toast({ title: "Passwords do not match", variant: "destructive" });
       return;
@@ -60,7 +86,7 @@ const ResetPassword = () => {
       await supabase.auth.signOut();
       navigate("/auth");
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error updating password", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }

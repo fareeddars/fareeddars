@@ -27,8 +27,8 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading, isPasswordRecovery } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading...</div>;
-  if (!session) return <Navigate to="/auth" replace />;
   if (isPasswordRecovery) return <Navigate to="/reset-password" replace />;
+  if (!session) return <Navigate to="/auth" replace />;
   return <AppLayout>{children}</AppLayout>;
 };
 
@@ -53,10 +53,9 @@ const RecoveryRedirect = () => {
     const isRecoveryQuery = type === "recovery" || Boolean(accessToken);
 
     if ((isRecoveryHash || isRecoveryQuery) && location.pathname !== "/reset-password") {
-      const redirectUrl = `${window.location.origin}/reset-password${location.search}${hash}`;
-      window.location.replace(redirectUrl);
+      navigate(`/reset-password${location.search}${hash}`, { replace: true });
     }
-  }, [location]);
+  }, [location, navigate]);
 
   return null;
 };

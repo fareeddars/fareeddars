@@ -90,20 +90,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializedRef.current = true;
 
     const initializeAuth = async () => {
-      // Parse auth redirect from Supabase recovery link on first load.
-      try {
-        const { data: redirectData, error: redirectError } = await supabase.auth.getSessionFromUrl();
-        if (redirectError && redirectError.message !== "No auth session found.") {
-          console.warn("[Auth] getSessionFromUrl failed:", redirectError.message);
-        }
-        if (redirectData?.session?.user) {
-          setSession(redirectData.session);
-          setUser(redirectData.session.user);
-          fetchUserData(redirectData.session.user.id);
-          bootOfflineSync();
-        }
-      } catch (error) {
-        console.warn("[Auth] recovery redirect parse skipped:", error);
+      // Check for recovery tokens in URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+      const isRecoveryType = urlParams.get('type') === 'recovery' || hashParams.get('type') === 'recovery';
+      const hasRecoveryToken = Boolean(accessToken || isRecoveryType);
+
+      if (hasRecoveryToken) {
+        console.log('[Auth] Recovery token detected in URL');
+        setIsPasswordRecovery(true);
       }
 
       const { data: { session: restoredSession } } = await supabase.auth.getSession();
