@@ -76,7 +76,7 @@ const Inventory = () => {
             <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;">${e.farmers?.name || "—"}</td>
             <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${e.quantity || "—"} ${item.unit}</td>
             <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">₨ ${Number(e.rate || item.price_per_unit).toLocaleString()}</td>
-            <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:${isRTL ? 'left' : 'right'};">₨ ${Number(e.amount).toLocaleString()}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:${isRTL ? 'right' : 'left'};">₨ ${Number(e.amount).toLocaleString()}</td>
             <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${e.entry_date || "—"}</td>
           </tr>
         `).join("");
@@ -85,10 +85,10 @@ const Inventory = () => {
           <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;">
             <thead>
               <tr style="background:#f0f4ff;">
-                <th style="padding:8px 10px;text-align:${isRTL ? 'right' : 'left'};border-bottom:2px solid #6366f1;color:#4338ca;font-weight:600;">${tl("Farmer", "کسان", "هاري")}</th>
+                <th style="padding:8px 10px;text-align:${isRTL ? 'left' : 'right'};border-bottom:2px solid #6366f1;color:#4338ca;font-weight:600;">${tl("Farmer", "کسان", "هاري")}</th>
                 <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #6366f1;color:#4338ca;font-weight:600;">${tl("Qty Given", "دی گئی مقدار", "ڏنل مقدار")}</th>
                 <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #6366f1;color:#4338ca;font-weight:600;">${tl("Rate", "قیمت", "قيمت")}</th>
-                <th style="padding:8px 10px;text-align:${isRTL ? 'left' : 'right'};border-bottom:2px solid #6366f1;color:#4338ca;font-weight:600;">${tl("Total", "کل", "ڪُل")}</th>
+                <th style="padding:8px 10px;text-align:${isRTL ? 'right' : 'left'};border-bottom:2px solid #6366f1;color:#4338ca;font-weight:600;">${tl("Total", "کل", "ڪُل")}</th>
                 <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #6366f1;color:#4338ca;font-weight:600;">${tl("Date", "تاریخ", "تاريخ")}</th>
               </tr>
             </thead>
@@ -98,7 +98,7 @@ const Inventory = () => {
                 <td style="padding:8px 10px;border-top:2px solid #6366f1;">${tl("Total", "کل", "ڪُل")}</td>
                 <td style="padding:8px 10px;text-align:center;border-top:2px solid #6366f1;">${totalGiven} ${item.unit}</td>
                 <td style="padding:8px 10px;border-top:2px solid #6366f1;"></td>
-                <td style="padding:8px 10px;text-align:${isRTL ? 'left' : 'right'};border-top:2px solid #6366f1;">₨ ${totalValue.toLocaleString()}</td>
+                <td style="padding:8px 10px;text-align:${isRTL ? 'right' : 'left'};border-top:2px solid #6366f1;">₨ ${totalValue.toLocaleString()}</td>
                 <td style="padding:8px 10px;border-top:2px solid #6366f1;"></td>
               </tr>
             </tfoot>
@@ -117,7 +117,7 @@ const Inventory = () => {
               <h3 style="margin:0;color:#fff;font-size:16px;font-weight:700;">${item.item_name}</h3>
               <p style="margin:4px 0 0;color:rgba(255,255,255,0.8);font-size:12px;">${tl("Unit", "اکائی", "اڪائي")}: ${item.unit}</p>
             </div>
-            <div style="text-align:${isRTL ? 'left' : 'right'};">
+            <div style="text-align:${isRTL ? 'right' : 'left'};">
               <p style="margin:0;color:#fff;font-size:14px;font-weight:700;">₨ ${Number(item.price_per_unit).toLocaleString()}/${item.unit}</p>
               <p style="margin:4px 0 0;color:${lowStock ? '#fbbf24' : 'rgba(255,255,255,0.8)'};font-size:12px;font-weight:${lowStock ? '700' : '400'};">
                 ${tl("Stock", "ذخیرہ", "ذخيرو")}: ${item.current_stock} ${item.unit} ${lowStock ? '⚠️' : ''}
@@ -158,7 +158,7 @@ const Inventory = () => {
   <title>${tl("Inventory Report", "گودام کی رپورٹ", "گودام جي رپورٽ")}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: ${isRTL ? "'Jameel Noori Nastaleeq','Noto Naskh Arabic','Noto Nastaliq Urdu','Scheherazade New','Tahoma',Arial,sans-serif" : "'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif"}; color: #1e293b; padding: 30px; background: #fff; font-size: 13px; line-height: 1.5; }
+    body { font-family: ${isRTL ? "'Jameel Noori Nastaleeq','Noto Naskh Arabic','Noto Nastaliq Urdu','Scheherazade New','Tahoma',Arial,sans-serif" : "'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif"}; color: #1e293b; padding: 30px; background: #fff; font-size: 13px; line-height: 1.5; direction: ${isRTL ? 'rtl' : 'ltr'}; }
     @media print { body { padding: 15px; } @page { margin: 15mm; } }
   </style>
 </head>
