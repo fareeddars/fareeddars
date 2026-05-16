@@ -195,43 +195,43 @@ const Seasons = () => {
               {/* Top Accent Bar */}
               <div className={`h-1.5 w-full ${isActive ? "bg-gradient-to-r from-emerald-400 to-teal-500" : "bg-slate-300 dark:bg-slate-700"}`} />
               
-              <CardContent className="p-4 sm:p-6 relative z-10">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 shrink-0 ${
+              <CardContent className="p-3 sm:p-6 relative z-10">
+                <div className="flex items-start justify-between gap-1 sm:gap-2.5 mb-2 sm:mb-3">
+                  <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                    <div className={`flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 shrink-0 ${
                       isActive 
                         ? "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 dark:from-emerald-900/50 dark:to-teal-900/50 dark:text-emerald-400" 
                         : "bg-muted text-muted-foreground"
                     }`}>
-                      <Leaf className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <Leaf className="h-4 w-4 sm:h-6 sm:w-6" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-base sm:text-lg font-bold text-foreground font-serif tracking-tight truncate">{season.name}</h3>
-                      <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">
+                      <h3 className="text-sm sm:text-lg font-bold text-foreground font-serif tracking-tight truncate">{season.name}</h3>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground font-medium mt-0.5 truncate">
                         {season.start_date} {season.end_date ? `→ ${season.end_date}` : ""}
                       </p>
                     </div>
                   </div>
-                  <Badge variant={isActive ? "default" : "secondary"} className={`font-semibold text-[10px] sm:text-xs shrink-0 ml-1 ${isActive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/20 shadow-sm" : ""}`}>
+                  <Badge variant={isActive ? "default" : "secondary"} className={`font-semibold text-[8px] sm:text-xs shrink-0 ${isActive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/20 shadow-sm" : ""}`}>
                     {isActive ? t("seasons.active") : t("seasons.closedStatus")}
                   </Badge>
                 </div>
 
                 {/* Actions Area */}
                 {isSelected && (
-                  <div className="mt-3 pt-3 border-t border-border/40 flex flex-col gap-2 animate-in slide-in-from-top-2 duration-300">
+                  <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-border/40 flex flex-col gap-1.5 sm:gap-2 animate-in slide-in-from-top-2 duration-300">
                     {isActive ? (
                       <>
                         {isManagerOrAdmin && (
-                          <Button size="sm" className="flex-1 text-xs bg-emerald-600 text-white hover:bg-emerald-700 font-semibold shadow-md rounded-xl h-9" onClick={(e) => { e.stopPropagation(); openAssignDialog(); }}>
-                            <Users className="h-4 w-4 mr-1.5" />{t("seasons.addFarmers")}
+                          <Button size="sm" className="flex-1 text-[10px] sm:text-xs bg-emerald-600 text-white hover:bg-emerald-700 font-semibold shadow-md rounded-lg sm:rounded-xl h-7 sm:h-9" onClick={(e) => { e.stopPropagation(); openAssignDialog(); }}>
+                            <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />{t("seasons.addFarmers")}
                           </Button>
                         )}
                         {isAdmin && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="outline" className="flex-1 text-xs border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 rounded-xl h-9" onClick={(e) => e.stopPropagation()}>
-                                <Lock className="h-4 w-4 mr-1.5" />{t("seasons.closeSeason")}
+                              <Button size="sm" variant="outline" className="flex-1 text-[10px] sm:text-xs border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 rounded-lg sm:rounded-xl h-7 sm:h-9" onClick={(e) => e.stopPropagation()}>
+                                <Lock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />{t("seasons.closeSeason")}
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="rounded-2xl">
@@ -246,8 +246,8 @@ const Seasons = () => {
                         {isAdmin && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="outline" className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10 rounded-xl px-3 h-9" onClick={(e) => e.stopPropagation()}>
-                                <Trash2 className="h-4 w-4" />
+                              <Button size="sm" variant="outline" className="text-[10px] sm:text-xs border-destructive/30 text-destructive hover:bg-destructive/10 rounded-lg sm:rounded-xl px-2 sm:px-3 h-7 sm:h-9" onClick={(e) => e.stopPropagation()}>
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="rounded-2xl">
@@ -266,8 +266,8 @@ const Seasons = () => {
                           <>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button size="sm" className="flex-1 text-xs bg-emerald-600/10 text-emerald-600 hover:bg-emerald-600/20 border border-emerald-600/30 font-semibold rounded-xl h-9" onClick={(e) => e.stopPropagation()}>
-                                  <RotateCcw className="h-4 w-4 mr-1.5" />{t("seasons.reopenSeason")}
+                                <Button size="sm" className="flex-1 text-[10px] sm:text-xs bg-emerald-600/10 text-emerald-600 hover:bg-emerald-600/20 border border-emerald-600/30 font-semibold rounded-lg sm:rounded-xl h-7 sm:h-9" onClick={(e) => e.stopPropagation()}>
+                                  <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />{t("seasons.reopenSeason")}
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent className="rounded-2xl">
@@ -280,8 +280,8 @@ const Seasons = () => {
                             </AlertDialog>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button size="sm" variant="outline" className="flex-1 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 rounded-xl h-9" onClick={(e) => e.stopPropagation()}>
-                                  <Trash2 className="h-4 w-4 mr-1.5" />{t("seasons.deleteSeason")}
+                                <Button size="sm" variant="outline" className="flex-1 text-[10px] sm:text-xs border-destructive/30 text-destructive hover:bg-destructive/10 rounded-lg sm:rounded-xl h-7 sm:h-9" onClick={(e) => e.stopPropagation()}>
+                                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />{t("seasons.deleteSeason")}
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent className="rounded-2xl">
@@ -329,22 +329,22 @@ const Seasons = () => {
             </CardHeader>
             <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               {farmerSeasons.length > 0 ? (
-                <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-2 xl:grid-cols-3">
                   {farmerSeasons.map((fs) => (
-                    <div key={fs.id} className={`group relative rounded-xl sm:rounded-2xl border p-3.5 sm:p-5 transition-all duration-300 hover:shadow-lg bg-background/50 backdrop-blur-sm ${
+                    <div key={fs.id} className={`group relative rounded-xl sm:rounded-2xl border p-2.5 sm:p-5 transition-all duration-300 hover:shadow-lg bg-background/50 backdrop-blur-sm ${
                       fs.status === "left" ? "opacity-60 border-destructive/30 bg-destructive/5" :
                       fs.status === "completed" ? "border-emerald-500/30 bg-emerald-500/5" : "border-border hover:border-emerald-500/30 hover:-translate-y-1"
                     }`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white text-sm font-bold shadow-sm shrink-0 ${
+                      <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                          <div className={`flex h-7 w-7 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br text-white text-[10px] sm:text-sm font-bold shadow-sm shrink-0 ${
                             fs.status === 'left' ? 'from-destructive to-destructive/70' : 'from-emerald-500 to-teal-600'
                           }`}>
                             {fs.farmers?.name?.charAt(0).toUpperCase() || "?"}
                           </div>
                           <div className="min-w-0">
-                            <h4 className="font-bold text-sm sm:text-base text-foreground leading-tight truncate">{fs.farmers?.name || "—"}</h4>
-                            <Badge variant="outline" className={`mt-0.5 text-[10px] px-1.5 py-0 shadow-sm ${
+                            <h4 className="font-bold text-xs sm:text-base text-foreground leading-tight truncate">{fs.farmers?.name || "—"}</h4>
+                            <Badge variant="outline" className={`mt-0.5 text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0 shadow-sm ${
                               fs.status === "active" ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/10" :
                               fs.status === "left" ? "border-destructive/30 text-destructive bg-destructive/10" : "border-blue-500/30 text-blue-600 bg-blue-500/10"
                             }`}>
@@ -354,15 +354,15 @@ const Seasons = () => {
                         </div>
                       </div>
 
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-1.5 sm:gap-2 mt-1.5 sm:mt-2">
                         {fs.status === "active" && selectedSeason.status === "active" && isManagerOrAdmin && (
-                          <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl h-9" onClick={() => handleFarmerLeave(fs.id)}>
+                          <Button size="sm" variant="ghost" className="w-full text-[10px] sm:text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg sm:rounded-xl h-7 sm:h-9" onClick={() => handleFarmerLeave(fs.id)}>
                             {t("seasons.markLeft")}
                           </Button>
                         )}
                         {fs.status === "left" && selectedSeason.status === "active" && isManagerOrAdmin && (
-                          <Button size="sm" variant="ghost" className="w-full text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-600/10 rounded-xl h-9" onClick={() => handleFarmerReactivate(fs.id)}>
-                            <RotateCcw className="h-3.5 w-3.5 mr-1.5" />{t("seasons.markActive")}
+                          <Button size="sm" variant="ghost" className="w-full text-[10px] sm:text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-600/10 rounded-lg sm:rounded-xl h-7 sm:h-9" onClick={() => handleFarmerReactivate(fs.id)}>
+                            <RotateCcw className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />{t("seasons.markActive")}
                           </Button>
                         )}
                       </div>
@@ -383,19 +383,19 @@ const Seasons = () => {
       {/* Assign Farmers Dialog */}
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent className="w-[95vw] sm:w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-2">
-            <DialogTitle className="font-serif text-2xl flex items-center gap-2">
-              <Users className="h-6 w-6 text-emerald-600" />
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2">
+            <DialogTitle className="font-serif text-lg sm:text-2xl flex items-center gap-2">
+              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
               {t("seasons.addFarmers")}
             </DialogTitle>
-            <DialogDescription>{t("seasons.selectFarmersDesc")}</DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">{t("seasons.selectFarmersDesc")}</DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-2 space-y-3">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-2 space-y-2 sm:space-y-3">
             {allFarmers.map((farmer) => {
               const alreadyAssigned = farmerSeasons.some((fs) => fs.farmer_id === farmer.id);
               const isChecked = selectedFarmerIds.includes(farmer.id);
               return (
-                <div key={farmer.id} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 ${
+                <div key={farmer.id} className={`flex items-center gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 ${
                   alreadyAssigned ? "bg-muted/30 border-muted opacity-60" : isChecked ? "bg-emerald-500/5 border-emerald-500/30 shadow-sm" : "border-border hover:border-emerald-500/20 bg-card hover:shadow-sm"
                 }`}>
                   <Checkbox 
@@ -405,19 +405,19 @@ const Seasons = () => {
                     className={isChecked ? "data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" : ""}
                   />
                   <div className="flex-1 min-w-0">
-                    <span className="font-semibold text-sm block truncate">{farmer.name}</span>
-                    {alreadyAssigned && <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t("seasons.alreadyAssigned")}</span>}
+                    <span className="font-semibold text-xs sm:text-sm block truncate">{farmer.name}</span>
+                    {alreadyAssigned && <span className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t("seasons.alreadyAssigned")}</span>}
                   </div>
                   {isChecked && !alreadyAssigned && (
                     <div className="relative shrink-0">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">₨</span>
+                      <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-semibold text-muted-foreground">₨</span>
                       <Input 
                         type="number" 
                         inputMode="decimal" 
                         min="0" 
                         step="0.01" 
                         placeholder="0.00" 
-                        className="w-28 h-10 text-sm font-mono pl-7 rounded-xl bg-background" 
+                        className="w-20 sm:w-28 h-8 sm:h-10 text-xs sm:text-sm font-mono pl-5 sm:pl-7 rounded-lg sm:rounded-xl bg-background" 
                         value={balances[farmer.id] || ""} 
                         onChange={(e) => setBalances({ ...balances, [farmer.id]: e.target.value })} 
                       />
@@ -433,8 +433,8 @@ const Seasons = () => {
               </div>
             )}
           </div>
-          <DialogFooter className="p-6 bg-muted/20 mt-auto border-t">
-            <Button onClick={handleAssignFarmers} className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold shadow-lg rounded-xl transition-all">
+          <DialogFooter className="p-4 sm:p-6 bg-muted/20 mt-auto border-t">
+            <Button onClick={handleAssignFarmers} className="w-full h-10 sm:h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold shadow-lg rounded-xl text-sm sm:text-base transition-all">
               {t("seasons.assignSelected")}
             </Button>
           </DialogFooter>

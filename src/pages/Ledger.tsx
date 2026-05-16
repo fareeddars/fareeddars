@@ -398,20 +398,20 @@ const Ledger = () => {
       )}
 
       {/* --- Premium Header Banner --- */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-950 via-purple-900 to-violet-900 p-6 sm:p-10 text-white shadow-2xl border border-violet-700/50">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-violet-950 via-purple-900 to-violet-900 p-4 sm:p-10 text-white shadow-2xl border border-violet-700/50">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-purple-400/10 -translate-y-1/3 translate-x-1/4 blur-[80px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-violet-400/20 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
         
-        <div className="relative z-10 flex flex-col xl:flex-row gap-8 justify-between">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+        <div className="relative z-10 flex flex-col xl:flex-row gap-4 sm:gap-8 justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
             <div className="hidden sm:flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner shrink-0">
               <BookOpen className="h-10 w-10 text-purple-100" />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-sm mb-2">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-sm mb-1 sm:mb-2">
                 {t("ledger.title")}
               </h1>
-              <p className="text-purple-100/80 text-sm sm:text-base font-medium tracking-wide max-w-lg">
+              <p className="text-purple-100/80 text-xs sm:text-base font-medium tracking-wide max-w-lg">
                 {t("ledger.subtitle")} {selectedSeason ? `— ${selectedSeason.name}` : ""}
               </p>
             </div>
@@ -421,126 +421,128 @@ const Ledger = () => {
             <div className="flex items-center">
               <Dialog open={open} onOpenChange={(v) => { if (saving && !v) return; setOpen(v); if (!v) resetForm(); }}>
                 <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto bg-white text-violet-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-2xl h-14 px-8 shrink-0 text-base">
-                    <Plus className="mr-2 h-5 w-5" />{t("ledger.newTransaction")}
+                  <Button className="w-full sm:w-auto bg-white text-violet-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl sm:rounded-2xl h-11 sm:h-14 px-5 sm:px-8 shrink-0 text-sm sm:text-base">
+                    <Plus className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />{t("ledger.newTransaction")}
                   </Button>
                 </DialogTrigger>
-                <DialogContent
-                  className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl"
+                    <DialogContent
+                  className="sm:max-w-xl h-dvh sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-none sm:rounded-2xl"
                   onKeyDown={(e) => { if (e.key === "Enter" && saving) { e.preventDefault(); e.stopPropagation(); } }}
                   onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}
                   onPointerDownOutside={(e) => { if (saving) e.preventDefault(); }}
                   onInteractOutside={(e) => { if (saving) e.preventDefault(); }}
                 >
-                  <DialogHeader className="px-6 py-5 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-b">
-                    <DialogTitle className="font-serif text-2xl flex items-center gap-2 text-violet-900 dark:text-violet-100">
-                      <BookOpen className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                  <DialogHeader className="px-3 sm:px-6 py-2 sm:py-5 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-b">
+                    <DialogTitle className="font-serif text-base sm:text-2xl flex items-center gap-2 text-violet-900 dark:text-violet-100">
+                      <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-violet-600 dark:text-violet-400" />
                       {editingId ? "Edit Entry" : t("ledger.newTransaction")}
                     </DialogTitle>
-                    <DialogDescription>{t("ledger.addEntry")}</DialogDescription>
+                    <DialogDescription className="text-[10px] sm:text-sm">{t("ledger.addEntry")}</DialogDescription>
                   </DialogHeader>
-                  <div className="flex-1 overflow-y-auto px-6 py-4">
+                  <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-2 sm:py-4">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                      <TabsList className="w-full grid grid-cols-4 h-auto gap-1.5 bg-muted/50 p-1.5 rounded-xl mb-6">
-                        <TabsTrigger value="expense" className="data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-red-500/30 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider py-2.5 transition-all duration-300 font-bold">
-                          <TrendingDown className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">{t("ledger.expense")}</span>
+                      <TabsList className="w-full grid grid-cols-4 h-auto gap-0.5 sm:gap-1 bg-muted/50 p-0.5 sm:p-1 rounded-md sm:rounded-lg mb-2 sm:mb-6">
+                        <TabsTrigger value="expense" className="data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-red-500/30 rounded sm:rounded-lg text-[8px] sm:text-xs uppercase tracking-wider py-1.5 sm:py-2.5 transition-all duration-300 font-bold flex flex-col sm:flex-row items-center gap-0 sm:gap-1.5">
+                          <TrendingDown className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> <span className="text-[7px] sm:text-xs leading-none">{t("ledger.expense")}</span>
                         </TabsTrigger>
-                        <TabsTrigger value="sale" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-emerald-500/30 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider py-2.5 transition-all duration-300 font-bold">
-                          <TrendingUp className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">{t("ledger.sale")}</span>
+                        <TabsTrigger value="sale" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-emerald-500/30 rounded sm:rounded-lg text-[8px] sm:text-xs uppercase tracking-wider py-1.5 sm:py-2.5 transition-all duration-300 font-bold flex flex-col sm:flex-row items-center gap-0 sm:gap-1.5">
+                          <TrendingUp className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> <span className="text-[7px] sm:text-xs leading-none">{t("ledger.sale")}</span>
                         </TabsTrigger>
-                        <TabsTrigger value="payment" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider py-2.5 transition-all duration-300 font-bold">
-                          <Wallet className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">{t("ledger.payment")}</span>
+                        <TabsTrigger value="payment" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 rounded sm:rounded-lg text-[8px] sm:text-xs uppercase tracking-wider py-1.5 sm:py-2.5 transition-all duration-300 font-bold flex flex-col sm:flex-row items-center gap-0 sm:gap-1.5">
+                          <Wallet className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> <span className="text-[7px] sm:text-xs leading-none">{t("ledger.payment")}</span>
                         </TabsTrigger>
-                        <TabsTrigger value="loan" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider py-2.5 transition-all duration-300 font-bold">
-                          <HandCoins className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">{t("ledger.loan")}</span>
+                        <TabsTrigger value="loan" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30 rounded sm:rounded-lg text-[8px] sm:text-xs uppercase tracking-wider py-1.5 sm:py-2.5 transition-all duration-300 font-bold flex flex-col sm:flex-row items-center gap-0 sm:gap-1.5">
+                          <HandCoins className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> <span className="text-[7px] sm:text-xs leading-none">{t("ledger.loan")}</span>
                         </TabsTrigger>
                       </TabsList>
 
-                      <div className="space-y-4 mb-6">
-                        <div className="space-y-1.5">
-                          <Label className="text-sm font-semibold">{t("ledger.farmer")} *</Label>
-                          <Select value={farmerId} onValueChange={setFarmerId}>
-                            <SelectTrigger className="h-11 bg-background"><SelectValue placeholder={t("ledger.selectFarmer")} /></SelectTrigger>
-                            <SelectContent>{seasonFarmers.map((fs) => <SelectItem key={fs.farmer_id} value={fs.farmer_id}>{fs.farmers?.name || "—"}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-sm font-semibold">{t("common.date")}</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-11 bg-background", !entryDate && "text-muted-foreground")}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {entryDate ? format(entryDate, "PPP") : t("ledger.pickDate")}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={entryDate} onSelect={(d) => d && setEntryDate(d)} initialFocus /></PopoverContent>
-                          </Popover>
+                      <div className="space-y-1.5 sm:space-y-4 mb-2 sm:mb-6">
+                        <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
+                          <div className="space-y-0.5 sm:space-y-1.5">
+                            <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.farmer")} *</Label>
+                            <Select value={farmerId} onValueChange={setFarmerId}>
+                              <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue placeholder={t("ledger.selectFarmer")} /></SelectTrigger>
+                              <SelectContent>{seasonFarmers.map((fs) => <SelectItem key={fs.farmer_id} value={fs.farmer_id}>{fs.farmers?.name || "—"}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-0.5 sm:space-y-1.5">
+                            <Label className="text-[9px] sm:text-sm font-semibold">{t("common.date")}</Label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-8 sm:h-11 bg-background text-[10px] sm:text-sm", !entryDate && "text-muted-foreground")}>
+                                  <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                  {entryDate ? format(entryDate, "PPP") : t("ledger.pickDate")}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={entryDate} onSelect={(d) => d && setEntryDate(d)} initialFocus /></PopoverContent>
+                            </Popover>
+                          </div>
                         </div>
                       </div>
 
                       {/* EXPENSE TAB */}
-                      <TabsContent value="expense" className="space-y-5">
-                        <div className="space-y-1.5">
-                          <Label className="text-sm font-semibold">{t("ledger.category")}</Label>
+                      <TabsContent value="expense" className="space-y-1.5 sm:space-y-5">
+                        <div className="space-y-0.5 sm:space-y-1.5">
+                          <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.category")}</Label>
                           <Select value={category} onValueChange={setCategory}>
-                            <SelectTrigger className="h-11 bg-background"><SelectValue placeholder={t("ledger.selectCategory")} /></SelectTrigger>
+                            <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue placeholder={t("ledger.selectCategory")} /></SelectTrigger>
                             <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.key} value={c.key.toLowerCase()}>{t(c.label)}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
-                        <div className="space-y-1.5">
-                          <Label className="text-sm font-semibold">{t("ledger.linkInventory")}</Label>
+                        <div className="hidden sm:block space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
+                        <div className="space-y-0.5 sm:space-y-1.5">
+                          <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.linkInventory")}</Label>
                           <Select value={inventoryItemId} onValueChange={setInventoryItemId}>
-                            <SelectTrigger className="h-11 bg-background"><SelectValue placeholder={t("ledger.selectInventory")} /></SelectTrigger>
+                            <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue placeholder={t("ledger.selectInventory")} /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">{t("ledger.none")}</SelectItem>
                               {inventory.map((item) => (<SelectItem key={item.id} value={item.id}>{item.item_name} — ₨{item.price_per_unit}/{item.unit} ({t("ledger.stock")}: {item.current_stock})</SelectItem>))}
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.price")} (₨)</Label><Input className="h-11 bg-background" type="number" inputMode="decimal" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" /></div>
-                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.quantity")}</Label><Input className="h-11 bg-background" type="number" inputMode="decimal" min="0" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" /></div>
+                        <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
+                          <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.price")} (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" /></div>
+                          <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.quantity")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" /></div>
                         </div>
-                        {(!price || !quantity) && (<div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-11 bg-background font-mono" type="number" inputMode="decimal" min="0" step="0.01" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} placeholder={t("ledger.manualAmount")} /></div>)}
-                        {(price && quantity) && (<div className="rounded-xl bg-gradient-to-r from-red-500/10 to-rose-500/10 border border-red-500/20 p-4 text-sm font-semibold flex justify-between items-center"><span className="text-red-700 dark:text-red-400">{t("common.total")}:</span> <span className="text-xl font-mono text-red-600 dark:text-red-400">₨ {computedExpenseAmount().toLocaleString()}</span></div>)}
+                        {(!price || !quantity) && (<div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} placeholder={t("ledger.manualAmount")} /></div>)}
+                        {(price && quantity) && (<div className="rounded sm:rounded-xl bg-gradient-to-r from-red-500/10 to-rose-500/10 border border-red-500/20 p-1 sm:p-4 text-[9px] sm:text-sm font-semibold flex justify-between items-center"><span className="text-red-700 dark:text-red-400">{t("common.total")}:</span> <span className="text-xs sm:text-xl font-mono text-red-600 dark:text-red-400">₨ {computedExpenseAmount().toLocaleString()}</span></div>)}
 
                         {/* Cost Allocation */}
-                        <div className="space-y-3 pt-2">
-                          <Label className="text-sm font-semibold">{t("ledger.costAllocation")}</Label>
-                          <RadioGroup value={costAllocation} onValueChange={(v) => setCostAllocation(v as CostAllocation)} className="grid grid-cols-3 gap-2">
+                        <div className="space-y-1 sm:space-y-3 pt-0.5 sm:pt-2">
+                          <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.costAllocation")}</Label>
+                          <RadioGroup value={costAllocation} onValueChange={(v) => setCostAllocation(v as CostAllocation)} className="grid grid-cols-3 gap-0.5 sm:gap-2">
                             <Label htmlFor="alloc-farmer" className={cn(
-                              "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 text-center",
+                              "flex flex-col items-center gap-0 sm:gap-1 rounded sm:rounded-xl border-[1.5px] sm:border-2 p-0.5 sm:p-3 cursor-pointer transition-all duration-200 text-center",
                               costAllocation === "farmer" ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 shadow-md shadow-indigo-500/20" : "border-muted hover:border-muted-foreground/30 bg-background"
                             )}>
                               <RadioGroupItem value="farmer" id="alloc-farmer" className="sr-only" />
-                              <span className="text-lg">👨‍🌾</span>
-                              <span className="text-xs font-semibold leading-tight">{t("ledger.farmerOnly")}</span>
+                              <span className="text-xs sm:text-lg">👨‍🌾</span>
+                              <span className="text-[7px] sm:text-xs font-semibold leading-tight">{t("ledger.farmerOnly")}</span>
                             </Label>
                             <Label htmlFor="alloc-shared" className={cn(
-                              "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 text-center",
+                              "flex flex-col items-center gap-0 sm:gap-1 rounded sm:rounded-xl border-[1.5px] sm:border-2 p-0.5 sm:p-3 cursor-pointer transition-all duration-200 text-center",
                               costAllocation === "shared" ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-md shadow-orange-500/20" : "border-muted hover:border-muted-foreground/30 bg-background"
                             )}>
                               <RadioGroupItem value="shared" id="alloc-shared" className="sr-only" />
-                              <span className="text-lg">🤝</span>
-                              <span className="text-xs font-semibold leading-tight">50/50</span>
+                              <span className="text-xs sm:text-lg">🤝</span>
+                              <span className="text-[7px] sm:text-xs font-semibold leading-tight">50/50</span>
                             </Label>
                             <Label htmlFor="alloc-landlord" className={cn(
-                              "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 text-center",
+                              "flex flex-col items-center gap-0 sm:gap-1 rounded sm:rounded-xl border-[1.5px] sm:border-2 p-0.5 sm:p-3 cursor-pointer transition-all duration-200 text-center",
                               costAllocation === "landlord" ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-md shadow-purple-500/20" : "border-muted hover:border-muted-foreground/30 bg-background"
                             )}>
                               <RadioGroupItem value="landlord" id="alloc-landlord" className="sr-only" />
-                              <span className="text-lg">🏠</span>
-                              <span className="text-xs font-semibold leading-tight">{t("ledger.landlordOnly")}</span>
+                              <span className="text-xs sm:text-lg">🏠</span>
+                              <span className="text-[7px] sm:text-xs font-semibold leading-tight">{t("ledger.landlordOnly")}</span>
                             </Label>
                           </RadioGroup>
                           {costAllocation === "shared" && computedExpenseAmount() > 0 && (
-                            <div className="rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 p-2.5 text-xs font-medium text-orange-700 dark:text-orange-400 text-center">
+                            <div className="hidden sm:block rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 p-2.5 text-xs font-medium text-orange-700 dark:text-orange-400 text-center">
                               {t("ledger.eachPays")}: ₨ {(computedExpenseAmount() / 2).toLocaleString()}
                             </div>
                           )}
                           {costAllocation === "landlord" && computedExpenseAmount() > 0 && (
-                            <div className="rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 p-2.5 text-xs font-medium text-purple-700 dark:text-purple-400 text-center">
+                            <div className="hidden sm:block rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 p-2.5 text-xs font-medium text-purple-700 dark:text-purple-400 text-center">
                               {t("ledger.landlordPays")}: ₨ {computedExpenseAmount().toLocaleString()}
                             </div>
                           )}
@@ -548,24 +550,24 @@ const Ledger = () => {
                       </TabsContent>
 
                       {/* SALE TAB */}
-                      <TabsContent value="sale" className="space-y-4">
-                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.grossWeight")}</Label><Input className="h-11 bg-background" type="number" inputMode="decimal" min="0" step="0.01" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" /></div>
-                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.deductions")}</Label><Input className="h-11 bg-background text-red-600 font-medium" type="number" inputMode="decimal" min="0" step="0.01" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" /></div>
+                      <TabsContent value="sale" className="space-y-1.5 sm:space-y-4">
+                        <div className="hidden sm:block space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
+                        <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
+                          <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.grossWeight")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" /></div>
+                          <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.deductions")}</Label><Input className="h-8 sm:h-11 bg-background text-red-600 font-medium text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" /></div>
                         </div>
-                        <div className="rounded-xl bg-muted/40 border border-border p-3 text-sm flex justify-between"><span className="font-semibold text-muted-foreground">{t("ledger.netWeight")}:</span> <span className="font-mono font-bold">{netWeight().toLocaleString()} kg</span></div>
-                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11 bg-background font-mono" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
-                        <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-4 text-sm font-semibold flex justify-between items-center"><span className="text-emerald-700 dark:text-emerald-400">{t("ledger.totalAmount")}:</span> <span className="text-xl font-mono text-emerald-600 dark:text-emerald-400">₨ {saleTotal().toLocaleString()}</span></div>
+                        <div className="rounded sm:rounded-xl bg-muted/40 border border-border p-1 sm:p-3 text-[8px] sm:text-sm flex justify-between"><span className="font-semibold text-muted-foreground">{t("ledger.netWeight")}:</span> <span className="font-mono font-bold">{netWeight().toLocaleString()} kg</span></div>
+                        <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
+                        <div className="rounded sm:rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-1.5 sm:p-4 text-[9px] sm:text-sm font-semibold flex justify-between items-center"><span className="text-emerald-700 dark:text-emerald-400">{t("ledger.totalAmount")}:</span> <span className="text-xs sm:text-xl font-mono text-emerald-600 dark:text-emerald-400">₨ {saleTotal().toLocaleString()}</span></div>
                       </TabsContent>
 
                       {/* PAYMENT TAB */}
-                      <TabsContent value="payment" className="space-y-4">
-                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
-                        <div className="space-y-1.5">
-                          <Label className="text-sm font-semibold">{t("ledger.paymentMethod")}</Label>
+                      <TabsContent value="payment" className="space-y-1.5 sm:space-y-4">
+                        <div className="hidden sm:block space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
+                        <div className="space-y-0.5 sm:space-y-1.5">
+                          <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.paymentMethod")}</Label>
                           <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                            <SelectTrigger className="h-11 bg-background"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="cash">{t("ledger.cashPayment")}</SelectItem>
                               <SelectItem value="crop_return">{t("ledger.cropReturn")}</SelectItem>
@@ -573,30 +575,30 @@ const Ledger = () => {
                           </Select>
                         </div>
                         {paymentMethod === "cash" ? (
-                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-11 bg-background font-mono text-amber-600 font-bold" type="number" inputMode="decimal" min="0" step="0.01" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0" /></div>
+                          <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-amber-600 font-bold text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0" /></div>
                         ) : (
                           <>
-                            <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.cropType")}</Label><Input className="h-11 bg-background" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="e.g. Wheat, Rice" /></div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.cropWeight")}</Label><Input className="h-11 bg-background" type="number" inputMode="decimal" min="0" step="0.01" value={cropWeight} onChange={(e) => setCropWeight(e.target.value)} placeholder="0" /></div>
-                              <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11 bg-background font-mono" type="number" inputMode="decimal" min="0" step="0.01" value={cropRate} onChange={(e) => setCropRate(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.cropType")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="e.g. Wheat, Rice" /></div>
+                            <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
+                              <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.cropWeight")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={cropWeight} onChange={(e) => setCropWeight(e.target.value)} placeholder="0" /></div>
+                              <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={cropRate} onChange={(e) => setCropRate(e.target.value)} placeholder="0" /></div>
                             </div>
-                            <div className="rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 p-4 text-sm font-semibold flex justify-between items-center"><span className="text-amber-700 dark:text-amber-400">{t("common.total")}:</span> <span className="text-xl font-mono text-amber-600 dark:text-amber-400">₨ {cropTotal().toLocaleString()}</span></div>
+                            <div className="rounded sm:rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 p-1.5 sm:p-4 text-[9px] sm:text-sm font-semibold flex justify-between items-center"><span className="text-amber-700 dark:text-amber-400">{t("common.total")}:</span> <span className="text-xs sm:text-xl font-mono text-amber-600 dark:text-amber-400">₨ {cropTotal().toLocaleString()}</span></div>
                           </>
                         )}
                       </TabsContent>
 
                       {/* LOAN TAB */}
-                      <TabsContent value="loan" className="space-y-4">
-                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.loanPurpose")} /></div>
-                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-11 bg-background font-mono text-blue-600 font-bold" type="number" inputMode="decimal" min="0" step="0.01" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} placeholder="0" /></div>
-                        {loanAmount && (<div className="rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 p-4 text-sm font-semibold flex justify-between items-center"><span className="text-blue-700 dark:text-blue-400">{t("ledger.loanAmount")}:</span> <span className="text-xl font-mono text-blue-600 dark:text-blue-400">₨ {Number(loanAmount).toLocaleString()}</span></div>)}
+                      <TabsContent value="loan" className="space-y-1.5 sm:space-y-4">
+                        <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("common.description")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.loanPurpose")} /></div>
+                        <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-blue-600 font-bold text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} placeholder="0" /></div>
+                        {loanAmount && (<div className="rounded sm:rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 p-1.5 sm:p-4 text-[9px] sm:text-sm font-semibold flex justify-between items-center"><span className="text-blue-700 dark:text-blue-400">{t("ledger.loanAmount")}:</span> <span className="text-xs sm:text-xl font-mono text-blue-600 dark:text-blue-400">₨ {Number(loanAmount).toLocaleString()}</span></div>)}
                       </TabsContent>
                     </Tabs>
                   </div>
-                  <DialogFooter className="p-6 bg-muted/30 border-t mt-auto">
-                    <Button onClick={handleSave} disabled={!farmerId || saving} className="w-full h-12 text-base font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg transition-all duration-300 rounded-xl">
-                      {saving ? (<><Loader2 className="animate-spin h-5 w-5 mr-2" /> {t("common.saving") || "Saving..."}</>) : t("ledger.saveEntry")}
+                  <DialogFooter className="p-2 sm:p-6 bg-muted/30 border-t mt-auto">
+                    <Button size="sm" onClick={handleSave} disabled={!farmerId || saving} className="w-full h-9 sm:h-12 text-xs sm:text-base font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg transition-all duration-300 rounded-md sm:rounded-xl">
+                      {saving ? (<><Loader2 className="animate-spin h-3.5 w-3.5 sm:h-5 sm:w-5 mr-1 sm:mr-2" /> {t("common.saving") || "Saving..."}</>) : t("ledger.saveEntry")}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -607,56 +609,56 @@ const Ledger = () => {
       </div>
 
       {/* --- Premium Summary Cards --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="border-red-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-                <TrendingDown className="h-5 w-5 text-red-500" />
+          <CardContent className="p-3 sm:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+                <TrendingDown className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-red-500" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.expense")}</span>
+              <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.expense")}</span>
             </div>
-            <p className="text-2xl font-bold font-mono text-red-600 dark:text-red-400 truncate">₨ {totalExpenses.toLocaleString()}</p>
+            <p className="text-sm sm:text-2xl font-bold font-mono text-red-600 dark:text-red-400 truncate">₨ {totalExpenses.toLocaleString()}</p>
           </CardContent>
         </Card>
         
         <Card className="border-emerald-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <TrendingUp className="h-5 w-5 text-emerald-500" />
+          <CardContent className="p-3 sm:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-emerald-500" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.sale")}</span>
+              <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.sale")}</span>
             </div>
-            <p className="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 truncate">₨ {totalSales.toLocaleString()}</p>
+            <p className="text-sm sm:text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 truncate">₨ {totalSales.toLocaleString()}</p>
           </CardContent>
         </Card>
 
         <Card className="border-amber-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
-                <Wallet className="h-5 w-5 text-amber-500" />
+          <CardContent className="p-3 sm:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                <Wallet className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-amber-500" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.payment")}</span>
+              <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.payment")}</span>
             </div>
-            <p className="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 truncate">₨ {totalPayments.toLocaleString()}</p>
+            <p className="text-sm sm:text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 truncate">₨ {totalPayments.toLocaleString()}</p>
           </CardContent>
         </Card>
 
         <Card className="border-blue-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                <HandCoins className="h-5 w-5 text-blue-500" />
+          <CardContent className="p-3 sm:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                <HandCoins className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-blue-500" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.loan")}</span>
+              <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.loan")}</span>
             </div>
-            <p className="text-2xl font-bold font-mono text-blue-600 dark:text-blue-400 truncate">₨ {totalLoans.toLocaleString()}</p>
+            <p className="text-sm sm:text-2xl font-bold font-mono text-blue-600 dark:text-blue-400 truncate">₨ {totalLoans.toLocaleString()}</p>
           </CardContent>
         </Card>
       </div>
@@ -664,30 +666,30 @@ const Ledger = () => {
       {/* --- Premium Entries Table Card --- */}
       <Card className="shadow-2xl border-border/50 bg-card/80 backdrop-blur-xl rounded-3xl overflow-hidden">
         <div className="h-1.5 bg-gradient-to-r from-violet-500 to-purple-500" />
-        <CardHeader className="pb-4 pt-6 px-6 border-b border-border/40 space-y-5">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <CardTitle className="text-xl font-serif flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-violet-500" />
+        <CardHeader className="pb-3 sm:pb-4 pt-4 sm:pt-6 px-4 sm:px-6 border-b border-border/40 space-y-3 sm:space-y-5">
+          <div className="flex items-center justify-between gap-3 sm:gap-4 flex-wrap">
+            <CardTitle className="text-base sm:text-xl font-serif flex items-center gap-2">
+              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
               {t("ledger.recentEntries")}
             </CardTitle>
-            <Badge variant="outline" className="border-violet-500/30 text-violet-600 dark:text-violet-400 bg-violet-500/10 font-bold px-3 py-1">
+            <Badge variant="outline" className="border-violet-500/30 text-violet-600 dark:text-violet-400 bg-violet-500/10 font-bold px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs">
               {filteredEntries.length} / {entries.length} Entries
             </Badge>
           </div>
 
           {/* Premium Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-            <div className="relative lg:col-span-2 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-violet-500 transition-colors" />
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-6 gap-2 sm:gap-3">
+            <div className="relative lg:col-span-2 group col-span-2 sm:col-span-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground group-focus-within:text-violet-500 transition-colors" />
               <Input
                 placeholder="Search farmer, description…"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="pl-10 h-10 rounded-xl bg-background/50 border-border/60 focus:border-violet-500/50 transition-all"
+                className="pl-9 sm:pl-10 h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 border-border/60 focus:border-violet-500/50 transition-all text-xs sm:text-sm"
               />
             </div>
             <Select value={filterFarmer} onValueChange={setFilterFarmer}>
-              <SelectTrigger className="h-10 rounded-xl bg-background/50"><SelectValue placeholder="Farmer" /></SelectTrigger>
+              <SelectTrigger className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 text-xs sm:text-sm"><SelectValue placeholder="Farmer" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Farmers</SelectItem>
                 {seasonFarmers.map((fs) => (
@@ -696,7 +698,7 @@ const Ledger = () => {
               </SelectContent>
             </Select>
             <Select value={filterType} onValueChange={(v) => { setFilterType(v); if (v !== "expense") setFilterCategory("all"); }}>
-              <SelectTrigger className="h-10 rounded-xl bg-background/50"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectTrigger className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 text-xs sm:text-sm"><SelectValue placeholder="Type" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="expense">{t("ledger.expense")}</SelectItem>
@@ -706,7 +708,7 @@ const Ledger = () => {
               </SelectContent>
             </Select>
             <Select value={filterCategory} onValueChange={setFilterCategory} disabled={filterType !== "all" && filterType !== "expense"}>
-              <SelectTrigger className="h-10 rounded-xl bg-background/50"><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectTrigger className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 text-xs sm:text-sm"><SelectValue placeholder="Category" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {EXPENSE_CATEGORIES.map((c) => (
@@ -714,11 +716,11 @@ const Ledger = () => {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 sm:gap-2">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("h-10 flex-1 justify-start text-left font-normal text-xs rounded-xl bg-background/50", !filterFromDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                  <Button variant="outline" className={cn("h-9 sm:h-10 flex-1 justify-start text-left font-normal text-[10px] sm:text-xs rounded-lg sm:rounded-xl bg-background/50", !filterFromDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
                     {filterFromDate ? format(filterFromDate, "MMM d") : "From"}
                   </Button>
                 </PopoverTrigger>
@@ -728,8 +730,8 @@ const Ledger = () => {
               </Popover>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("h-10 flex-1 justify-start text-left font-normal text-xs rounded-xl bg-background/50", !filterToDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                  <Button variant="outline" className={cn("h-9 sm:h-10 flex-1 justify-start text-left font-normal text-[10px] sm:text-xs rounded-lg sm:rounded-xl bg-background/50", !filterToDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
                     {filterToDate ? format(filterToDate, "MMM d") : "To"}
                   </Button>
                 </PopoverTrigger>

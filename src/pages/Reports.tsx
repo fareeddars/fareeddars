@@ -600,44 +600,44 @@ const Reports = () => {
   return (
     <div className="space-y-6">
       {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-4 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
-        <div className="relative z-10 flex items-center gap-4">
+        <div className="relative z-10 flex items-center gap-3 sm:gap-4">
           <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
             <FileText className="h-7 w-7" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("reports.title")}</h1>
-            <p className="text-primary-foreground/70 text-sm mt-0.5">{t("reports.subtitle")}</p>
+            <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight">{t("reports.title")}</h1>
+            <p className="text-primary-foreground/70 text-xs sm:text-sm mt-0.5">{t("reports.subtitle")}</p>
           </div>
         </div>
       </div>
 
       <Card className="overflow-hidden shadow-lg border-border/50">
         <div className="h-1 bg-gradient-to-r from-primary to-primary/70" />
-        <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />{t("reports.generateReport")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2 text-base sm:text-lg"><FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />{t("reports.generateReport")}</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label>{t("ledger.farmer")}</Label>
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-sm sm:text-base">{t("ledger.farmer")}</Label>
               <Select value={selectedFarmerId} onValueChange={setSelectedFarmerId}>
-                <SelectTrigger><SelectValue placeholder={t("ledger.selectFarmer")} /></SelectTrigger>
+                <SelectTrigger className="h-10 sm:h-11"><SelectValue placeholder={t("ledger.selectFarmer")} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("reports.allFarmers")}</SelectItem>
                   {farmers.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>{t("reports.monthOptional")}</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-sm sm:text-base">{t("reports.monthOptional")}</Label>
               <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
             </div>
-            <div className="space-y-2">
-              <Label>{t("reports.printLanguage")}</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-sm sm:text-base">{t("reports.printLanguage")}</Label>
               <Select value={printLang} onValueChange={(v) => setPrintLang(v as Language)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-10 sm:h-11"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="ur">اردو (Urdu)</SelectItem>
@@ -645,13 +645,13 @@ const Reports = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 flex items-end gap-2">
-              <Button onClick={generateReport} disabled={loading} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
+            <div className="space-y-1.5 sm:space-y-2 flex items-end gap-2 col-span-2 sm:col-span-1">
+              <Button size="sm" onClick={generateReport} disabled={loading} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl text-xs sm:text-sm h-9 sm:h-10">
                 {loading ? t("common.loading") : t("reports.generateReport")}
               </Button>
               {reportReady && (
-                <Button onClick={handlePrint} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
-                  <Printer className="h-4 w-4 mr-2" />{t("reports.printPdf")}
+                <Button size="sm" onClick={handlePrint} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl text-xs sm:text-sm h-9 sm:h-10">
+                  <Printer className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />{t("reports.printPdf")}
                 </Button>
               )}
             </div>
@@ -661,10 +661,10 @@ const Reports = () => {
 
       {reportReady && (
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground mb-4">{t("reports.preview")}</p>
+          <CardContent className="p-4 sm:pt-6 sm:px-6">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{t("reports.preview")}</p>
             <div className="border border-border rounded-md overflow-hidden">
-              <div className="bg-muted/30 px-4 py-2 text-xs text-muted-foreground flex justify-between">
+              <div className="bg-muted/30 px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs text-muted-foreground flex flex-col sm:flex-row justify-between gap-1">
                 <span>{t("reports.reportFor")}: {selectedFarmerName}</span>
                 <span>{t("reports.generated")}: {new Date().toLocaleDateString("en-PK")}</span>
               </div>
@@ -674,22 +674,22 @@ const Reports = () => {
       )}
 
       {reportReady && reportFarmerIds.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {reportFarmerIds.map((farmerId) => {
             const { totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, finalBalance, netProfit } = calcSections(farmerId);
             return (
               <Card key={farmerId}>
-                <CardHeader><CardTitle className="text-base">{getFarmerName(farmerId)}</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-                    <div><p className="text-muted-foreground">{t("reports.totalSales")}</p><p className="font-mono font-medium text-emerald-600">{fmt(totalSales)}</p></div>
-                    <div><p className="text-muted-foreground">{t("reports.farmerExpenses")}</p><p className="font-mono font-medium">{fmt(totalFarmerExpenses)}</p></div>
-                    <div><p className="text-muted-foreground">{t("reports.landlordExpenses")}</p><p className="font-mono font-medium">{fmt(totalLandlordExpenses)}</p></div>
-                    <div><p className="text-muted-foreground">Total Expenses</p><p className="font-mono font-medium text-red-600">{fmt(totalExpenses)}</p></div>
-                    <div><p className="text-muted-foreground">{t("reports.personalLoans")}</p><p className="font-mono font-medium">{fmt(totalLoans)}</p></div>
-                    <div><p className="text-muted-foreground">{t("reports.paymentsReceived")}</p><p className="font-mono font-medium">{fmt(totalPayments)}</p></div>
-                    <div><p className="text-muted-foreground">{t("reports.netProfitLoss")}</p><p className={`font-mono font-medium ${netProfit >= 0 ? "text-blue-600" : "text-destructive"}`}>{netProfit >= 0 ? "+" : "−"} {fmt(Math.abs(netProfit))}</p></div>
-                    <div><p className="text-muted-foreground">{t("reports.balanceDue")}</p><p className={`font-mono font-bold ${finalBalance > 0 ? "text-destructive" : "text-primary"}`}>{Math.abs(finalBalance) < 0.5 ? t("reports.settled") : fmt(Math.abs(finalBalance))}</p></div>
+                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4"><CardTitle className="text-sm sm:text-base">{getFarmerName(farmerId)}</CardTitle></CardHeader>
+                <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.totalSales")}</p><p className="font-mono font-medium text-emerald-600 text-sm sm:text-base">{fmt(totalSales)}</p></div>
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.farmerExpenses")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalFarmerExpenses)}</p></div>
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.landlordExpenses")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalLandlordExpenses)}</p></div>
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">Total Expenses</p><p className="font-mono font-medium text-red-600 text-sm sm:text-base">{fmt(totalExpenses)}</p></div>
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.personalLoans")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalLoans)}</p></div>
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.paymentsReceived")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalPayments)}</p></div>
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.netProfitLoss")}</p><p className={`font-mono font-medium text-sm sm:text-base ${netProfit >= 0 ? "text-blue-600" : "text-destructive"}`}>{netProfit >= 0 ? "+" : "−"} {fmt(Math.abs(netProfit))}</p></div>
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.balanceDue")}</p><p className={`font-mono font-bold text-sm sm:text-base ${finalBalance > 0 ? "text-destructive" : "text-primary"}`}>{Math.abs(finalBalance) < 0.5 ? t("reports.settled") : fmt(Math.abs(finalBalance))}</p></div>
                   </div>
                 </CardContent>
               </Card>

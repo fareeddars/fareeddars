@@ -208,43 +208,43 @@ const Farmers = () => {
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700">
       
       {/* --- Premium Page Header Banner --- */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-blue-900 to-indigo-900 p-6 sm:p-10 text-white shadow-2xl border border-indigo-700/50">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-950 via-blue-900 to-indigo-900 p-4 sm:p-10 text-white shadow-2xl border border-indigo-700/50">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-blue-400/10 -translate-y-1/3 translate-x-1/4 blur-[80px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-indigo-400/20 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
         
-        <div className="relative z-10 flex flex-col xl:flex-row gap-8 justify-between">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+         <div className="relative z-10 flex flex-col xl:flex-row gap-4 sm:gap-8 justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
             <div className="hidden sm:flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner shrink-0">
               <Users className="h-10 w-10 text-blue-100" />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-sm mb-2">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-sm mb-1 sm:mb-2">
                 {t("farmers.title")}
               </h1>
-              <p className="text-blue-100/80 text-sm sm:text-base font-medium tracking-wide max-w-lg">
+              <p className="text-blue-100/80 text-xs sm:text-base font-medium tracking-wide max-w-lg">
                 {t("farmers.subtitle")}
               </p>
             </div>
           </div>
           
           {/* Quick Stats & Action Area */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
-            <div className="flex w-full sm:w-auto gap-4">
-              <div className="flex-1 sm:flex-none bg-black/20 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/10 flex flex-col justify-center min-w-[140px]">
-                <p className="text-[10px] sm:text-xs text-blue-200/70 font-semibold uppercase tracking-widest mb-1">Total Farmers</p>
-                <p className="text-2xl sm:text-3xl font-bold font-mono">{farmers.length}</p>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full xl:w-auto">
+            <div className="flex w-full sm:w-auto gap-2 sm:gap-4">
+              <div className="flex-1 bg-black/20 backdrop-blur-md rounded-xl sm:rounded-2xl px-3 sm:px-5 py-2 sm:py-3 border border-white/10 flex flex-col justify-center min-w-0 sm:min-w-[140px]">
+                <p className="text-[9px] sm:text-xs text-blue-200/70 font-semibold uppercase tracking-widest mb-0.5 sm:mb-1">Total Farmers</p>
+                <p className="text-lg sm:text-3xl font-bold font-mono">{farmers.length}</p>
               </div>
-              <div className="flex-1 sm:flex-none bg-emerald-500/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-emerald-400/20 flex flex-col justify-center min-w-[160px]">
-                <p className="text-[10px] sm:text-xs text-emerald-200/80 font-semibold uppercase tracking-widest mb-1">Total Outstanding</p>
-                <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-300">₨ {totalPortfolioBalance.toLocaleString()}</p>
+              <div className="flex-1 bg-emerald-500/10 backdrop-blur-md rounded-xl sm:rounded-2xl px-3 sm:px-5 py-2 sm:py-3 border border-emerald-400/20 flex flex-col justify-center min-w-0 sm:min-w-[160px]">
+                <p className="text-[9px] sm:text-xs text-emerald-200/80 font-semibold uppercase tracking-widest mb-0.5 sm:mb-1">Total Outstanding</p>
+                <p className="text-base sm:text-2xl font-bold font-mono text-emerald-300 truncate">₨ {totalPortfolioBalance.toLocaleString()}</p>
               </div>
             </div>
             
             {isManagerOrAdmin && (
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto bg-white text-indigo-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-2xl h-14 px-8 shrink-0 text-base">
-                    <Plus className="mr-2 h-5 w-5" />{t("farmers.addFarmer")}
+                  <Button className="w-full sm:w-auto bg-white text-indigo-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl sm:rounded-2xl h-12 sm:h-14 px-5 sm:px-8 shrink-0 text-sm sm:text-base">
+                    <Plus className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />{t("farmers.addFarmer")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl">
@@ -288,19 +288,19 @@ const Farmers = () => {
 
       {/* --- Premium Search Bar --- */}
       <div className="relative max-w-xl mx-auto sm:mx-0 group">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-indigo-500 transition-colors" />
+        <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-focus-within:text-indigo-500 transition-colors" />
         </div>
         <Input 
           placeholder="Search by Name, CNIC, Phone, or Landlord..." 
           value={search} 
           onChange={(e) => setSearch(e.target.value)} 
-          className="pl-12 h-14 rounded-2xl border-border/60 bg-card/50 backdrop-blur-sm focus:border-indigo-500/50 shadow-sm text-base transition-all group-focus-within:shadow-md group-focus-within:bg-card" 
+          className="pl-10 sm:pl-12 h-11 sm:h-14 rounded-xl sm:rounded-2xl border-border/60 bg-card/50 backdrop-blur-sm focus:border-indigo-500/50 shadow-sm text-sm sm:text-base transition-all group-focus-within:shadow-md group-focus-within:bg-card" 
         />
       </div>
 
       {/* --- Premium Farmer Cards --- */}
-      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-3 sm:gap-6 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((farmer, i) => (
           <Card
             key={farmer.id}
@@ -309,31 +309,31 @@ const Farmers = () => {
             onClick={() => setSelectedFarmer(farmer)}
           >
             {/* Top Color Accent */}
-            <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 to-blue-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+            <div className="h-1 w-full sm:h-1.5 bg-gradient-to-r from-indigo-500 to-blue-500 opacity-80 group-hover:opacity-100 transition-opacity" />
             
-            <CardHeader className="pb-3 px-5 pt-5 flex flex-row items-start justify-between relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 text-indigo-700 dark:text-indigo-400 text-xl font-bold shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
+            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-5 pt-3 sm:pt-5 flex flex-row items-start justify-between relative z-10">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 text-indigo-700 dark:text-indigo-400 text-base sm:text-xl font-bold shadow-md shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   {farmer.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="max-w-[140px] sm:max-w-[120px] md:max-w-[140px]">
-                  <CardTitle className="text-lg font-bold font-serif leading-tight truncate">{farmer.name}</CardTitle>
-                  {farmer.cnic && <p className="text-[11px] text-muted-foreground mt-1 font-mono bg-muted/50 inline-block px-1.5 py-0.5 rounded">{farmer.cnic}</p>}
+                <div className="min-w-0">
+                  <CardTitle className="text-sm sm:text-lg font-bold font-serif leading-tight truncate">{farmer.name}</CardTitle>
+                  {farmer.cnic && <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 sm:mt-1 font-mono bg-muted/50 inline-block px-1 sm:px-1.5 py-0.5 rounded truncate max-w-full">{farmer.cnic}</p>}
                 </div>
               </div>
               
               {/* Card Quick Actions */}
-              <div className="flex gap-1 -mt-1 -mr-2">
+              <div className="flex gap-0.5 sm:gap-1 -mt-1 -mr-1 sm:-mr-2 shrink-0">
                 {isManagerOrAdmin && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/30 rounded-full transition-colors" onClick={(e) => { e.stopPropagation(); openEdit(farmer); }}>
-                    <Pencil className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/30 rounded-full transition-colors" onClick={(e) => { e.stopPropagation(); openEdit(farmer); }}>
+                    <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 )}
                 {isAdmin && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors" onClick={(e) => e.stopPropagation()}>
-                        <Trash2 className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors" onClick={(e) => e.stopPropagation()}>
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent className="rounded-2xl">
@@ -350,16 +350,16 @@ const Farmers = () => {
               </div>
             </CardHeader>
             
-            <CardContent className="px-5 pb-5 relative z-10">
-              <div className="space-y-2.5 text-sm text-muted-foreground mb-4">
-                {farmer.phone && <div className="flex items-center gap-2.5 truncate"><Phone className="h-4 w-4 text-indigo-500/70 shrink-0" /><span className="truncate">{farmer.phone}</span></div>}
-                {farmer.address && <div className="flex items-center gap-2.5 truncate"><MapPin className="h-4 w-4 text-indigo-500/60 shrink-0" /><span className="truncate">{farmer.address}</span></div>}
-                {farmer.landlord && <div className="flex items-center gap-2.5 truncate"><Home className="h-4 w-4 text-indigo-500/50 shrink-0" /><span className="truncate text-foreground/80 font-medium">{farmer.landlord}</span></div>}
+            <CardContent className="px-3 sm:px-5 pb-3 sm:pb-5 relative z-10">
+              <div className="space-y-1.5 sm:space-y-2.5 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-4">
+                {farmer.phone && <div className="flex items-center gap-1.5 sm:gap-2.5 truncate"><Phone className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500/70 shrink-0" /><span className="truncate">{farmer.phone}</span></div>}
+                {farmer.address && <div className="flex items-center gap-1.5 sm:gap-2.5 truncate"><MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500/60 shrink-0" /><span className="truncate">{farmer.address}</span></div>}
+                {farmer.landlord && <div className="flex items-center gap-1.5 sm:gap-2.5 truncate"><Home className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500/50 shrink-0" /><span className="truncate text-foreground/80 font-medium">{farmer.landlord}</span></div>}
               </div>
               
-              <div className="pt-3 border-t border-border/40 flex items-center justify-between">
-                <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">{t("farmers.balance")}</span>
-                <span className="text-foreground font-bold font-mono text-lg tracking-tight text-emerald-600 dark:text-emerald-400">
+              <div className="pt-2 sm:pt-3 border-t border-border/40 flex items-center justify-between">
+                <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-muted-foreground">{t("farmers.balance")}</span>
+                <span className="text-foreground font-bold font-mono text-sm sm:text-lg tracking-tight text-emerald-600 dark:text-emerald-400">
                   ₨ {Number(farmer.initial_balance).toLocaleString()}
                 </span>
               </div>
