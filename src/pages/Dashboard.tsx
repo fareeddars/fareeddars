@@ -4,23 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, BookOpen, Package, TrendingUp, Activity, Zap, Leaf, Sparkles, Sun, CloudRain, Cloud, Wind, Droplets } from "lucide-react";
-import { fetchWeatherData, type WeatherData } from "@/lib/weatherUtils";
+import { Users, BookOpen, Package, TrendingUp, Activity, Zap, Leaf, Sparkles } from "lucide-react";
 
 const Dashboard = () => {
   const { profile } = useAuth();
   const { t } = useLanguage();
   const { selectedSeason, farmerSeasons } = useSeason();
   const [stats, setStats] = useState({ farmers: 0, entries: 0, inventory: 0, revenue: 0 });
-  const [weather, setWeather] = useState<WeatherData>({
-    temperature: null,
-    humidity: null,
-    rainChance: null,
-    condition: "",
-    location: "",
-    timestamp: null,
-  });
-  const [locationGranted, setLocationGranted] = useState<boolean>(false);
 
   // Fetch dashboard stats
   useEffect(() => {
@@ -58,34 +48,6 @@ const Dashboard = () => {
     
     fetchStats();
   }, [selectedSeason?.id, farmerSeasons.length]);
-
-  // Check location permission status
-  useEffect(() => {
-    const checkLocationPermission = async () => {
-      if ('permissions' in navigator) {
-        try {
-          const permission = await navigator.permissions.query({ name: 'geolocation' });
-          setLocationGranted(permission.state === 'granted');
-          permission.addEventListener('change', () => {
-            setLocationGranted(permission.state === 'granted');
-          });
-        } catch (error) {
-          console.log('Permission API not supported');
-        }
-      }
-    };
-    checkLocationPermission();
-  }, []);
-
-  // Fetch weather data when location is granted or on initial load
-  useEffect(() => {
-    const loadWeatherData = async () => {
-      const weatherData = await fetchWeatherData();
-      setWeather(weatherData);
-    };
-
-    loadWeatherData();
-  }, [locationGranted]);
 
   const cards = [
     {
@@ -134,41 +96,27 @@ const Dashboard = () => {
     },
   ];
 
-  // Dynamic Weather Styles & Messages
-  const isRainy = (weather.rainChance ?? 0) > 50 || weather.condition.toLowerCase().includes("rain");
-  const isCloudy = weather.condition.toLowerCase().includes("cloud") && !isRainy;
-  
-  const weatherTheme = isRainy 
-    ? { bg: "from-blue-600 to-indigo-900", icon: <CloudRain className="h-16 w-16 text-blue-200" />, accent: "bg-blue-500/30 text-blue-100", border: "border-blue-400/30" }
-    : isCloudy 
-      ? { bg: "from-slate-500 to-slate-800", icon: <Cloud className="h-16 w-16 text-slate-200" />, accent: "bg-slate-400/30 text-slate-100", border: "border-slate-400/30" }
-      : { bg: "from-amber-400 to-orange-600", icon: <Sun className="h-16 w-16 text-amber-100 drop-shadow-lg" />, accent: "bg-amber-300/30 text-amber-50", border: "border-amber-300/30" };
-
-  const weatherMessage = isRainy
-      ? "🚨 Barish ka imkan hai, fasal sambhal lein!"
-      : "✅ Mausam saaf hai, kaam jari rakhen.";
-
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 animate-in fade-in duration-700">
       
-      {/* --- Premium Welcome Banner --- */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 sm:p-10 shadow-2xl border border-slate-700/50">
+      {/* --- Welcome Banner (Mobile Optimized) --- */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 md:p-10 shadow-2xl border border-slate-700/50">
         {/* Animated Background Orbs */}
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-primary/20 -translate-y-1/2 translate-x-1/3 blur-[80px] animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full bg-accent/20 translate-y-1/3 -translate-x-1/4 blur-[60px]" />
+        <div className="absolute top-0 right-0 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] rounded-full bg-primary/20 -translate-y-1/2 translate-x-1/3 blur-[60px] sm:blur-[80px] animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] rounded-full bg-accent/20 translate-y-1/3 -translate-x-1/4 blur-[40px] sm:blur-[60px]" />
         
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <div className="hidden sm:flex h-20 w-20 items-center justify-center rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-inner">
-            <Zap className="h-10 w-10 text-primary-foreground/90" />
+        <div className="relative z-10 flex flex-col items-start gap-4 sm:gap-6">
+          <div className="hidden sm:flex h-16 sm:h-20 w-16 sm:w-20 items-center justify-center rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-inner">
+            <Zap className="h-8 sm:h-10 w-8 sm:w-10 text-primary-foreground/90" />
           </div>
           
-          <div className="flex-1 space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-xs font-medium text-white/80">
-              <Sparkles className="h-3.5 w-3.5 text-yellow-400" />
+          <div className="flex-1 space-y-2 w-full">
+            <div className="inline-flex items-center gap-2 px-2 sm:px-3 py-1 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-xs font-medium text-white/80">
+              <Sparkles className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-yellow-400" />
               <span>{t("dashboard.welcome")}</span>
             </div>
             
-            <h1 className="text-4xl sm:text-5xl font-serif font-bold tracking-tight text-white leading-tight">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-white leading-snug sm:leading-tight">
               Welcome back,<br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-orange-400 drop-shadow-sm">
                 {profile?.full_name || "User"}
@@ -177,9 +125,10 @@ const Dashboard = () => {
             
             {selectedSeason && (
               <div className="pt-2">
-                <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-green-200 backdrop-blur-md px-3 py-1 rounded-full text-sm font-medium border border-green-500/30">
-                  <Leaf className="h-4 w-4" /> 
-                  Active Season: {selectedSeason.name}
+                <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-green-200 backdrop-blur-md px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border border-green-500/30">
+                  <Leaf className="h-3 sm:h-4 w-3 sm:w-4" /> 
+                  <span className="hidden sm:inline">Active Season: {selectedSeason.name}</span>
+                  <span className="sm:hidden">{selectedSeason.name}</span>
                 </span>
               </div>
             )}
@@ -187,8 +136,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* --- Premium Stats Grid --- */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-4">
+      {/* --- Mobile Responsive Stats Grid --- */}
+      <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card, i) => (
           <Card
             key={card.title}
@@ -197,16 +146,16 @@ const Dashboard = () => {
             {/* Subtle Gradient Overlay */}
             <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
             
-            <CardContent className="relative p-5 sm:p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
+            <CardContent className="relative p-4 sm:p-5 md:p-6 z-10 flex flex-col justify-between h-full min-h-[120px] sm:min-h-[140px]">
               <div className="flex items-start justify-between mb-2">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${card.iconBg} shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6`}>
-                  <card.icon className={`h-6 w-6 ${card.iconColor}`} />
+                <div className={`flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-2xl ${card.iconBg} shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6`}>
+                  <card.icon className={`h-5 sm:h-6 w-5 sm:w-6 ${card.iconColor}`} />
                 </div>
                 <Activity className="h-4 w-4 text-muted-foreground/30 group-hover:text-foreground/50 transition-colors duration-300" />
               </div>
               
               <div>
-                <div className={`text-2xl sm:text-3xl font-bold font-mono tracking-tight ${card.valueColor} drop-shadow-sm`}>
+                <div className={`text-xl sm:text-2xl md:text-3xl font-bold font-mono tracking-tight ${card.valueColor} drop-shadow-sm`}>
                   {card.value}
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium tracking-wide">
@@ -216,57 +165,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {/* --- Dynamic Premium Weather Widget --- */}
-      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${weatherTheme.bg} p-6 sm:p-8 shadow-xl transition-all duration-700`}>
-        {/* Decorative Weather Effects */}
-        <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 mix-blend-overlay" />
-        <div className="absolute -top-24 -right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        
-        <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-8 sm:gap-12">
-          
-          {/* Weather Info */}
-          <div className="flex-1 w-full text-center sm:text-left space-y-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-semibold text-white uppercase tracking-wider mb-3">
-                <Sun className="h-3 w-3" /> Mausam Ki Sorathal
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-md">
-                {weather.location || "Loading location..."}
-              </h2>
-            </div>
-            
-            <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-4">
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl backdrop-blur-md ${weatherTheme.accent} ${weatherTheme.border} border`}>
-                <Wind className="h-5 w-5 opacity-80" />
-                <span className="font-semibold text-lg">{weather.humidity !== null ? `${weather.humidity}%` : "—"}</span>
-              </div>
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl backdrop-blur-md ${weatherTheme.accent} ${weatherTheme.border} border`}>
-                <Droplets className="h-5 w-5 opacity-80" />
-                <span className="font-semibold text-lg">{weather.rainChance !== null ? `${weather.rainChance}%` : "—"}</span>
-              </div>
-            </div>
-
-            <p className="mt-4 text-sm sm:text-base font-medium text-white/90 bg-black/20 inline-block px-4 py-2 rounded-xl backdrop-blur-md border border-white/10">
-              {weatherMessage}
-            </p>
-          </div>
-
-          {/* Large Temperature Display */}
-          <div className="flex flex-col items-center shrink-0">
-            <div className="relative">
-              {weatherTheme.icon}
-            </div>
-            <div className="text-5xl sm:text-7xl font-bold font-mono text-white mt-4 drop-shadow-xl tracking-tighter">
-              {weather.temperature !== null ? `${weather.temperature.toFixed(0)}°` : "—"}
-            </div>
-            <span className="text-white/70 font-medium text-lg capitalize tracking-wide mt-1">
-              {weather.condition || "Loading..."}
-            </span>
-          </div>
-          
-        </div>
       </div>
       
     </div>
