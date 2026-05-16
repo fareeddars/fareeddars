@@ -116,7 +116,7 @@ const Dashboard = () => {
               <span>{t("dashboard.welcome")}</span>
             </div>
             
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-white leading-snug sm:leading-tight">
+            <h1 className="text-xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-white leading-snug sm:leading-tight">
               Welcome back,<br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-orange-400 drop-shadow-sm">
                 {profile?.full_name || "User"}
@@ -124,11 +124,10 @@ const Dashboard = () => {
             </h1>
             
             {selectedSeason && (
-              <div className="pt-2">
-                <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-green-200 backdrop-blur-md px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border border-green-500/30">
-                  <Leaf className="h-3 sm:h-4 w-3 sm:w-4" /> 
-                  <span className="hidden sm:inline">Active Season: {selectedSeason.name}</span>
-                  <span className="sm:hidden">{selectedSeason.name}</span>
+              <div className="pt-1 sm:pt-2">
+                <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-green-200 backdrop-blur-md px-2 sm:px-3 py-1 rounded-full text-[11px] sm:text-sm font-medium border border-green-500/30">
+                  <Leaf className="h-3 sm:h-4 w-3 sm:w-4 shrink-0" /> 
+                  <span>Active Season: {selectedSeason.name}</span>
                 </span>
               </div>
             )}
@@ -136,8 +135,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* --- Mobile Responsive Stats Grid --- */}
-      <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {/* --- 2x2 Stats Grid (Mobile First) --- */}
+      <div className="grid gap-2.5 sm:gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
         {cards.map((card, i) => (
           <Card
             key={card.title}
@@ -146,19 +145,19 @@ const Dashboard = () => {
             {/* Subtle Gradient Overlay */}
             <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
             
-            <CardContent className="relative p-4 sm:p-5 md:p-6 z-10 flex flex-col justify-between h-full min-h-[120px] sm:min-h-[140px]">
+            <CardContent className="relative p-3 sm:p-5 md:p-6 z-10 flex flex-col justify-between h-full min-h-[110px] sm:min-h-[140px]">
               <div className="flex items-start justify-between mb-2">
-                <div className={`flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-2xl ${card.iconBg} shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6`}>
-                  <card.icon className={`h-5 sm:h-6 w-5 sm:w-6 ${card.iconColor}`} />
+                <div className={`flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl ${card.iconBg} shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6`}>
+                  <card.icon className={`h-4 w-4 sm:h-6 sm:w-6 ${card.iconColor}`} />
                 </div>
-                <Activity className="h-4 w-4 text-muted-foreground/30 group-hover:text-foreground/50 transition-colors duration-300" />
+                <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground/30 group-hover:text-foreground/50 transition-colors duration-300" />
               </div>
               
               <div>
-                <div className={`text-xl sm:text-2xl md:text-3xl font-bold font-mono tracking-tight ${card.valueColor} drop-shadow-sm`}>
+                <div className={`text-lg sm:text-2xl md:text-3xl font-bold font-mono tracking-tight ${card.valueColor} drop-shadow-sm`}>
                   {card.value}
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium tracking-wide">
+                <p className="text-[10px] sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 font-medium tracking-wide leading-tight">
                   {card.title}
                 </p>
               </div>

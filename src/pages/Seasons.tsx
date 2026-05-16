@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSeason } from "@/contexts/SeasonContext";
@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Leaf, Lock, Users, CheckCircle2, ArrowRight, Sprout, Trash2, RotateCcw, Wallet, Activity } from "lucide-react";
+import { Plus, Leaf, Lock, Users, CheckCircle2, ArrowRight, Sprout, Trash2, RotateCcw } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 const Seasons = () => {
@@ -109,31 +109,25 @@ const Seasons = () => {
     }
   };
 
-  // Calculate Season Stats
-  const seasonStats = useMemo(() => {
-    const totalBalance = farmerSeasons.reduce((sum, fs) => sum + Number(fs.opening_balance || 0), 0);
-    const activeFarmersCount = farmerSeasons.filter(fs => fs.status === "active").length;
-    return { totalBalance, activeFarmersCount };
-  }, [farmerSeasons]);
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-700">
       
       {/* --- Premium Page Header Banner --- */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 p-6 sm:p-10 text-primary-foreground shadow-2xl border border-emerald-700/50">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 p-4 sm:p-10 text-primary-foreground shadow-2xl border border-emerald-700/50">
         <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-emerald-400/10 -translate-y-1/2 translate-x-1/3 blur-[60px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-teal-400/10 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
         
-        <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+        <div className="relative z-10 flex flex-col gap-4 sm:gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
             <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner">
               <Sprout className="h-8 w-8 text-emerald-100" />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-white drop-shadow-sm">
+              <h1 className="text-2xl sm:text-4xl font-serif font-bold tracking-tight text-white drop-shadow-sm">
                 {t("seasons.title")}
               </h1>
-              <p className="text-emerald-100/80 text-sm mt-1.5 font-medium tracking-wide">
+              <p className="text-emerald-100/80 text-xs sm:text-sm mt-1 font-medium tracking-wide">
                 {t("seasons.subtitle")}
               </p>
             </div>
@@ -142,8 +136,8 @@ const Seasons = () => {
           {isAdmin && (
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-white text-emerald-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl h-12 px-6 w-full sm:w-auto">
-                  <Plus className="mr-2 h-5 w-5" />{t("seasons.createSeason")}
+                <Button className="bg-white text-emerald-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl h-11 sm:h-12 px-6 w-full sm:w-auto text-sm">
+                  <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />{t("seasons.createSeason")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="w-[95vw] sm:w-full max-w-md rounded-2xl">
@@ -182,7 +176,7 @@ const Seasons = () => {
       </div>
 
       {/* --- Premium Season Cards --- */}
-      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
         {seasons.map((season, i) => {
           const isSelected = selectedSeason?.id === season.id;
           const isActive = season.status === "active";
@@ -201,31 +195,31 @@ const Seasons = () => {
               {/* Top Accent Bar */}
               <div className={`h-1.5 w-full ${isActive ? "bg-gradient-to-r from-emerald-400 to-teal-500" : "bg-slate-300 dark:bg-slate-700"}`} />
               
-              <CardContent className="p-5 sm:p-6 relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 ${
+              <CardContent className="p-4 sm:p-6 relative z-10">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 shrink-0 ${
                       isActive 
                         ? "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 dark:from-emerald-900/50 dark:to-teal-900/50 dark:text-emerald-400" 
                         : "bg-muted text-muted-foreground"
                     }`}>
-                      <Leaf className="h-6 w-6" />
+                      <Leaf className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-foreground font-serif tracking-tight">{season.name}</h3>
-                      <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                    <div className="min-w-0">
+                      <h3 className="text-base sm:text-lg font-bold text-foreground font-serif tracking-tight truncate">{season.name}</h3>
+                      <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">
                         {season.start_date} {season.end_date ? `→ ${season.end_date}` : ""}
                       </p>
                     </div>
                   </div>
-                  <Badge variant={isActive ? "default" : "secondary"} className={`font-semibold ${isActive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/20 shadow-sm" : ""}`}>
+                  <Badge variant={isActive ? "default" : "secondary"} className={`font-semibold text-[10px] sm:text-xs shrink-0 ml-1 ${isActive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/20 shadow-sm" : ""}`}>
                     {isActive ? t("seasons.active") : t("seasons.closedStatus")}
                   </Badge>
                 </div>
 
                 {/* Actions Area */}
                 {isSelected && (
-                  <div className="mt-4 pt-4 border-t border-border/40 flex flex-col sm:flex-row gap-2 animate-in slide-in-from-top-2 duration-300">
+                  <div className="mt-3 pt-3 border-t border-border/40 flex flex-col gap-2 animate-in slide-in-from-top-2 duration-300">
                     {isActive ? (
                       <>
                         {isManagerOrAdmin && (
@@ -322,58 +316,35 @@ const Seasons = () => {
 
       {/* --- Premium Selected Season's Farmers Area --- */}
       {selectedSeason && (
-        <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-700">
-          
-          {/* Stats Bar for the Season */}
-          <div className="grid grid-cols-2 gap-4 sm:flex sm:flex-row">
-            <div className="flex-1 bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-              <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Farmers</p>
-                <p className="text-xl font-bold font-mono">{farmerSeasons.length}</p>
-              </div>
-            </div>
-            
-            <div className="flex-1 bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Opening Balance</p>
-                <p className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">₨ {seasonStats.totalBalance.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
+        <div className="space-y-3 sm:space-y-4 animate-in slide-in-from-bottom-4 duration-700">
 
           {/* Main Farmers Card */}
-          <Card className="shadow-2xl border-border/50 overflow-hidden bg-card/80 backdrop-blur-xl rounded-3xl">
+          <Card className="shadow-2xl border-border/50 overflow-hidden bg-card/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl">
             <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
-            <CardHeader className="pb-4 pt-6 px-6">
-              <CardTitle className="text-xl sm:text-2xl font-serif flex items-center gap-2">
-                <Users className="h-6 w-6 text-emerald-600" />
-                Farmers in {selectedSeason.name}
+            <CardHeader className="pb-3 pt-4 sm:pt-6 px-4 sm:px-6">
+              <CardTitle className="text-lg sm:text-2xl font-serif flex items-center gap-2">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600 shrink-0" />
+                <span className="truncate">Farmers in {selectedSeason.name}</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-6 pb-6">
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               {farmerSeasons.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {farmerSeasons.map((fs) => (
-                    <div key={fs.id} className={`group relative rounded-2xl border p-5 transition-all duration-300 hover:shadow-lg bg-background/50 backdrop-blur-sm ${
+                    <div key={fs.id} className={`group relative rounded-xl sm:rounded-2xl border p-3.5 sm:p-5 transition-all duration-300 hover:shadow-lg bg-background/50 backdrop-blur-sm ${
                       fs.status === "left" ? "opacity-60 border-destructive/30 bg-destructive/5" :
                       fs.status === "completed" ? "border-emerald-500/30 bg-emerald-500/5" : "border-border hover:border-emerald-500/30 hover:-translate-y-1"
                     }`}>
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white text-sm font-bold shadow-sm ${
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white text-sm font-bold shadow-sm shrink-0 ${
                             fs.status === 'left' ? 'from-destructive to-destructive/70' : 'from-emerald-500 to-teal-600'
                           }`}>
                             {fs.farmers?.name?.charAt(0).toUpperCase() || "?"}
                           </div>
-                          <div>
-                            <h4 className="font-bold text-foreground leading-tight">{fs.farmers?.name || "—"}</h4>
-                            <Badge variant="outline" className={`mt-1 text-[10px] px-1.5 py-0 shadow-sm ${
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-sm sm:text-base text-foreground leading-tight truncate">{fs.farmers?.name || "—"}</h4>
+                            <Badge variant="outline" className={`mt-0.5 text-[10px] px-1.5 py-0 shadow-sm ${
                               fs.status === "active" ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/10" :
                               fs.status === "left" ? "border-destructive/30 text-destructive bg-destructive/10" : "border-blue-500/30 text-blue-600 bg-blue-500/10"
                             }`}>
@@ -382,13 +353,8 @@ const Seasons = () => {
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="bg-muted/40 rounded-xl p-3 mb-3 border border-border/50">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">{t("farmers.balance")}</p>
-                        <p className="text-lg font-mono font-bold text-foreground">₨ {Number(fs.opening_balance).toLocaleString()}</p>
-                      </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-2">
                         {fs.status === "active" && selectedSeason.status === "active" && isManagerOrAdmin && (
                           <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl h-9" onClick={() => handleFarmerLeave(fs.id)}>
                             {t("seasons.markLeft")}

@@ -144,6 +144,11 @@
     @apply border-border;
   }
 
+  html {
+    /* Responsive base font: 14px on mobile, scales to 16px on desktop */
+    font-size: clamp(14px, 3.5vw, 16px);
+  }
+
   html, body {
     @apply overflow-x-hidden;
     max-width: 100vw;
@@ -151,13 +156,30 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+
   /* Prevent iOS Safari auto-zoom on input focus */
   @media (max-width: 640px) {
     input, select, textarea {
       font-size: 16px !important;
+    }
+  }
+
+  /* Better touch targets on mobile */
+  @media (max-width: 640px) {
+    button, [role="button"], a {
+      min-height: 44px;
+    }
+  }
+
+  /* Mobile scroll improvements */
+  @media (max-width: 640px) {
+    .overflow-y-auto, main {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
     }
   }
 }
