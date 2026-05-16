@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { offlineRepo, isOnline, useOnlineStatus } from "@/lib/offline";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Phone, MapPin, Pencil, Trash2, Users, UserPlus, CreditCard, User, Home, StickyNote, BadgeDollarSign } from "lucide-react";
+import { Plus, Search, Phone, MapPin, Pencil, Trash2, Users, UserPlus, CreditCard, User, Home, StickyNote, BadgeDollarSign, Wallet, Leaf } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface Farmer {
@@ -50,12 +50,10 @@ const Farmers = () => {
       const { data } = await supabase.from("farmers").select("*").order("created_at", { ascending: false });
       if (data) {
         setFarmers(data as unknown as Farmer[]);
-        // refresh cache
         await offlineRepo.hydrate("farmers", data);
         return;
       }
     }
-    // Offline fallback → read from local cache
     const local = await offlineRepo.listLocal("farmers");
     local.sort((a: any, b: any) => (b.created_at || "").localeCompare(a.created_at || ""));
     setFarmers(local as Farmer[]);
@@ -120,80 +118,86 @@ const Farmers = () => {
     }
   };
 
-  const filtered = farmers.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()) || (f.cnic && f.cnic.includes(search)) || (f.phone && f.phone.includes(search)));
+  const filtered = farmers.filter((f) => {
+    const term = search.toLowerCase();
+    return f.name.toLowerCase().includes(term) || 
+           (f.cnic && f.cnic.includes(term)) || 
+           (f.phone && f.phone.includes(term)) ||
+           (f.landlord && f.landlord.toLowerCase().includes(term));
+  });
+
+  const totalPortfolioBalance = useMemo(() => {
+    return farmers.reduce((sum, f) => sum + Number(f.initial_balance || 0), 0);
+  }, [farmers]);
 
   const renderFarmerFormFields = (formData: typeof form, setFormData: (v: typeof form) => void) => (
-    <div className="space-y-5">
+    <div className="space-y-5 px-1 py-2">
       {/* Personal Info */}
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("farmers.personalInfo")}</p>
-        <div className="space-y-3">
+      <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2"><User className="h-4 w-4"/> {t("farmers.personalInfo")}</p>
+        <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-sm">{t("common.name")} *</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="pl-9" placeholder="Muhammad Ali" required maxLength={100} autoComplete="name" />
-            </div>
+            <Label className="text-sm font-semibold">{t("common.name")} *</Label>
+            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-11 bg-background" placeholder="Muhammad Ali" required maxLength={100} autoComplete="name" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">{t("farmers.cnic")}</Label>
+            <Label className="text-sm font-semibold">{t("farmers.cnic")}</Label>
             <div className="relative">
               <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={formData.cnic} onChange={(e) => setFormData({ ...formData, cnic: e.target.value })} className="pl-9" placeholder="42101-1234567-1" inputMode="numeric" maxLength={15} />
+              <Input value={formData.cnic} onChange={(e) => setFormData({ ...formData, cnic: e.target.value })} className="h-11 pl-9 bg-background" placeholder="42101-1234567-1" inputMode="numeric" maxLength={15} />
             </div>
           </div>
         </div>
       </div>
-      <Separator />
+      
       {/* Contact Info */}
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("farmers.contactInfo")}</p>
-        <div className="space-y-3">
+      <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2"><Phone className="h-4 w-4"/> {t("farmers.contactInfo")}</p>
+        <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-sm">{t("common.phone")}</Label>
+            <Label className="text-sm font-semibold">{t("common.phone")}</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input type="tel" inputMode="tel" autoComplete="tel" maxLength={20} value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="pl-9" placeholder="03XX-XXXXXXX" />
+              <Input type="tel" inputMode="tel" autoComplete="tel" maxLength={20} value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="h-11 pl-9 bg-background" placeholder="03XX-XXXXXXX" />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">{t("common.address")} / {t("farmers.village")}</Label>
+            <Label className="text-sm font-semibold">{t("common.address")} / {t("farmers.village")}</Label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="pl-9" placeholder="Village name, District" />
+              <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="h-11 pl-9 bg-background" placeholder="Village name, District" />
             </div>
           </div>
         </div>
       </div>
-      <Separator />
+
       {/* Farm & Financial */}
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("farmers.financialInfo")}</p>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label className="text-sm">{t("farmers.landlord")}</Label>
-            <div className="relative">
-              <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={formData.landlord} onChange={(e) => setFormData({ ...formData, landlord: e.target.value })} className="pl-9" placeholder="Landlord name" />
+      <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2"><Wallet className="h-4 w-4"/> {t("farmers.financialInfo")}</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">{t("farmers.landlord")}</Label>
+              <div className="relative">
+                <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input value={formData.landlord} onChange={(e) => setFormData({ ...formData, landlord: e.target.value })} className="h-11 pl-9 bg-background" placeholder="Landlord name" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{t("farmers.initialBalance")} (₨)</Label>
+              <div className="relative">
+                <BadgeDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600/70" />
+                <Input type="number" inputMode="decimal" min="0" step="0.01" value={formData.initial_balance} onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })} className="h-11 pl-9 bg-background border-emerald-500/30 focus-visible:ring-emerald-500/50 font-mono" />
+              </div>
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">{t("farmers.initialBalance")} (₨)</Label>
-            <div className="relative">
-              <BadgeDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input type="number" inputMode="decimal" min="0" step="0.01" value={formData.initial_balance} onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })} className="pl-9" />
-            </div>
+            <Label className="text-sm font-semibold">{t("farmers.farmDetails")}</Label>
+            <Textarea value={formData.farm_details} onChange={(e) => setFormData({ ...formData, farm_details: e.target.value })} placeholder="Crop types, land area..." className="bg-background resize-none" rows={2} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">{t("farmers.farmDetails")}</Label>
-            <Textarea value={formData.farm_details} onChange={(e) => setFormData({ ...formData, farm_details: e.target.value })} placeholder="Crop types, land area..." rows={2} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-sm">{t("farmers.notes")}</Label>
-            <div className="relative">
-              <StickyNote className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="pl-9" placeholder="Any additional notes..." rows={2} />
-            </div>
+            <Label className="text-sm font-semibold">{t("farmers.notes")}</Label>
+            <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} placeholder="Any additional notes..." className="bg-background resize-none" rows={2} />
           </div>
         </div>
       </div>
@@ -201,42 +205,77 @@ const Farmers = () => {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-accent-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
-        <div className="absolute bottom-0 left-1/2 w-32 h-32 rounded-full bg-accent-foreground/10 translate-y-1/2 blur-xl" />
-        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
-              <Users className="h-7 w-7" />
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700">
+      
+      {/* --- Premium Page Header Banner --- */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-blue-900 to-indigo-900 p-6 sm:p-10 text-white shadow-2xl border border-indigo-700/50">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-blue-400/10 -translate-y-1/3 translate-x-1/4 blur-[80px] animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-indigo-400/20 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
+        
+        <div className="relative z-10 flex flex-col xl:flex-row gap-8 justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="hidden sm:flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner shrink-0">
+              <Users className="h-10 w-10 text-blue-100" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("farmers.title")}</h1>
-              <p className="text-primary-foreground/70 text-sm mt-0.5">{t("farmers.subtitle")}</p>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-sm mb-2">
+                {t("farmers.title")}
+              </h1>
+              <p className="text-blue-100/80 text-sm sm:text-base font-medium tracking-wide max-w-lg">
+                {t("farmers.subtitle")}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:block bg-primary-foreground/10 backdrop-blur-sm rounded-xl px-4 py-2 border border-primary-foreground/10">
-              <p className="text-xs text-primary-foreground/60">Total Farmers</p>
-              <p className="text-xl font-bold">{farmers.length}</p>
+          
+          {/* Quick Stats & Action Area */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
+            <div className="flex w-full sm:w-auto gap-4">
+              <div className="flex-1 sm:flex-none bg-black/20 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/10 flex flex-col justify-center min-w-[140px]">
+                <p className="text-[10px] sm:text-xs text-blue-200/70 font-semibold uppercase tracking-widest mb-1">Total Farmers</p>
+                <p className="text-2xl sm:text-3xl font-bold font-mono">{farmers.length}</p>
+              </div>
+              <div className="flex-1 sm:flex-none bg-emerald-500/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-emerald-400/20 flex flex-col justify-center min-w-[160px]">
+                <p className="text-[10px] sm:text-xs text-emerald-200/80 font-semibold uppercase tracking-widest mb-1">Total Outstanding</p>
+                <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-300">₨ {totalPortfolioBalance.toLocaleString()}</p>
+              </div>
             </div>
+            
             {isManagerOrAdmin && (
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl rounded-xl">
-                    <Plus className="mr-2 h-4 w-4" />{t("farmers.addFarmer")}
+                  <Button className="w-full sm:w-auto bg-white text-indigo-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-2xl h-14 px-8 shrink-0 text-base">
+                    <Plus className="mr-2 h-5 w-5" />{t("farmers.addFarmer")}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle>{t("farmers.addNew")}</DialogTitle><DialogDescription>{t("farmers.enterDetails")}</DialogDescription></DialogHeader>
-                  {renderFarmerFormFields(form, setForm)}
-                  <DialogFooter>
+                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl">
+                  <DialogHeader className="px-6 py-5 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 border-b">
+                    <DialogTitle className="font-serif text-2xl flex items-center gap-2 text-indigo-900 dark:text-indigo-100">
+                      <UserPlus className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                      {t("farmers.addNew")}
+                    </DialogTitle>
+                    <DialogDescription>{t("farmers.enterDetails")}</DialogDescription>
+                  </DialogHeader>
+                  <div className="flex-1 overflow-y-auto px-6 py-2">
+                    {renderFarmerFormFields(form, setForm)}
+                  </div>
+                  <DialogFooter className="p-6 bg-muted/30 border-t mt-auto">
                     <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                      <DialogTrigger asChild><Button disabled={!form.name} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">{t("farmers.saveFarmer")}</Button></DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader><DialogTitle>{t("common.confirm")}</DialogTitle><DialogDescription>{t("farmers.saveFarmer")}: <strong>{form.name}</strong>?</DialogDescription></DialogHeader>
-                        <DialogFooter><Button variant="outline" onClick={() => setConfirmOpen(false)}>{t("common.cancel")}</Button><Button onClick={handleSave}>{t("common.confirm")}</Button></DialogFooter>
+                      <DialogTrigger asChild>
+                        <Button disabled={!form.name} className="w-full h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold shadow-lg rounded-xl text-base">
+                          {t("farmers.saveFarmer")}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="rounded-2xl">
+                        <DialogHeader>
+                          <DialogTitle className="font-serif text-xl">{t("common.confirm")}</DialogTitle>
+                          <DialogDescription className="text-base mt-2">
+                            {t("farmers.saveFarmer")}: <strong className="text-foreground">{form.name}</strong>?
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="gap-2 sm:gap-0">
+                          <Button variant="outline" className="rounded-xl" onClick={() => setConfirmOpen(false)}>{t("common.cancel")}</Button>
+                          <Button onClick={handleSave} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white">{t("common.confirm")}</Button>
+                        </DialogFooter>
                       </DialogContent>
                     </Dialog>
                   </DialogFooter>
@@ -247,117 +286,175 @@ const Farmers = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder={t("farmers.searchFarmers")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-11 rounded-xl border-border/50 focus:border-primary/50 transition-colors" />
+      {/* --- Premium Search Bar --- */}
+      <div className="relative max-w-xl mx-auto sm:mx-0 group">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-indigo-500 transition-colors" />
+        </div>
+        <Input 
+          placeholder="Search by Name, CNIC, Phone, or Landlord..." 
+          value={search} 
+          onChange={(e) => setSearch(e.target.value)} 
+          className="pl-12 h-14 rounded-2xl border-border/60 bg-card/50 backdrop-blur-sm focus:border-indigo-500/50 shadow-sm text-base transition-all group-focus-within:shadow-md group-focus-within:bg-card" 
+        />
       </div>
 
-      {/* Farmer Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* --- Premium Farmer Cards --- */}
+      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((farmer, i) => (
           <Card
             key={farmer.id}
-            className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden border-border/50 animate-fade-in cursor-pointer"
-            style={{ animationDelay: `${i * 60}ms` }}
+            className="group relative cursor-pointer overflow-hidden bg-card/60 backdrop-blur-xl transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-indigo-500/10 border-border/50 animate-fade-in"
+            style={{ animationDelay: `${(i % 10) * 60}ms` }}
             onClick={() => setSelectedFarmer(farmer)}
           >
-            <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
-            <CardHeader className="pb-2 flex flex-row items-start justify-between">
+            {/* Top Color Accent */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 to-blue-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+            
+            <CardHeader className="pb-3 px-5 pt-5 flex flex-row items-start justify-between relative z-10">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-base font-bold shadow-lg shadow-primary/20 ring-2 ring-primary/20">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 text-indigo-700 dark:text-indigo-400 text-xl font-bold shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   {farmer.name.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <CardTitle className="text-base">{farmer.name}</CardTitle>
-                  {farmer.cnic && <p className="text-xs text-muted-foreground mt-0.5 font-mono">{farmer.cnic}</p>}
+                <div className="max-w-[140px] sm:max-w-[120px] md:max-w-[140px]">
+                  <CardTitle className="text-lg font-bold font-serif leading-tight truncate">{farmer.name}</CardTitle>
+                  {farmer.cnic && <p className="text-[11px] text-muted-foreground mt-1 font-mono bg-muted/50 inline-block px-1.5 py-0.5 rounded">{farmer.cnic}</p>}
                 </div>
               </div>
-              <div className="flex gap-1">
-                {isManagerOrAdmin && (<Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/10 hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); openEdit(farmer); }}><Pencil className="h-3.5 w-3.5" /></Button>)}
+              
+              {/* Card Quick Actions */}
+              <div className="flex gap-1 -mt-1 -mr-2">
+                {isManagerOrAdmin && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/30 rounded-full transition-colors" onClick={(e) => { e.stopPropagation(); openEdit(farmer); }}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
                 {isAdmin && (
                   <AlertDialog>
-                    <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={(e) => e.stopPropagation()}><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors" onClick={(e) => e.stopPropagation()}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-2xl">
                       <AlertDialogHeader><AlertDialogTitle>{t("farmers.deleteFarmer")}</AlertDialogTitle>
-                        <AlertDialogDescription>{t("farmers.deleteConfirm")} <strong>{farmer.name}</strong>? {t("farmers.deleteWarning")}</AlertDialogDescription>
+                        <AlertDialogDescription>{t("farmers.deleteConfirm")} <strong className="text-foreground">{farmer.name}</strong>? {t("farmers.deleteWarning")}</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(farmer.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+                        <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(farmer.id)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl">{t("common.delete")}</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              {farmer.phone && <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-primary" />{farmer.phone}</div>}
-              {farmer.address && <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-primary/70" />{farmer.address}</div>}
-              {farmer.landlord && <div className="flex items-center gap-2"><Home className="h-3.5 w-3.5 text-primary/60" />{farmer.landlord}</div>}
-              <div className="pt-3 border-t border-border/50 flex items-center justify-between">
-                <span className="text-foreground font-bold font-mono text-base">{t("farmers.balance")}: ₨ {Number(farmer.initial_balance).toLocaleString()}</span>
+            
+            <CardContent className="px-5 pb-5 relative z-10">
+              <div className="space-y-2.5 text-sm text-muted-foreground mb-4">
+                {farmer.phone && <div className="flex items-center gap-2.5 truncate"><Phone className="h-4 w-4 text-indigo-500/70 shrink-0" /><span className="truncate">{farmer.phone}</span></div>}
+                {farmer.address && <div className="flex items-center gap-2.5 truncate"><MapPin className="h-4 w-4 text-indigo-500/60 shrink-0" /><span className="truncate">{farmer.address}</span></div>}
+                {farmer.landlord && <div className="flex items-center gap-2.5 truncate"><Home className="h-4 w-4 text-indigo-500/50 shrink-0" /><span className="truncate text-foreground/80 font-medium">{farmer.landlord}</span></div>}
+              </div>
+              
+              <div className="pt-3 border-t border-border/40 flex items-center justify-between">
+                <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">{t("farmers.balance")}</span>
+                <span className="text-foreground font-bold font-mono text-lg tracking-tight text-emerald-600 dark:text-emerald-400">
+                  ₨ {Number(farmer.initial_balance).toLocaleString()}
+                </span>
               </div>
             </CardContent>
           </Card>
         ))}
         {filtered.length === 0 && (
-          <div className="col-span-full text-center py-16 text-muted-foreground">
-            <UserPlus className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-            <p className="font-medium">{t("farmers.noFarmers")}</p>
+          <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center bg-card/30 backdrop-blur-sm rounded-3xl border border-dashed border-border/60">
+            <div className="h-20 w-20 bg-muted rounded-full flex items-center justify-center mb-4">
+              <UserPlus className="h-10 w-10 text-muted-foreground/40" />
+            </div>
+            <h3 className="text-xl font-bold font-serif mb-1">{t("farmers.noFarmers")}</h3>
+            <p className="text-muted-foreground text-sm">No farmers matched your search.</p>
           </div>
         )}
       </div>
 
-      {/* Farmer Detail Dialog */}
+      {/* --- Premium Profile Detail Popup --- */}
       <Dialog open={!!selectedFarmer} onOpenChange={(v) => !v && setSelectedFarmer(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-3xl border-0 shadow-2xl">
           {selectedFarmer && (
             <>
-              <DialogHeader>
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xl font-bold shadow-lg shadow-primary/20 ring-2 ring-primary/20">
-                    {selectedFarmer.name.charAt(0).toUpperCase()}
+              {/* Profile Cover Image / Gradient */}
+              <div className="h-32 bg-gradient-to-r from-indigo-600 to-blue-500 relative">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 mix-blend-overlay"></div>
+              </div>
+              
+              {/* Overlapping Avatar */}
+              <div className="px-6 relative pb-2 -mt-12">
+                <div className="flex justify-between items-end">
+                  <div className="h-24 w-24 rounded-full bg-card p-1 shadow-xl">
+                    <div className="h-full w-full rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900 dark:to-blue-900 flex items-center justify-center text-3xl font-bold text-indigo-700 dark:text-indigo-300 font-serif border border-indigo-200 dark:border-indigo-800">
+                      {selectedFarmer.name.charAt(0).toUpperCase()}
+                    </div>
                   </div>
+                  {isManagerOrAdmin && (
+                    <Button onClick={() => { setSelectedFarmer(null); openEdit(selectedFarmer); }} size="sm" className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-md rounded-full px-4 mb-2">
+                      <Pencil className="mr-2 h-3.5 w-3.5" />{t("common.edit")}
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="mt-3">
+                  <DialogTitle className="text-2xl font-serif font-bold text-foreground">{selectedFarmer.name}</DialogTitle>
+                  {selectedFarmer.cnic && (
+                    <div className="inline-flex items-center gap-1.5 mt-1 bg-muted/50 px-2 py-0.5 rounded text-sm text-muted-foreground font-mono">
+                      <CreditCard className="h-3.5 w-3.5" /> {selectedFarmer.cnic}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6 pt-2 space-y-4 max-h-[50vh] overflow-y-auto">
+                {/* Financial Highlight */}
+                <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 p-5 flex items-center justify-between shadow-sm">
                   <div>
-                    <DialogTitle className="text-xl">{selectedFarmer.name}</DialogTitle>
-                    {selectedFarmer.cnic && <p className="text-sm text-muted-foreground font-mono">{selectedFarmer.cnic}</p>}
+                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><BadgeDollarSign className="h-4 w-4"/> {t("farmers.initialBalance")}</p>
+                    <p className="text-3xl font-bold font-mono text-emerald-700 dark:text-emerald-300">₨ {Number(selectedFarmer.initial_balance).toLocaleString()}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <Wallet className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                   </div>
                 </div>
-              </DialogHeader>
-              <div className="space-y-4 mt-2">
-                {/* Contact */}
-                <div className="rounded-xl bg-muted/50 p-4 space-y-2.5">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("farmers.contactInfo")}</p>
-                  {selectedFarmer.phone && <div className="flex items-center gap-3 text-sm"><Phone className="h-4 w-4 text-primary" /><span>{selectedFarmer.phone}</span></div>}
-                  {selectedFarmer.address && <div className="flex items-center gap-3 text-sm"><MapPin className="h-4 w-4 text-primary/70" /><span>{selectedFarmer.address}</span></div>}
-                  {!selectedFarmer.phone && !selectedFarmer.address && <p className="text-sm text-muted-foreground italic">—</p>}
-                </div>
-                {/* Farm details */}
-                <div className="rounded-xl bg-muted/50 p-4 space-y-2.5">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("farmers.financialInfo")}</p>
-                  {selectedFarmer.landlord && <div className="flex items-center gap-3 text-sm"><Home className="h-4 w-4 text-primary/60" /><span>{selectedFarmer.landlord}</span></div>}
-                  <div className="flex items-center gap-3">
-                    <BadgeDollarSign className="h-4 w-4 text-chart-5" />
-                    <span className="text-lg font-bold font-mono text-foreground">₨ {Number(selectedFarmer.initial_balance).toLocaleString()}</span>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Phone className="h-3 w-3"/> {t("common.phone")}</p>
+                    <p className="text-sm font-medium text-foreground break-all">{selectedFarmer.phone || "—"}</p>
                   </div>
-                  {selectedFarmer.farm_details && <p className="text-sm text-muted-foreground mt-1">{selectedFarmer.farm_details}</p>}
+                  <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Home className="h-3 w-3"/> {t("farmers.landlord")}</p>
+                    <p className="text-sm font-medium text-foreground">{selectedFarmer.landlord || "—"}</p>
+                  </div>
                 </div>
-                {/* Notes */}
+                
+                <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><MapPin className="h-3 w-3"/> {t("common.address")}</p>
+                  <p className="text-sm font-medium text-foreground">{selectedFarmer.address || "—"}</p>
+                </div>
+
+                {selectedFarmer.farm_details && (
+                  <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Leaf className="h-3 w-3"/> {t("farmers.farmDetails")}</p>
+                    <p className="text-sm text-foreground/90 leading-relaxed">{selectedFarmer.farm_details}</p>
+                  </div>
+                )}
+                
                 {selectedFarmer.notes && (
-                  <div className="rounded-xl bg-muted/50 p-4 space-y-1.5">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("farmers.notes")}</p>
-                    <p className="text-sm text-foreground">{selectedFarmer.notes}</p>
+                  <div className="rounded-2xl bg-amber-500/5 p-4 border border-amber-500/20">
+                    <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"><StickyNote className="h-3 w-3"/> {t("farmers.notes")}</p>
+                    <p className="text-sm text-foreground/90 leading-relaxed italic">{selectedFarmer.notes}</p>
                   </div>
                 )}
               </div>
-              <DialogFooter className="mt-2">
-                {isManagerOrAdmin && (
-                  <Button onClick={() => { setSelectedFarmer(null); openEdit(selectedFarmer); }} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl">
-                    <Pencil className="mr-2 h-4 w-4" />{t("common.edit")}
-                  </Button>
-                )}
-              </DialogFooter>
             </>
           )}
         </DialogContent>
@@ -365,12 +462,20 @@ const Farmers = () => {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{t("farmers.editFarmer")}</DialogTitle><DialogDescription>{t("farmers.updateDetails")}</DialogDescription></DialogHeader>
-          {renderFarmerFormFields(editForm, setEditForm)}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>{t("common.cancel")}</Button>
-            <Button onClick={handleUpdate} disabled={!editForm.name} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">{t("farmers.updateFarmer")}</Button>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl">
+          <DialogHeader className="px-6 py-5 bg-muted/30 border-b">
+            <DialogTitle className="font-serif text-2xl flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+              <Pencil className="h-5 w-5" />
+              {t("farmers.editFarmer")}
+            </DialogTitle>
+            <DialogDescription>{t("farmers.updateDetails")}</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-2">
+            {renderFarmerFormFields(editForm, setEditForm)}
+          </div>
+          <DialogFooter className="p-6 bg-muted/30 border-t mt-auto gap-2 sm:gap-0">
+            <Button variant="outline" className="rounded-xl h-11" onClick={() => setEditOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleUpdate} disabled={!editForm.name} className="h-11 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold shadow-lg rounded-xl">{t("farmers.updateFarmer")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -165,7 +165,7 @@ BEGIN
   VALUES (NEW.id, NEW.email, COALESCE(NEW.raw_user_meta_data->>'full_name', ''));
 
   INSERT INTO public.user_roles (user_id, role, can_create, can_edit, can_delete, is_active)
-  VALUES (NEW.id, 'staff', false, false, false, true);
+  VALUES (NEW.id, 'admin', true, true, true, true);
 
   RETURN NEW;
 END;

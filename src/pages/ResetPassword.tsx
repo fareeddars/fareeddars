@@ -15,6 +15,7 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [hasRecoveryLink, setHasRecoveryLink] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ const ResetPassword = () => {
           const { data } = await supabase.auth.getSession();
           if (data.session) {
             sessionFound = true;
+            setHasSession(true);
           } else {
             attempts += 1;
             await new Promise((resolve) => setTimeout(resolve, 150));

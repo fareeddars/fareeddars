@@ -334,20 +334,20 @@ const Ledger = () => {
 
   const typeBadge = (type: string) => {
     const config: Record<string, { bg: string; text: string; label: string }> = {
-      expense: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: t("ledger.expense") },
-      sale: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", label: t("ledger.sale") },
-      payment: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", label: t("ledger.payment") },
-      loan: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", label: t("ledger.loan") },
+      expense: { bg: "bg-red-500/10 dark:bg-red-500/20 border-red-500/20", text: "text-red-700 dark:text-red-400", label: t("ledger.expense") },
+      sale: { bg: "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20", text: "text-emerald-700 dark:text-emerald-400", label: t("ledger.sale") },
+      payment: { bg: "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20", text: "text-amber-700 dark:text-amber-400", label: t("ledger.payment") },
+      loan: { bg: "bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20", text: "text-blue-700 dark:text-blue-400", label: t("ledger.loan") },
     };
     const c = config[type] || config.expense;
-    return <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize", c.bg, c.text)}>{c.label}</span>;
+    return <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider", c.bg, c.text)}>{c.label}</span>;
   };
 
   const getAllocationLabel = (entry: any) => {
     if (entry.entry_type !== "expense") return null;
-    if (entry.payment_method === "landlord_only") return <span className="text-xs px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">{t("ledger.landlordOnly")}</span>;
-    if (entry.is_shared) return <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400">50/50</span>;
-    return <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{t("ledger.farmerOnly")}</span>;
+    if (entry.payment_method === "landlord_only") return <span className="text-[10px] px-2 py-0.5 rounded-md border border-purple-500/20 bg-purple-500/10 text-purple-700 dark:text-purple-400 font-bold uppercase tracking-wider">{t("ledger.landlordOnly")}</span>;
+    if (entry.is_shared) return <span className="text-[10px] px-2 py-0.5 rounded-md border border-orange-500/20 bg-orange-500/10 text-orange-700 dark:text-orange-400 font-bold uppercase tracking-wider">50/50</span>;
+    return <span className="text-[10px] px-2 py-0.5 rounded-md border border-muted-foreground/20 bg-muted/50 text-muted-foreground font-bold uppercase tracking-wider">{t("ledger.farmerOnly")}</span>;
   };
 
   // Stats
@@ -384,281 +384,310 @@ const Ledger = () => {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700">
       {/* Season Closed Banner */}
       {isSeasonClosed && (
-        <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
-          <Lock className="h-4 w-4 shrink-0" /> {t("seasons.seasonClosed")}
+        <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 flex items-center gap-3 text-amber-700 dark:text-amber-400 shadow-sm">
+          <Lock className="h-5 w-5 shrink-0" /> <span className="font-medium text-sm">{t("seasons.seasonClosed")}</span>
         </div>
       )}
       {!selectedSeason && (
-        <div className="rounded-xl bg-muted border border-border p-4 text-center text-muted-foreground">
+        <div className="rounded-2xl bg-muted border border-border p-5 text-center text-muted-foreground font-medium">
           {t("seasons.noActiveSeason")}
         </div>
       )}
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent/80 p-4 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
-        <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
-        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
-              <BookOpen className="h-7 w-7" />
+
+      {/* --- Premium Header Banner --- */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-950 via-purple-900 to-violet-900 p-6 sm:p-10 text-white shadow-2xl border border-violet-700/50">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-purple-400/10 -translate-y-1/3 translate-x-1/4 blur-[80px] animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-violet-400/20 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
+        
+        <div className="relative z-10 flex flex-col xl:flex-row gap-8 justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="hidden sm:flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner shrink-0">
+              <BookOpen className="h-10 w-10 text-purple-100" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("ledger.title")}</h1>
-              <p className="text-primary-foreground/70 text-sm mt-0.5">{t("ledger.subtitle")} {selectedSeason ? `— ${selectedSeason.name}` : ""}</p>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-sm mb-2">
+                {t("ledger.title")}
+              </h1>
+              <p className="text-purple-100/80 text-sm sm:text-base font-medium tracking-wide max-w-lg">
+                {t("ledger.subtitle")} {selectedSeason ? `— ${selectedSeason.name}` : ""}
+              </p>
             </div>
           </div>
-        {canCreate && !isSeasonClosed && selectedSeason && (
-          <Dialog open={open} onOpenChange={(v) => { if (saving && !v) return; setOpen(v); if (!v) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
-                <Plus className="mr-2 h-4 w-4" />{t("ledger.newTransaction")}
-              </Button>
-            </DialogTrigger>
-            <DialogContent
-              className="max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full p-4 sm:p-6"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && saving) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }
-              }}
-              onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}
-              onPointerDownOutside={(e) => { if (saving) e.preventDefault(); }}
-              onInteractOutside={(e) => { if (saving) e.preventDefault(); }}
-            >
-              <DialogHeader>
-                <DialogTitle className="text-xl font-serif">{editingId ? "Edit Entry" : t("ledger.newTransaction")}</DialogTitle>
-                <DialogDescription>{t("ledger.addEntry")}</DialogDescription>
-              </DialogHeader>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="w-full grid grid-cols-4 h-auto gap-1 bg-muted/50 p-1.5 rounded-xl">
-                  <TabsTrigger value="expense" className="data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-red-500/30 rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-300 font-medium">
-                    <TrendingDown className="h-3.5 w-3.5 mr-1 hidden sm:inline" />{t("ledger.expense")}
-                  </TabsTrigger>
-                  <TabsTrigger value="sale" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-emerald-500/30 rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-300 font-medium">
-                    <TrendingUp className="h-3.5 w-3.5 mr-1 hidden sm:inline" />{t("ledger.sale")}
-                  </TabsTrigger>
-                  <TabsTrigger value="payment" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-300 font-medium">
-                    <Wallet className="h-3.5 w-3.5 mr-1 hidden sm:inline" />{t("ledger.payment")}
-                  </TabsTrigger>
-                  <TabsTrigger value="loan" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30 rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-300 font-medium">
-                    <HandCoins className="h-3.5 w-3.5 mr-1 hidden sm:inline" />{t("ledger.loan")}
-                  </TabsTrigger>
-                </TabsList>
 
-                <div className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label className="font-medium">{t("ledger.farmer")} *</Label>
-                    <Select value={farmerId} onValueChange={setFarmerId}>
-                      <SelectTrigger className="h-11"><SelectValue placeholder={t("ledger.selectFarmer")} /></SelectTrigger>
-                      <SelectContent>{seasonFarmers.map((fs) => <SelectItem key={fs.farmer_id} value={fs.farmer_id}>{fs.farmers?.name || "—"}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-medium">{t("common.date")}</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-11", !entryDate && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {entryDate ? format(entryDate, "PPP") : t("ledger.pickDate")}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={entryDate} onSelect={(d) => d && setEntryDate(d)} initialFocus /></PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
+          {canCreate && !isSeasonClosed && selectedSeason && (
+            <div className="flex items-center">
+              <Dialog open={open} onOpenChange={(v) => { if (saving && !v) return; setOpen(v); if (!v) resetForm(); }}>
+                <DialogTrigger asChild>
+                  <Button className="w-full sm:w-auto bg-white text-violet-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-2xl h-14 px-8 shrink-0 text-base">
+                    <Plus className="mr-2 h-5 w-5" />{t("ledger.newTransaction")}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent
+                  className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl"
+                  onKeyDown={(e) => { if (e.key === "Enter" && saving) { e.preventDefault(); e.stopPropagation(); } }}
+                  onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}
+                  onPointerDownOutside={(e) => { if (saving) e.preventDefault(); }}
+                  onInteractOutside={(e) => { if (saving) e.preventDefault(); }}
+                >
+                  <DialogHeader className="px-6 py-5 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-b">
+                    <DialogTitle className="font-serif text-2xl flex items-center gap-2 text-violet-900 dark:text-violet-100">
+                      <BookOpen className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                      {editingId ? "Edit Entry" : t("ledger.newTransaction")}
+                    </DialogTitle>
+                    <DialogDescription>{t("ledger.addEntry")}</DialogDescription>
+                  </DialogHeader>
+                  <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                      <TabsList className="w-full grid grid-cols-4 h-auto gap-1.5 bg-muted/50 p-1.5 rounded-xl mb-6">
+                        <TabsTrigger value="expense" className="data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-red-500/30 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider py-2.5 transition-all duration-300 font-bold">
+                          <TrendingDown className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">{t("ledger.expense")}</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="sale" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-emerald-500/30 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider py-2.5 transition-all duration-300 font-bold">
+                          <TrendingUp className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">{t("ledger.sale")}</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="payment" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider py-2.5 transition-all duration-300 font-bold">
+                          <Wallet className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">{t("ledger.payment")}</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="loan" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider py-2.5 transition-all duration-300 font-bold">
+                          <HandCoins className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">{t("ledger.loan")}</span>
+                        </TabsTrigger>
+                      </TabsList>
 
-                {/* EXPENSE TAB */}
-                <TabsContent value="expense" className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="font-medium">{t("ledger.category")}</Label>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="h-11"><SelectValue placeholder={t("ledger.selectCategory")} /></SelectTrigger>
-                      <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.key} value={c.key.toLowerCase()}>{t(c.label)}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2"><Label className="font-medium">{t("common.description")}</Label><Input className="h-11" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
-                  <div className="space-y-2">
-                    <Label className="font-medium">{t("ledger.linkInventory")}</Label>
-                    <Select value={inventoryItemId} onValueChange={setInventoryItemId}>
-                      <SelectTrigger className="h-11"><SelectValue placeholder={t("ledger.selectInventory")} /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t("ledger.none")}</SelectItem>
-                        {inventory.map((item) => (<SelectItem key={item.id} value={item.id}>{item.item_name} — ₨{item.price_per_unit}/{item.unit} ({t("ledger.stock")}: {item.current_stock})</SelectItem>))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label className="font-medium">{t("ledger.price")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" /></div>
-                    <div className="space-y-2"><Label className="font-medium">{t("ledger.quantity")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" /></div>
-                  </div>
-                  {(!price || !quantity) && (<div className="space-y-2"><Label className="font-medium">{t("common.amount")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} placeholder={t("ledger.manualAmount")} /></div>)}
-                  {(price && quantity) && (<div className="rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-3 text-sm font-semibold text-foreground">{t("common.total")}: ₨ {computedExpenseAmount().toLocaleString()}</div>)}
-
-                  {/* Cost Allocation - 3 options */}
-                  <div className="space-y-3">
-                    <Label className="font-medium text-sm">{t("ledger.costAllocation")}</Label>
-                    <RadioGroup value={costAllocation} onValueChange={(v) => setCostAllocation(v as CostAllocation)} className="grid grid-cols-3 gap-2">
-                      <Label htmlFor="alloc-farmer" className={cn(
-                        "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 text-center",
-                        costAllocation === "farmer" ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md shadow-blue-500/20" : "border-muted hover:border-muted-foreground/30"
-                      )}>
-                        <RadioGroupItem value="farmer" id="alloc-farmer" className="sr-only" />
-                        <span className="text-lg">👨‍🌾</span>
-                        <span className="text-xs font-semibold leading-tight">{t("ledger.farmerOnly")}</span>
-                      </Label>
-                      <Label htmlFor="alloc-shared" className={cn(
-                        "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 text-center",
-                        costAllocation === "shared" ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-md shadow-orange-500/20" : "border-muted hover:border-muted-foreground/30"
-                      )}>
-                        <RadioGroupItem value="shared" id="alloc-shared" className="sr-only" />
-                        <span className="text-lg">🤝</span>
-                        <span className="text-xs font-semibold leading-tight">50/50</span>
-                      </Label>
-                      <Label htmlFor="alloc-landlord" className={cn(
-                        "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 text-center",
-                        costAllocation === "landlord" ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-md shadow-purple-500/20" : "border-muted hover:border-muted-foreground/30"
-                      )}>
-                        <RadioGroupItem value="landlord" id="alloc-landlord" className="sr-only" />
-                        <span className="text-lg">🏠</span>
-                        <span className="text-xs font-semibold leading-tight">{t("ledger.landlordOnly")}</span>
-                      </Label>
-                    </RadioGroup>
-                    {costAllocation === "shared" && computedExpenseAmount() > 0 && (
-                      <div className="rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 p-2.5 text-xs font-medium text-orange-700 dark:text-orange-400 text-center">
-                        {t("ledger.eachPays")}: ₨ {(computedExpenseAmount() / 2).toLocaleString()}
+                      <div className="space-y-4 mb-6">
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-semibold">{t("ledger.farmer")} *</Label>
+                          <Select value={farmerId} onValueChange={setFarmerId}>
+                            <SelectTrigger className="h-11 bg-background"><SelectValue placeholder={t("ledger.selectFarmer")} /></SelectTrigger>
+                            <SelectContent>{seasonFarmers.map((fs) => <SelectItem key={fs.farmer_id} value={fs.farmer_id}>{fs.farmers?.name || "—"}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-semibold">{t("common.date")}</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-11 bg-background", !entryDate && "text-muted-foreground")}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {entryDate ? format(entryDate, "PPP") : t("ledger.pickDate")}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={entryDate} onSelect={(d) => d && setEntryDate(d)} initialFocus /></PopoverContent>
+                          </Popover>
+                        </div>
                       </div>
-                    )}
-                    {costAllocation === "landlord" && computedExpenseAmount() > 0 && (
-                      <div className="rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 p-2.5 text-xs font-medium text-purple-700 dark:text-purple-400 text-center">
-                        {t("ledger.landlordPays")}: ₨ {computedExpenseAmount().toLocaleString()}
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
 
-                {/* SALE TAB */}
-                <TabsContent value="sale" className="space-y-4">
-                  <div className="space-y-2"><Label className="font-medium">{t("common.description")}</Label><Input className="h-11" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label className="font-medium">{t("ledger.grossWeight")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" /></div>
-                    <div className="space-y-2"><Label className="font-medium">{t("ledger.deductions")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" /></div>
-                  </div>
-                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-3 text-sm"><span className="font-semibold text-emerald-700 dark:text-emerald-400">{t("ledger.netWeight")}:</span> <span className="text-emerald-600 dark:text-emerald-300">{netWeight().toLocaleString()} kg</span></div>
-                  <div className="space-y-2"><Label className="font-medium">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
-                  <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-200 dark:border-emerald-800 p-3 text-sm font-bold text-emerald-700 dark:text-emerald-400">{t("ledger.totalAmount")}: ₨ {saleTotal().toLocaleString()}</div>
-                </TabsContent>
+                      {/* EXPENSE TAB */}
+                      <TabsContent value="expense" className="space-y-5">
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-semibold">{t("ledger.category")}</Label>
+                          <Select value={category} onValueChange={setCategory}>
+                            <SelectTrigger className="h-11 bg-background"><SelectValue placeholder={t("ledger.selectCategory")} /></SelectTrigger>
+                            <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.key} value={c.key.toLowerCase()}>{t(c.label)}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-semibold">{t("ledger.linkInventory")}</Label>
+                          <Select value={inventoryItemId} onValueChange={setInventoryItemId}>
+                            <SelectTrigger className="h-11 bg-background"><SelectValue placeholder={t("ledger.selectInventory")} /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">{t("ledger.none")}</SelectItem>
+                              {inventory.map((item) => (<SelectItem key={item.id} value={item.id}>{item.item_name} — ₨{item.price_per_unit}/{item.unit} ({t("ledger.stock")}: {item.current_stock})</SelectItem>))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.price")} (₨)</Label><Input className="h-11 bg-background" type="number" inputMode="decimal" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" /></div>
+                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.quantity")}</Label><Input className="h-11 bg-background" type="number" inputMode="decimal" min="0" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" /></div>
+                        </div>
+                        {(!price || !quantity) && (<div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-11 bg-background font-mono" type="number" inputMode="decimal" min="0" step="0.01" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} placeholder={t("ledger.manualAmount")} /></div>)}
+                        {(price && quantity) && (<div className="rounded-xl bg-gradient-to-r from-red-500/10 to-rose-500/10 border border-red-500/20 p-4 text-sm font-semibold flex justify-between items-center"><span className="text-red-700 dark:text-red-400">{t("common.total")}:</span> <span className="text-xl font-mono text-red-600 dark:text-red-400">₨ {computedExpenseAmount().toLocaleString()}</span></div>)}
 
-                {/* PAYMENT TAB */}
-                <TabsContent value="payment" className="space-y-4">
-                  <div className="space-y-2"><Label className="font-medium">{t("common.description")}</Label><Input className="h-11" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
-                  <div className="space-y-2">
-                    <Label className="font-medium">{t("ledger.paymentMethod")}</Label>
-                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="cash">{t("ledger.cashPayment")}</SelectItem>
-                        <SelectItem value="crop_return">{t("ledger.cropReturn")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {paymentMethod === "cash" ? (
-                    <div className="space-y-2"><Label className="font-medium">{t("common.amount")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0" /></div>
-                  ) : (
-                    <>
-                      <div className="space-y-2"><Label className="font-medium">{t("ledger.cropType")}</Label><Input className="h-11" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="e.g. Wheat, Rice" /></div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-2"><Label className="font-medium">{t("ledger.cropWeight")}</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={cropWeight} onChange={(e) => setCropWeight(e.target.value)} placeholder="0" /></div>
-                        <div className="space-y-2"><Label className="font-medium">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={cropRate} onChange={(e) => setCropRate(e.target.value)} placeholder="0" /></div>
-                      </div>
-                      <div className="rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-200 dark:border-amber-800 p-3 text-sm font-bold text-amber-700 dark:text-amber-400">{t("common.total")}: ₨ {cropTotal().toLocaleString()}</div>
-                    </>
-                  )}
-                </TabsContent>
+                        {/* Cost Allocation */}
+                        <div className="space-y-3 pt-2">
+                          <Label className="text-sm font-semibold">{t("ledger.costAllocation")}</Label>
+                          <RadioGroup value={costAllocation} onValueChange={(v) => setCostAllocation(v as CostAllocation)} className="grid grid-cols-3 gap-2">
+                            <Label htmlFor="alloc-farmer" className={cn(
+                              "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 text-center",
+                              costAllocation === "farmer" ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 shadow-md shadow-indigo-500/20" : "border-muted hover:border-muted-foreground/30 bg-background"
+                            )}>
+                              <RadioGroupItem value="farmer" id="alloc-farmer" className="sr-only" />
+                              <span className="text-lg">👨‍🌾</span>
+                              <span className="text-xs font-semibold leading-tight">{t("ledger.farmerOnly")}</span>
+                            </Label>
+                            <Label htmlFor="alloc-shared" className={cn(
+                              "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 text-center",
+                              costAllocation === "shared" ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-md shadow-orange-500/20" : "border-muted hover:border-muted-foreground/30 bg-background"
+                            )}>
+                              <RadioGroupItem value="shared" id="alloc-shared" className="sr-only" />
+                              <span className="text-lg">🤝</span>
+                              <span className="text-xs font-semibold leading-tight">50/50</span>
+                            </Label>
+                            <Label htmlFor="alloc-landlord" className={cn(
+                              "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 text-center",
+                              costAllocation === "landlord" ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-md shadow-purple-500/20" : "border-muted hover:border-muted-foreground/30 bg-background"
+                            )}>
+                              <RadioGroupItem value="landlord" id="alloc-landlord" className="sr-only" />
+                              <span className="text-lg">🏠</span>
+                              <span className="text-xs font-semibold leading-tight">{t("ledger.landlordOnly")}</span>
+                            </Label>
+                          </RadioGroup>
+                          {costAllocation === "shared" && computedExpenseAmount() > 0 && (
+                            <div className="rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 p-2.5 text-xs font-medium text-orange-700 dark:text-orange-400 text-center">
+                              {t("ledger.eachPays")}: ₨ {(computedExpenseAmount() / 2).toLocaleString()}
+                            </div>
+                          )}
+                          {costAllocation === "landlord" && computedExpenseAmount() > 0 && (
+                            <div className="rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 p-2.5 text-xs font-medium text-purple-700 dark:text-purple-400 text-center">
+                              {t("ledger.landlordPays")}: ₨ {computedExpenseAmount().toLocaleString()}
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
 
-                {/* LOAN TAB */}
-                <TabsContent value="loan" className="space-y-4">
-                  <div className="space-y-2"><Label className="font-medium">{t("common.description")}</Label><Input className="h-11" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.loanPurpose")} /></div>
-                  <div className="space-y-2"><Label className="font-medium">{t("common.amount")} (₨)</Label><Input className="h-11" type="number" inputMode="decimal" min="0" step="0.01" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} placeholder="0" /></div>
-                  {loanAmount && (<div className="rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200 dark:border-blue-800 p-3 text-sm font-bold text-blue-700 dark:text-blue-400">{t("ledger.loanAmount")}: ₨ {Number(loanAmount).toLocaleString()}</div>)}
-                </TabsContent>
-              </Tabs>
-              <DialogFooter>
-                <Button onClick={handleSave} disabled={!farmerId || saving} className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg transition-all duration-300">
-                  {saving ? (<><Loader2 className="animate-spin" /> {t("common.saving") || "Saving..."}</>) : t("ledger.saveEntry")}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+                      {/* SALE TAB */}
+                      <TabsContent value="sale" className="space-y-4">
+                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.grossWeight")}</Label><Input className="h-11 bg-background" type="number" inputMode="decimal" min="0" step="0.01" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" /></div>
+                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.deductions")}</Label><Input className="h-11 bg-background text-red-600 font-medium" type="number" inputMode="decimal" min="0" step="0.01" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" /></div>
+                        </div>
+                        <div className="rounded-xl bg-muted/40 border border-border p-3 text-sm flex justify-between"><span className="font-semibold text-muted-foreground">{t("ledger.netWeight")}:</span> <span className="font-mono font-bold">{netWeight().toLocaleString()} kg</span></div>
+                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11 bg-background font-mono" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
+                        <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-4 text-sm font-semibold flex justify-between items-center"><span className="text-emerald-700 dark:text-emerald-400">{t("ledger.totalAmount")}:</span> <span className="text-xl font-mono text-emerald-600 dark:text-emerald-400">₨ {saleTotal().toLocaleString()}</span></div>
+                      </TabsContent>
+
+                      {/* PAYMENT TAB */}
+                      <TabsContent value="payment" className="space-y-4">
+                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-semibold">{t("ledger.paymentMethod")}</Label>
+                          <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                            <SelectTrigger className="h-11 bg-background"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="cash">{t("ledger.cashPayment")}</SelectItem>
+                              <SelectItem value="crop_return">{t("ledger.cropReturn")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {paymentMethod === "cash" ? (
+                          <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-11 bg-background font-mono text-amber-600 font-bold" type="number" inputMode="decimal" min="0" step="0.01" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0" /></div>
+                        ) : (
+                          <>
+                            <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.cropType")}</Label><Input className="h-11 bg-background" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="e.g. Wheat, Rice" /></div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.cropWeight")}</Label><Input className="h-11 bg-background" type="number" inputMode="decimal" min="0" step="0.01" value={cropWeight} onChange={(e) => setCropWeight(e.target.value)} placeholder="0" /></div>
+                              <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-11 bg-background font-mono" type="number" inputMode="decimal" min="0" step="0.01" value={cropRate} onChange={(e) => setCropRate(e.target.value)} placeholder="0" /></div>
+                            </div>
+                            <div className="rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 p-4 text-sm font-semibold flex justify-between items-center"><span className="text-amber-700 dark:text-amber-400">{t("common.total")}:</span> <span className="text-xl font-mono text-amber-600 dark:text-amber-400">₨ {cropTotal().toLocaleString()}</span></div>
+                          </>
+                        )}
+                      </TabsContent>
+
+                      {/* LOAN TAB */}
+                      <TabsContent value="loan" className="space-y-4">
+                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.loanPurpose")} /></div>
+                        <div className="space-y-1.5"><Label className="text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-11 bg-background font-mono text-blue-600 font-bold" type="number" inputMode="decimal" min="0" step="0.01" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} placeholder="0" /></div>
+                        {loanAmount && (<div className="rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 p-4 text-sm font-semibold flex justify-between items-center"><span className="text-blue-700 dark:text-blue-400">{t("ledger.loanAmount")}:</span> <span className="text-xl font-mono text-blue-600 dark:text-blue-400">₨ {Number(loanAmount).toLocaleString()}</span></div>)}
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                  <DialogFooter className="p-6 bg-muted/30 border-t mt-auto">
+                    <Button onClick={handleSave} disabled={!farmerId || saving} className="w-full h-12 text-base font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg transition-all duration-300 rounded-xl">
+                      {saving ? (<><Loader2 className="animate-spin h-5 w-5 mr-2" /> {t("common.saving") || "Saving..."}</>) : t("ledger.saveEntry")}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="border-red-200 dark:border-red-800 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 shadow-sm">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingDown className="h-4 w-4 text-red-500" />
-              <span className="text-xs font-medium text-red-600 dark:text-red-400">{t("ledger.expense")}</span>
+      {/* --- Premium Summary Cards --- */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-red-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+                <TrendingDown className="h-5 w-5 text-red-500" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.expense")}</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-red-700 dark:text-red-300">₨ {totalExpenses.toLocaleString()}</p>
+            <p className="text-2xl font-bold font-mono text-red-600 dark:text-red-400 truncate">₨ {totalExpenses.toLocaleString()}</p>
           </CardContent>
         </Card>
-        <Card className="border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 shadow-sm">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-4 w-4 text-emerald-500" />
-              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t("ledger.sale")}</span>
+        
+        <Card className="border-emerald-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.sale")}</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-emerald-700 dark:text-emerald-300">₨ {totalSales.toLocaleString()}</p>
+            <p className="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 truncate">₨ {totalSales.toLocaleString()}</p>
           </CardContent>
         </Card>
-        <Card className="border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 shadow-sm">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Wallet className="h-4 w-4 text-amber-500" />
-              <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{t("ledger.payment")}</span>
+
+        <Card className="border-amber-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                <Wallet className="h-5 w-5 text-amber-500" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.payment")}</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-amber-700 dark:text-amber-300">₨ {totalPayments.toLocaleString()}</p>
+            <p className="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 truncate">₨ {totalPayments.toLocaleString()}</p>
           </CardContent>
         </Card>
-        <Card className="border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-sm">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <HandCoins className="h-4 w-4 text-blue-500" />
-              <span className="text-xs font-medium text-blue-600 dark:text-blue-400">{t("ledger.loan")}</span>
+
+        <Card className="border-blue-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                <HandCoins className="h-5 w-5 text-blue-500" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.loan")}</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-blue-700 dark:text-blue-300">₨ {totalLoans.toLocaleString()}</p>
+            <p className="text-2xl font-bold font-mono text-blue-600 dark:text-blue-400 truncate">₨ {totalLoans.toLocaleString()}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Entries Table */}
-      <Card className="shadow-lg border-border/50">
-        <CardHeader className="pb-3 space-y-4">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <CardTitle className="text-lg font-serif">{t("ledger.recentEntries")}</CardTitle>
-            <span className="text-xs text-muted-foreground">
-              {filteredEntries.length} of {entries.length}
-            </span>
+      {/* --- Premium Entries Table Card --- */}
+      <Card className="shadow-2xl border-border/50 bg-card/80 backdrop-blur-xl rounded-3xl overflow-hidden">
+        <div className="h-1.5 bg-gradient-to-r from-violet-500 to-purple-500" />
+        <CardHeader className="pb-4 pt-6 px-6 border-b border-border/40 space-y-5">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <CardTitle className="text-xl font-serif flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-violet-500" />
+              {t("ledger.recentEntries")}
+            </CardTitle>
+            <Badge variant="outline" className="border-violet-500/30 text-violet-600 dark:text-violet-400 bg-violet-500/10 font-bold px-3 py-1">
+              {filteredEntries.length} / {entries.length} Entries
+            </Badge>
           </div>
-          {/* Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
-            <div className="relative lg:col-span-2">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+
+          {/* Premium Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div className="relative lg:col-span-2 group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-violet-500 transition-colors" />
               <Input
                 placeholder="Search farmer, description…"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="pl-8 h-9"
+                className="pl-10 h-10 rounded-xl bg-background/50 border-border/60 focus:border-violet-500/50 transition-all"
               />
             </div>
             <Select value={filterFarmer} onValueChange={setFilterFarmer}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Farmer" /></SelectTrigger>
+              <SelectTrigger className="h-10 rounded-xl bg-background/50"><SelectValue placeholder="Farmer" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Farmers</SelectItem>
                 {seasonFarmers.map((fs) => (
@@ -667,7 +696,7 @@ const Ledger = () => {
               </SelectContent>
             </Select>
             <Select value={filterType} onValueChange={(v) => { setFilterType(v); if (v !== "expense") setFilterCategory("all"); }}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectTrigger className="h-10 rounded-xl bg-background/50"><SelectValue placeholder="Type" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="expense">{t("ledger.expense")}</SelectItem>
@@ -677,7 +706,7 @@ const Ledger = () => {
               </SelectContent>
             </Select>
             <Select value={filterCategory} onValueChange={setFilterCategory} disabled={filterType !== "all" && filterType !== "expense"}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectTrigger className="h-10 rounded-xl bg-background/50"><SelectValue placeholder="Category" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {EXPENSE_CATEGORIES.map((c) => (
@@ -685,11 +714,11 @@ const Ledger = () => {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("h-9 flex-1 justify-start text-left font-normal text-xs", !filterFromDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-1 h-3.5 w-3.5" />
+                  <Button variant="outline" className={cn("h-10 flex-1 justify-start text-left font-normal text-xs rounded-xl bg-background/50", !filterFromDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
                     {filterFromDate ? format(filterFromDate, "MMM d") : "From"}
                   </Button>
                 </PopoverTrigger>
@@ -699,8 +728,8 @@ const Ledger = () => {
               </Popover>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("h-9 flex-1 justify-start text-left font-normal text-xs", !filterToDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-1 h-3.5 w-3.5" />
+                  <Button variant="outline" className={cn("h-10 flex-1 justify-start text-left font-normal text-xs rounded-xl bg-background/50", !filterToDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
                     {filterToDate ? format(filterToDate, "MMM d") : "To"}
                   </Button>
                 </PopoverTrigger>
@@ -711,48 +740,56 @@ const Ledger = () => {
             </div>
           </div>
           {hasActiveFilters && (
-            <div className="flex justify-end">
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
-                <X className="h-3.5 w-3.5 mr-1" /> Clear filters
+            <div className="flex justify-end mt-1">
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground hover:text-foreground rounded-lg">
+                <X className="h-3.5 w-3.5 mr-1" /> Clear active filters
               </Button>
             </div>
           )}
         </CardHeader>
-        <CardContent className="p-0 sm:p-6 sm:pt-0">
-          {/* Mobile card layout */}
-          <div className="sm:hidden divide-y divide-border">
+        
+        <CardContent className="p-0">
+          {/* Mobile Layout */}
+          <div className="sm:hidden divide-y divide-border/40">
             {filteredEntries.map((e) => (
-              <div key={e.id} className="p-3 hover:bg-muted/20 transition-colors">
-                <div className="flex items-start justify-between gap-2">
+              <div key={e.id} className="p-4 hover:bg-muted/30 transition-colors">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
                       {typeBadge(e.entry_type)}
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
                         {e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm font-medium truncate">{e.farmers?.name ?? "—"}</p>
+                    <p className="text-sm font-bold text-foreground truncate">{e.farmers?.name ?? "—"}</p>
                     {e.description && (
-                      <p className="text-xs text-muted-foreground truncate">{e.description}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{e.description}</p>
                     )}
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="font-mono font-semibold text-sm whitespace-nowrap">₨ {Number(e.amount).toLocaleString()}</span>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <span className={cn(
+                      "font-mono font-bold text-[15px] whitespace-nowrap",
+                      e.entry_type === "expense" && "text-red-600 dark:text-red-400",
+                      e.entry_type === "sale" && "text-emerald-600 dark:text-emerald-400",
+                      e.entry_type === "payment" && "text-amber-600 dark:text-amber-400",
+                      e.entry_type === "loan" && "text-blue-600 dark:text-blue-400"
+                    )}>₨ {Number(e.amount).toLocaleString()}</span>
+                    
                     {(canEdit || canDelete) && !isSeasonClosed && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
                         {canEdit && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary" onClick={() => openEdit(e)}>
-                            <Pencil className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-background hover:text-violet-600 shadow-sm transition-all" onClick={() => openEdit(e)}>
+                            <Pencil className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         {canDelete && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
-                                <Trash2 className="h-4 w-4" />
+                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md text-destructive hover:text-destructive hover:bg-white dark:hover:bg-background shadow-sm transition-all">
+                                <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
+                            <AlertDialogContent className="rounded-2xl">
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete entry?</AlertDialogTitle>
                                 <AlertDialogDescription>
@@ -760,8 +797,8 @@ const Ledger = () => {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(e.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+                                <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(e.id)} className="bg-destructive hover:bg-destructive/90 text-white rounded-xl">{t("common.delete")}</AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
@@ -773,113 +810,141 @@ const Ledger = () => {
               </div>
             ))}
             {filteredEntries.length === 0 && (
-              <div className="text-center text-muted-foreground py-12 text-sm">
-                {hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}
+              <div className="text-center py-16 px-4">
+                <BookOpen className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground font-medium">{hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}</p>
               </div>
             )}
           </div>
 
-          {/* Desktop/tablet table */}
+          {/* Desktop/Tablet Table Layout */}
           <div className="hidden sm:block overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="text-xs font-semibold">{t("common.date")}</TableHead>
-                <TableHead className="text-xs font-semibold">{t("ledger.farmer")}</TableHead>
-                <TableHead className="text-xs font-semibold">{t("ledger.type")}</TableHead>
-                <TableHead className="text-xs font-semibold hidden sm:table-cell">{t("ledger.category")}</TableHead>
-                <TableHead className="text-xs font-semibold hidden md:table-cell">{t("common.description")}</TableHead>
-                <TableHead className="text-xs font-semibold hidden sm:table-cell">{t("ledger.costAllocation")}</TableHead>
-                <TableHead className="text-right text-xs font-semibold">{t("common.amount")} (₨)</TableHead>
-                {(canEdit || canDelete) && !isSeasonClosed && <TableHead className="text-right text-xs font-semibold">Actions</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEntries.map((e) => (
-                <TableRow key={e.id} className="hover:bg-muted/20 transition-colors">
-                  <TableCell className="text-xs sm:text-sm py-3">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-xs sm:text-sm font-medium">{e.farmers?.name ?? "—"}</TableCell>
-                  <TableCell>{typeBadge(e.entry_type)}</TableCell>
-                  <TableCell className="capitalize text-xs hidden sm:table-cell">{(() => { const cat = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase()); return cat ? t(cat.label) : ((e as any).category || "—"); })()}</TableCell>
-                  <TableCell className="text-xs hidden md:table-cell max-w-[150px] truncate">{e.description || "—"}</TableCell>
-                  <TableCell className="hidden sm:table-cell">{getAllocationLabel(e)}</TableCell>
-                  <TableCell className="text-right font-mono font-semibold text-sm">₨ {Number(e.amount).toLocaleString()}</TableCell>
-                  {(canEdit || canDelete) && !isSeasonClosed && (
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {canEdit && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/10 hover:text-primary" onClick={() => openEdit(e)}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10">
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete {e.entry_type === "expense" ? "Expense" : e.entry_type === "sale" ? "Sale" : e.entry_type === "payment" ? "Payment" : "Entry"}?</AlertDialogTitle>
-                                <AlertDialogDescription asChild>
-                                  <div className="space-y-2 text-sm">
-                                    <p>This action cannot be undone. Please review the details below:</p>
-                                    <div className="rounded-md border bg-muted/40 p-3 space-y-1">
-                                      <div className="flex justify-between gap-4">
-                                        <span className="text-muted-foreground">Farmer</span>
-                                        <span className="font-medium text-foreground">{e.farmers?.name ?? "—"}</span>
-                                      </div>
-                                      <div className="flex justify-between gap-4">
-                                        <span className="text-muted-foreground">Date</span>
-                                        <span className="font-medium text-foreground">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</span>
-                                      </div>
-                                      <div className="flex justify-between gap-4">
-                                        <span className="text-muted-foreground">Type</span>
-                                        <span className="font-medium capitalize text-foreground">{e.entry_type}</span>
-                                      </div>
-                                      {(e as any).category && (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border/40">
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("common.date")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.farmer")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.type")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden lg:table-cell">{t("ledger.category")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden md:table-cell">{t("common.description")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden sm:table-cell">{t("ledger.costAllocation")}</TableHead>
+                  <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11">{t("common.amount")} (₨)</TableHead>
+                  {(canEdit || canDelete) && !isSeasonClosed && <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11 w-[100px]">Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredEntries.map((e) => (
+                  <TableRow key={e.id} className="hover:bg-muted/30 transition-colors border-b border-border/30">
+                    <TableCell className="text-xs font-medium py-3 text-muted-foreground">
+                      {e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-sm font-bold text-foreground">{e.farmers?.name ?? "—"}</TableCell>
+                    <TableCell>{typeBadge(e.entry_type)}</TableCell>
+                    <TableCell className="capitalize text-xs hidden lg:table-cell font-medium text-muted-foreground">
+                      {(() => { const cat = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase()); return cat ? t(cat.label) : ((e as any).category || "—"); })()}
+                    </TableCell>
+                    <TableCell className="text-xs hidden md:table-cell max-w-[180px] truncate text-muted-foreground" title={e.description || ""}>
+                      {e.description || "—"}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{getAllocationLabel(e)}</TableCell>
+                    <TableCell className={cn(
+                      "text-right font-mono font-bold text-sm",
+                      e.entry_type === "expense" && "text-red-600 dark:text-red-400",
+                      e.entry_type === "sale" && "text-emerald-600 dark:text-emerald-400",
+                      e.entry_type === "payment" && "text-amber-600 dark:text-amber-400",
+                      e.entry_type === "loan" && "text-blue-600 dark:text-blue-400"
+                    )}>
+                      ₨ {Number(e.amount).toLocaleString()}
+                    </TableCell>
+                    {(canEdit || canDelete) && !isSeasonClosed && (
+                      <TableCell className="text-right py-2">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* We remove opacity-0 logic since TableRow hover state for children is tricky without group class, just show them slightly faded */}
+                        </div>
+                        <div className="flex items-center justify-end gap-1 opacity-60 hover:opacity-100 transition-opacity">
+                          {canEdit && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-violet-500/10 hover:text-violet-600 rounded-lg transition-colors" onClick={() => openEdit(e)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg transition-colors">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-2xl">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete {e.entry_type === "expense" ? "Expense" : e.entry_type === "sale" ? "Sale" : e.entry_type === "payment" ? "Payment" : "Entry"}?</AlertDialogTitle>
+                                  <AlertDialogDescription asChild>
+                                    <div className="space-y-3 text-sm mt-2">
+                                      <p>This action cannot be undone. Please review the details below:</p>
+                                      <div className="rounded-xl border bg-muted/40 p-4 space-y-2">
                                         <div className="flex justify-between gap-4">
-                                          <span className="text-muted-foreground">Category</span>
-                                          <span className="font-medium capitalize text-foreground">{(e as any).category}</span>
+                                          <span className="text-muted-foreground">Farmer</span>
+                                          <span className="font-bold text-foreground">{e.farmers?.name ?? "—"}</span>
                                         </div>
-                                      )}
-                                      {e.description && (
                                         <div className="flex justify-between gap-4">
-                                          <span className="text-muted-foreground">Description</span>
-                                          <span className="font-medium text-foreground text-right max-w-[60%] truncate">{e.description}</span>
+                                          <span className="text-muted-foreground">Date</span>
+                                          <span className="font-medium text-foreground">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</span>
                                         </div>
-                                      )}
-                                      <div className="flex justify-between gap-4 pt-1 border-t mt-1">
-                                        <span className="text-muted-foreground">
-                                          {e.entry_type === "expense" ? "Expense Amount" : e.entry_type === "sale" ? "Sale Amount" : e.entry_type === "payment" ? "Payment Amount" : "Amount"}
-                                        </span>
-                                        <span className={cn(
-                                          "font-mono font-bold",
-                                          e.entry_type === "expense" && "text-red-600 dark:text-red-400",
-                                          e.entry_type === "sale" && "text-green-600 dark:text-green-400",
-                                          e.entry_type === "payment" && "text-blue-600 dark:text-blue-400",
-                                        )}>₨ {Number(e.amount).toLocaleString()}</span>
+                                        <div className="flex justify-between gap-4">
+                                          <span className="text-muted-foreground">Type</span>
+                                          <span className="font-bold uppercase tracking-wider text-[10px] text-foreground">{e.entry_type}</span>
+                                        </div>
+                                        {(e as any).category && (
+                                          <div className="flex justify-between gap-4">
+                                            <span className="text-muted-foreground">Category</span>
+                                            <span className="font-medium capitalize text-foreground">{(e as any).category}</span>
+                                          </div>
+                                        )}
+                                        {e.description && (
+                                          <div className="flex justify-between gap-4">
+                                            <span className="text-muted-foreground">Description</span>
+                                            <span className="font-medium text-foreground text-right max-w-[60%] truncate">{e.description}</span>
+                                          </div>
+                                        )}
+                                        <div className="flex justify-between gap-4 pt-3 border-t border-border/60 mt-3">
+                                          <span className="text-muted-foreground uppercase text-xs font-bold tracking-wider pt-0.5">
+                                            Amount
+                                          </span>
+                                          <span className={cn(
+                                            "font-mono font-bold text-lg leading-none",
+                                            e.entry_type === "expense" && "text-red-600 dark:text-red-400",
+                                            e.entry_type === "sale" && "text-emerald-600 dark:text-emerald-400",
+                                            e.entry_type === "payment" && "text-amber-600 dark:text-amber-400",
+                                            e.entry_type === "loan" && "text-blue-600 dark:text-blue-400",
+                                          )}>₨ {Number(e.amount).toLocaleString()}</span>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(e.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter className="gap-2 sm:gap-0 mt-2">
+                                  <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(e.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">{t("common.delete")}</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+                {filteredEntries.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="h-32 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center">
+                        <BookOpen className="h-8 w-8 mb-2 opacity-20" />
+                        {hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}
                       </div>
                     </TableCell>
-                  )}
-                </TableRow>
-              ))}
-              {filteredEntries.length === 0 && (<TableRow><TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="text-center text-muted-foreground py-12">{hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}</TableCell></TableRow>)}
-            </TableBody>
-          </Table>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

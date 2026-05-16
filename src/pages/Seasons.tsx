@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSeason } from "@/contexts/SeasonContext";
@@ -12,10 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Leaf, Lock, Users, CalendarDays, CheckCircle2, ArrowRight, Sprout, Trash2, RotateCcw } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, Leaf, Lock, Users, CheckCircle2, ArrowRight, Sprout, Trash2, RotateCcw, Wallet, Activity } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
-import { useEffect } from "react";
 
 const Seasons = () => {
   const { user, isAdmin, isManagerOrAdmin } = useAuth();
@@ -99,7 +97,6 @@ const Seasons = () => {
   };
 
   const handleDeleteSeason = async (seasonId: string) => {
-    // First delete associated farmer_seasons, then the season itself
     await supabase.from("farmer_seasons").delete().eq("season_id", seasonId);
     await supabase.from("ledger_entries").delete().eq("season_id", seasonId);
     await supabase.from("expense_categories").delete().eq("season_id", seasonId);
@@ -112,46 +109,69 @@ const Seasons = () => {
     }
   };
 
+  // Calculate Season Stats
+  const seasonStats = useMemo(() => {
+    const totalBalance = farmerSeasons.reduce((sum, fs) => sum + Number(fs.opening_balance || 0), 0);
+    const activeFarmersCount = farmerSeasons.filter(fs => fs.status === "active").length;
+    return { totalBalance, activeFarmersCount };
+  }, [farmerSeasons]);
+
   return (
-    <div className="space-y-6">
-      {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
-        <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
-        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
-              <Sprout className="h-7 w-7" />
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700">
+      
+      {/* --- Premium Page Header Banner --- */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 p-6 sm:p-10 text-primary-foreground shadow-2xl border border-emerald-700/50">
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-emerald-400/10 -translate-y-1/2 translate-x-1/3 blur-[60px] animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-teal-400/10 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
+        
+        <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner">
+              <Sprout className="h-8 w-8 text-emerald-100" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">{t("seasons.title")}</h1>
-              <p className="text-primary-foreground/70 text-sm mt-0.5">{t("seasons.subtitle")}</p>
+              <h1 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-white drop-shadow-sm">
+                {t("seasons.title")}
+              </h1>
+              <p className="text-emerald-100/80 text-sm mt-1.5 font-medium tracking-wide">
+                {t("seasons.subtitle")}
+              </p>
             </div>
           </div>
+          
           {isAdmin && (
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl rounded-xl">
-                  <Plus className="mr-2 h-4 w-4" />{t("seasons.createSeason")}
+                <Button className="bg-white text-emerald-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl h-12 px-6 w-full sm:w-auto">
+                  <Plus className="mr-2 h-5 w-5" />{t("seasons.createSeason")}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[95vw] sm:w-full max-w-md">
+              <DialogContent className="w-[95vw] sm:w-full max-w-md rounded-2xl">
                 <DialogHeader>
-                  <DialogTitle className="font-serif">{t("seasons.createSeason")}</DialogTitle>
+                  <DialogTitle className="font-serif text-2xl flex items-center gap-2">
+                    <Sprout className="h-6 w-6 text-emerald-600" />
+                    {t("seasons.createSeason")}
+                  </DialogTitle>
                   <DialogDescription>{t("seasons.createDescription")}</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-5 py-4">
                   <div className="space-y-2">
-                    <Label>{t("common.name")} *</Label>
-                    <Input className="h-11" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("seasons.namePlaceholder")} />
+                    <Label className="text-foreground/80">{t("common.name")} *</Label>
+                    <Input className="h-12 bg-muted/50 rounded-xl" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("seasons.namePlaceholder")} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label>{t("seasons.startDate")} *</Label><Input type="date" className="h-11" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>
-                    <div className="space-y-2"><Label>{t("seasons.endDate")}</Label><Input type="date" className="h-11" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-foreground/80">{t("seasons.startDate")} *</Label>
+                      <Input type="date" className="h-12 bg-muted/50 rounded-xl" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-foreground/80">{t("seasons.endDate")}</Label>
+                      <Input type="date" className="h-12 bg-muted/50 rounded-xl" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleCreateSeason} disabled={!form.name || !form.start_date} className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 rounded-xl">
+                  <Button onClick={handleCreateSeason} disabled={!form.name || !form.start_date} className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold shadow-lg rounded-xl transition-all">
                     {t("seasons.createSeason")}
                   </Button>
                 </DialogFooter>
@@ -161,208 +181,294 @@ const Seasons = () => {
         </div>
       </div>
 
-      {/* Season Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* --- Premium Season Cards --- */}
+      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {seasons.map((season, i) => {
           const isSelected = selectedSeason?.id === season.id;
           const isActive = season.status === "active";
+          
           return (
             <Card
               key={season.id}
-              className={`cursor-pointer transition-all duration-500 hover:shadow-xl hover:-translate-y-1 overflow-hidden animate-fade-in ${
-                isSelected ? "ring-2 ring-primary shadow-xl" : "hover:shadow-lg"
-              } ${isActive ? "border-primary/30" : "border-border/50 opacity-75"}`}
-              style={{ animationDelay: `${i * 80}ms` }}
+              className={`cursor-pointer group relative overflow-hidden bg-card/60 backdrop-blur-xl transition-all duration-500 hover:-translate-y-1.5 animate-fade-in ${
+                isSelected 
+                  ? "ring-2 ring-emerald-500 shadow-2xl shadow-emerald-500/20" 
+                  : "hover:shadow-xl shadow-sm border-border/50"
+              } ${isActive ? "border-emerald-500/30" : "opacity-80 hover:opacity-100"}`}
+              style={{ animationDelay: `${i * 100}ms` }}
               onClick={() => setSelectedSeasonId(season.id)}
             >
-              <div className={`h-1.5 ${isActive ? "bg-gradient-to-r from-primary to-primary/70" : "bg-muted"}`} />
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-3">
+              {/* Top Accent Bar */}
+              <div className={`h-1.5 w-full ${isActive ? "bg-gradient-to-r from-emerald-400 to-teal-500" : "bg-slate-300 dark:bg-slate-700"}`} />
+              
+              <CardContent className="p-5 sm:p-6 relative z-10">
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl shadow-md ${isActive ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                      <Leaf className="h-5 w-5" />
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 ${
+                      isActive 
+                        ? "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 dark:from-emerald-900/50 dark:to-teal-900/50 dark:text-emerald-400" 
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      <Leaf className="h-6 w-6" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-foreground">{season.name}</h3>
-                      <p className="text-xs text-muted-foreground">{season.start_date}{season.end_date ? ` → ${season.end_date}` : ""}</p>
+                      <h3 className="text-lg font-bold text-foreground font-serif tracking-tight">{season.name}</h3>
+                      <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                        {season.start_date} {season.end_date ? `→ ${season.end_date}` : ""}
+                      </p>
                     </div>
                   </div>
-                  <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-chart-5/15 text-chart-5 border-chart-5/30" : ""}>
+                  <Badge variant={isActive ? "default" : "secondary"} className={`font-semibold ${isActive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/20 shadow-sm" : ""}`}>
                     {isActive ? t("seasons.active") : t("seasons.closedStatus")}
                   </Badge>
                 </div>
-                {isSelected && isActive && (
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
-                    {isManagerOrAdmin && (
-                      <Button size="sm" className="flex-1 text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md rounded-xl" onClick={(e) => { e.stopPropagation(); openAssignDialog(); }}>
-                        <Users className="h-3 w-3 mr-1" />{t("seasons.addFarmers")}
-                      </Button>
-                    )}
-                    {isAdmin && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline" className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10" onClick={(e) => e.stopPropagation()}>
-                            <Lock className="h-3 w-3 mr-1" />{t("seasons.closeSeason")}
+
+                {/* Actions Area */}
+                {isSelected && (
+                  <div className="mt-4 pt-4 border-t border-border/40 flex flex-col sm:flex-row gap-2 animate-in slide-in-from-top-2 duration-300">
+                    {isActive ? (
+                      <>
+                        {isManagerOrAdmin && (
+                          <Button size="sm" className="flex-1 text-xs bg-emerald-600 text-white hover:bg-emerald-700 font-semibold shadow-md rounded-xl h-9" onClick={(e) => { e.stopPropagation(); openAssignDialog(); }}>
+                            <Users className="h-4 w-4 mr-1.5" />{t("seasons.addFarmers")}
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader><AlertDialogTitle>{t("seasons.closeConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.closeConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleCloseSeason(season.id)} className="bg-destructive text-destructive-foreground">{t("seasons.closeSeason")}</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                        )}
+                        {isAdmin && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="outline" className="flex-1 text-xs border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 rounded-xl h-9" onClick={(e) => e.stopPropagation()}>
+                                <Lock className="h-4 w-4 mr-1.5" />{t("seasons.closeSeason")}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-2xl">
+                              <AlertDialogHeader><AlertDialogTitle>{t("seasons.closeConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.closeConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleCloseSeason(season.id)} className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl">{t("seasons.closeSeason")}</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                        {isAdmin && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="outline" className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10 rounded-xl px-3 h-9" onClick={(e) => e.stopPropagation()}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-2xl">
+                              <AlertDialogHeader><AlertDialogTitle>{t("seasons.deleteConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.deleteConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteSeason(season.id)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl">{t("seasons.deleteSeason")}</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {isAdmin && (
+                          <>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" className="flex-1 text-xs bg-emerald-600/10 text-emerald-600 hover:bg-emerald-600/20 border border-emerald-600/30 font-semibold rounded-xl h-9" onClick={(e) => e.stopPropagation()}>
+                                  <RotateCcw className="h-4 w-4 mr-1.5" />{t("seasons.reopenSeason")}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-2xl">
+                                <AlertDialogHeader><AlertDialogTitle>{t("seasons.reopenConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.reopenConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleReopenSeason(season.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">{t("seasons.reopenSeason")}</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="outline" className="flex-1 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 rounded-xl h-9" onClick={(e) => e.stopPropagation()}>
+                                  <Trash2 className="h-4 w-4 mr-1.5" />{t("seasons.deleteSeason")}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-2xl">
+                                <AlertDialogHeader><AlertDialogTitle>{t("seasons.deleteConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.deleteConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteSeason(season.id)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl">{t("seasons.deleteSeason")}</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        )}
+                      </>
                     )}
-                  </div>
-                )}
-                {isSelected && !isActive && isAdmin && (
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="sm" className="text-xs bg-chart-5/15 text-chart-5 hover:bg-chart-5/20 border border-chart-5/30 font-semibold rounded-xl" onClick={(e) => e.stopPropagation()}>
-                          <RotateCcw className="h-3 w-3 mr-1" />{t("seasons.reopenSeason")}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>{t("seasons.reopenConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.reopenConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleReopenSeason(season.id)} className="bg-primary text-primary-foreground">{t("seasons.reopenSeason")}</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10" onClick={(e) => e.stopPropagation()}>
-                          <Trash2 className="h-3 w-3 mr-1" />{t("seasons.deleteSeason")}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>{t("seasons.deleteConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.deleteConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteSeason(season.id)} className="bg-destructive text-destructive-foreground">{t("seasons.deleteSeason")}</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                )}
-                {isSelected && isAdmin && isActive && (
-                  <div className="flex gap-2 mt-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10" onClick={(e) => e.stopPropagation()}>
-                          <Trash2 className="h-3 w-3 mr-1" />{t("seasons.deleteSeason")}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>{t("seasons.deleteConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.deleteConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteSeason(season.id)} className="bg-destructive text-destructive-foreground">{t("seasons.deleteSeason")}</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
                   </div>
                 )}
               </CardContent>
             </Card>
           );
         })}
+
         {seasons.length === 0 && (
-          <div className="col-span-full text-center py-16 text-muted-foreground">
-            <Sprout className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-            <p className="font-medium">{t("seasons.noSeasons")}</p>
-            <p className="text-sm">{t("seasons.createFirst")}</p>
+          <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center bg-card/30 backdrop-blur-sm rounded-3xl border border-dashed border-border/60">
+            <div className="h-20 w-20 bg-muted rounded-full flex items-center justify-center mb-4">
+              <Sprout className="h-10 w-10 text-muted-foreground/40" />
+            </div>
+            <h3 className="text-xl font-bold font-serif mb-1">{t("seasons.noSeasons")}</h3>
+            <p className="text-muted-foreground">{t("seasons.createFirst")}</p>
           </div>
         )}
       </div>
 
-      {/* Selected Season's Farmers */}
+      {/* --- Premium Selected Season's Farmers Area --- */}
       {selectedSeason && (
-        <Card className="shadow-xl border-border/50 overflow-hidden">
-          <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-serif flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              {t("seasons.seasonFarmers")} — {selectedSeason.name}
-              <Badge variant="outline" className="ml-auto border-primary/30 text-primary">{farmerSeasons.length} {t("seasons.farmers")}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {farmerSeasons.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {farmerSeasons.map((fs) => (
-                  <div key={fs.id} className={`rounded-xl border p-4 transition-all duration-300 hover:shadow-md ${
-                    fs.status === "left" ? "opacity-60 border-destructive/30 bg-destructive/5" :
-                    fs.status === "completed" ? "border-primary/30 bg-primary/5" : "border-border hover:border-primary/20 hover:-translate-y-0.5"
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xs font-bold">
-                          {fs.farmers?.name?.charAt(0) || "?"}
-                        </div>
-                        <span className="font-semibold text-foreground">{fs.farmers?.name || "—"}</span>
-                      </div>
-                      <Badge variant="outline" className={`text-[10px] ${
-                        fs.status === "active" ? "border-chart-5/30 text-chart-5" :
-                        fs.status === "left" ? "border-destructive/30 text-destructive" : "border-muted-foreground/30"
-                      }`}>
-                        {fs.status === "active" ? t("seasons.active") : fs.status === "left" ? t("seasons.left") : t("seasons.completed")}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground font-mono">{t("farmers.balance")}: ₨ {Number(fs.opening_balance).toLocaleString()}</p>
-                    {fs.status === "active" && selectedSeason.status === "active" && isManagerOrAdmin && (
-                      <Button size="sm" variant="ghost" className="mt-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleFarmerLeave(fs.id)}>
-                        {t("seasons.markLeft")}
-                      </Button>
-                    )}
-                    {fs.status === "left" && selectedSeason.status === "active" && isManagerOrAdmin && (
-                      <Button size="sm" variant="ghost" className="mt-2 text-xs text-chart-5 hover:text-chart-5 hover:bg-chart-5/10" onClick={() => handleFarmerReactivate(fs.id)}>
-                        <RotateCcw className="h-3 w-3 mr-1" />{t("seasons.markActive")}
-                      </Button>
-                    )}
-                  </div>
-                ))}
+        <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-700">
+          
+          {/* Stats Bar for the Season */}
+          <div className="grid grid-cols-2 gap-4 sm:flex sm:flex-row">
+            <div className="flex-1 bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">{t("seasons.noFarmersInSeason")}</p>
-            )}
-          </CardContent>
-        </Card>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Farmers</p>
+                <p className="text-xl font-bold font-mono">{farmerSeasons.length}</p>
+              </div>
+            </div>
+            
+            <div className="flex-1 bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Opening Balance</p>
+                <p className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">₨ {seasonStats.totalBalance.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Farmers Card */}
+          <Card className="shadow-2xl border-border/50 overflow-hidden bg-card/80 backdrop-blur-xl rounded-3xl">
+            <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
+            <CardHeader className="pb-4 pt-6 px-6">
+              <CardTitle className="text-xl sm:text-2xl font-serif flex items-center gap-2">
+                <Users className="h-6 w-6 text-emerald-600" />
+                Farmers in {selectedSeason.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-6 pb-6">
+              {farmerSeasons.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {farmerSeasons.map((fs) => (
+                    <div key={fs.id} className={`group relative rounded-2xl border p-5 transition-all duration-300 hover:shadow-lg bg-background/50 backdrop-blur-sm ${
+                      fs.status === "left" ? "opacity-60 border-destructive/30 bg-destructive/5" :
+                      fs.status === "completed" ? "border-emerald-500/30 bg-emerald-500/5" : "border-border hover:border-emerald-500/30 hover:-translate-y-1"
+                    }`}>
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white text-sm font-bold shadow-sm ${
+                            fs.status === 'left' ? 'from-destructive to-destructive/70' : 'from-emerald-500 to-teal-600'
+                          }`}>
+                            {fs.farmers?.name?.charAt(0).toUpperCase() || "?"}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-foreground leading-tight">{fs.farmers?.name || "—"}</h4>
+                            <Badge variant="outline" className={`mt-1 text-[10px] px-1.5 py-0 shadow-sm ${
+                              fs.status === "active" ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/10" :
+                              fs.status === "left" ? "border-destructive/30 text-destructive bg-destructive/10" : "border-blue-500/30 text-blue-600 bg-blue-500/10"
+                            }`}>
+                              {fs.status === "active" ? t("seasons.active") : fs.status === "left" ? t("seasons.left") : t("seasons.completed")}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-muted/40 rounded-xl p-3 mb-3 border border-border/50">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">{t("farmers.balance")}</p>
+                        <p className="text-lg font-mono font-bold text-foreground">₨ {Number(fs.opening_balance).toLocaleString()}</p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {fs.status === "active" && selectedSeason.status === "active" && isManagerOrAdmin && (
+                          <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl h-9" onClick={() => handleFarmerLeave(fs.id)}>
+                            {t("seasons.markLeft")}
+                          </Button>
+                        )}
+                        {fs.status === "left" && selectedSeason.status === "active" && isManagerOrAdmin && (
+                          <Button size="sm" variant="ghost" className="w-full text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-600/10 rounded-xl h-9" onClick={() => handleFarmerReactivate(fs.id)}>
+                            <RotateCcw className="h-3.5 w-3.5 mr-1.5" />{t("seasons.markActive")}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 px-4 rounded-2xl bg-muted/20 border border-dashed border-border">
+                  <Users className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-muted-foreground font-medium">{t("seasons.noFarmersInSeason")}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Assign Farmers Dialog */}
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
-        <DialogContent className="w-[95vw] sm:w-full max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-serif">{t("seasons.addFarmers")}</DialogTitle>
+        <DialogContent className="w-[95vw] sm:w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-2">
+            <DialogTitle className="font-serif text-2xl flex items-center gap-2">
+              <Users className="h-6 w-6 text-emerald-600" />
+              {t("seasons.addFarmers")}
+            </DialogTitle>
             <DialogDescription>{t("seasons.selectFarmersDesc")}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="flex-1 overflow-y-auto px-6 py-2 space-y-3">
             {allFarmers.map((farmer) => {
               const alreadyAssigned = farmerSeasons.some((fs) => fs.farmer_id === farmer.id);
               const isChecked = selectedFarmerIds.includes(farmer.id);
               return (
-                <div key={farmer.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                  alreadyAssigned ? "bg-muted/50 border-muted" : isChecked ? "bg-primary/5 border-primary/30" : "border-border hover:border-primary/20"
+                <div key={farmer.id} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 ${
+                  alreadyAssigned ? "bg-muted/30 border-muted opacity-60" : isChecked ? "bg-emerald-500/5 border-emerald-500/30 shadow-sm" : "border-border hover:border-emerald-500/20 bg-card hover:shadow-sm"
                 }`}>
-                  <Checkbox checked={isChecked} disabled={alreadyAssigned} onCheckedChange={() => toggleFarmer(farmer.id)} />
-                  <div className="flex-1">
-                    <span className="font-medium text-sm">{farmer.name}</span>
-                    {alreadyAssigned && <span className="ml-2 text-xs text-muted-foreground">({t("seasons.alreadyAssigned")})</span>}
+                  <Checkbox 
+                    checked={isChecked} 
+                    disabled={alreadyAssigned} 
+                    onCheckedChange={() => toggleFarmer(farmer.id)} 
+                    className={isChecked ? "data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" : ""}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold text-sm block truncate">{farmer.name}</span>
+                    {alreadyAssigned && <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t("seasons.alreadyAssigned")}</span>}
                   </div>
                   {isChecked && !alreadyAssigned && (
-                    <Input type="number" inputMode="decimal" min="0" step="0.01" placeholder="₨ 0" className="w-24 h-9 text-xs" value={balances[farmer.id] || ""} onChange={(e) => setBalances({ ...balances, [farmer.id]: e.target.value })} />
+                    <div className="relative shrink-0">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">₨</span>
+                      <Input 
+                        type="number" 
+                        inputMode="decimal" 
+                        min="0" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        className="w-28 h-10 text-sm font-mono pl-7 rounded-xl bg-background" 
+                        value={balances[farmer.id] || ""} 
+                        onChange={(e) => setBalances({ ...balances, [farmer.id]: e.target.value })} 
+                      />
+                    </div>
                   )}
                 </div>
               );
             })}
-            {allFarmers.length === 0 && <p className="text-center text-muted-foreground py-4">{t("farmers.noFarmers")}</p>}
+            {allFarmers.length === 0 && (
+              <div className="text-center py-8">
+                <Users className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                <p className="text-muted-foreground">{t("farmers.noFarmers")}</p>
+              </div>
+            )}
           </div>
-          <DialogFooter>
-            <Button onClick={handleAssignFarmers} className="w-full h-11 bg-gradient-to-r from-chart-4 to-chart-3">
+          <DialogFooter className="p-6 bg-muted/20 mt-auto border-t">
+            <Button onClick={handleAssignFarmers} className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold shadow-lg rounded-xl transition-all">
               {t("seasons.assignSelected")}
             </Button>
           </DialogFooter>
