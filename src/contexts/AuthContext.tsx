@@ -90,16 +90,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializedRef.current = true;
 
     const initializeAuth = async () => {
-      // Check for recovery tokens in URL parameters
+      // Detect recovery from URL OR from a flag we persist across the PKCE
+      // code-exchange redirect (Supabase strips ?code=... after using it).
       const urlParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
       const isRecoveryType = urlParams.get('type') === 'recovery' || hashParams.get('type') === 'recovery';
-      const hasRecoveryToken = Boolean(accessToken || isRecoveryType);
+      let recoveryFlag = false;
+      try { recoveryFlag = sessionStorage.getItem('pw_recovery_active') === '1'; } catch {}
+      const onResetPage = window.location.pathname === '/reset-password';
+      const hasRecoveryToken = Boolean(accessToken || isRecoveryType || (recoveryFlag && onResetPage));
 
       if (hasRecoveryToken) {
-        console.log('[Auth] Recovery token detected in URL');
+        console.log('[Auth] Recovery flow detected');
         setIsPasswordRecovery(true);
+        try { sessionStorage.setItem('pw_recovery_active', '1'); } catch {}
       }
 
       const { data: { session: restoredSession } } = await supabase.auth.getSession();
@@ -144,12 +149,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === "SIGNED_IN") {
           setSession(newSession);
           setUser(newSession?.user ?? null);
-          if (!isPasswordRecovery && newSession?.user) {
+          // Re-check the persistent recovery flag — the PKCE code exchange
+          // triggers SIGNED_IN without firing PASSWORD_RECOVERY.
+          let recoveryFlag = false;
+          try { recoveryFlag = sessionStorage.getItem('pw_recovery_active') === '1'; } catch {}
+          const inRecovery = isPasswordRecovery || recoveryFlag;
+          if (inRecovery) {
+            setIsPasswordRecovery(true);
+            setLoading(false);
+            if (window.location.pathname !== "/reset-password") navigate("/reset-password");
+            return;
+          }
+          if (newSession?.user) {
             // Defer to avoid deadlock inside onAuthStateChange
             setTimeout(() => { fetchUserData(newSession.user.id); bootOfflineSync(); }, 0);
-          }
-          if (!isPasswordRecovery) {
-            setIsPasswordRecovery(false);
           }
           setLoading(false);
           return;
@@ -162,6 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
           setUserRole(null);
           setIsPasswordRecovery(false);
+          try { sessionStorage.removeItem('pw_recovery_active'); } catch {}
           setLoading(false);
           return;
         }

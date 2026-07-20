@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
+
+const RECOVERY_FLAG = "pw_recovery_active";
 
 const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -14,45 +16,40 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
-  const [hasRecoveryLink, setHasRecoveryLink] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Any visit to /reset-password is considered a recovery attempt — persist
+    // the flag so the AuthContext keeps us here after the PKCE code exchange
+    // fires a normal SIGNED_IN event.
+    try { sessionStorage.setItem(RECOVERY_FLAG, "1"); } catch {}
+
     const checkRecoverySession = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = urlParams.get("access_token") || hashParams.get("access_token");
+        const hasCode = urlParams.has("code");
+        const hasAccessToken = urlParams.has("access_token") || hashParams.has("access_token");
         const isRecoveryType = urlParams.get("type") === "recovery" || hashParams.get("type") === "recovery";
-        const hasRecoveryToken = Boolean(accessToken || isRecoveryType);
 
-        if (!hasRecoveryToken) {
-          setRecoveryError("The reset link is missing or invalid. Please request a new password reset link.");
-          setSessionReady(true);
-          return;
-        }
-
-        setHasRecoveryLink(true);
-
-        // Give Supabase a moment to hydrate the recovery session from the URL
-        let attempts = 0;
+        // Wait up to ~2.5s for Supabase's detectSessionInUrl to finish the
+        // implicit-hash pickup OR the PKCE ?code=... exchange.
         let sessionFound = false;
-        while (attempts < 5 && !sessionFound) {
+        for (let i = 0; i < 15 && !sessionFound; i++) {
           const { data } = await supabase.auth.getSession();
-          if (data.session) {
-            sessionFound = true;
-            setHasSession(true);
-          } else {
-            attempts += 1;
-            await new Promise((resolve) => setTimeout(resolve, 150));
-          }
+          if (data.session) { sessionFound = true; setHasSession(true); break; }
+          await new Promise((r) => setTimeout(r, 180));
         }
 
         if (!sessionFound) {
-          setRecoveryError("The reset link may have expired or is invalid. Please request a new password reset link.");
+          if (hasCode || hasAccessToken || isRecoveryType) {
+            setRecoveryError("The reset link is invalid or has expired. Please request a new password reset link.");
+          } else {
+            setRecoveryError("This page is only accessible from the reset link sent to your email.");
+          }
         }
       } catch (error: any) {
         console.error("[ResetPassword] session check failed:", error);
@@ -67,7 +64,7 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!hasRecoveryLink) {
+    if (!hasSession) {
       toast({ title: "Invalid recovery link", description: "Request a new reset link to continue.", variant: "destructive" });
       return;
     }
@@ -75,8 +72,8 @@ const ResetPassword = () => {
       toast({ title: "Passwords do not match", variant: "destructive" });
       return;
     }
-    if (newPassword.length < 6) {
-      toast({ title: "Password too short", description: "Use at least 6 characters.", variant: "destructive" });
+    if (newPassword.length < 8) {
+      toast({ title: "Password too short", description: "Use at least 8 characters.", variant: "destructive" });
       return;
     }
 
@@ -84,9 +81,10 @@ const ResetPassword = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      toast({ title: "Password updated", description: "You can now sign in with your new password." });
+      toast({ title: "Password updated", description: "Sign in with your new password to continue." });
+      try { sessionStorage.removeItem(RECOVERY_FLAG); } catch {}
       await supabase.auth.signOut();
-      navigate("/auth");
+      navigate("/auth", { replace: true });
     } catch (err: any) {
       toast({ title: "Error updating password", description: err.message, variant: "destructive" });
     } finally {
@@ -101,15 +99,19 @@ const ResetPassword = () => {
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl">Reset Password</CardTitle>
             <CardDescription>
-              {sessionReady
-                ? hasSession
+              {!sessionReady
+                ? "Verifying reset link..."
+                : hasSession
                   ? "Set a new password to finish resetting your account."
-                  : "This page is only accessible from the reset link sent to your email."
-                : "Checking reset session..."}
+                  : recoveryError ?? "This page is only accessible from the reset link sent to your email."}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
-            {sessionReady && !hasSession ? (
+            {!sessionReady ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : !hasSession ? (
               <div className="space-y-4 text-center text-muted-foreground">
                 <div className="rounded-2xl border border-border/80 bg-muted/80 p-6">
                   <CheckCircle2 className="mx-auto mb-2 h-10 w-10 text-primary" />
@@ -128,13 +130,16 @@ const ResetPassword = () => {
                       type={showPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder="At least 8 characters"
+                      autoComplete="new-password"
                       required
+                      minLength={8}
+                      maxLength={72}
                       className="h-11 rounded-xl pr-10"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword((state) => !state)}
+                      onClick={() => setShowPassword((s) => !s)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -148,21 +153,22 @@ const ResetPassword = () => {
                     type={showPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder="Re-enter new password"
+                    autoComplete="new-password"
                     required
+                    minLength={8}
+                    maxLength={72}
                     className="h-11 rounded-xl"
                   />
                 </div>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{showPassword ? "Hiding" : "Showing"} password text</span>
-                  <button type="button" onClick={() => setShowPassword((state) => !state)} className="font-medium text-primary hover:underline">
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
                 <Button type="submit" className="w-full h-12 font-semibold rounded-xl" disabled={loading}>
-                  {loading ? "Updating..." : "Update Password"}
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update Password"}
                 </Button>
-                <Button variant="ghost" className="w-full h-12 rounded-xl" onClick={() => navigate("/auth")}>Back to Login</Button>
+                <Button type="button" variant="ghost" className="w-full h-12 rounded-xl" onClick={async () => {
+                  try { sessionStorage.removeItem(RECOVERY_FLAG); } catch {}
+                  await supabase.auth.signOut();
+                  navigate("/auth", { replace: true });
+                }}>Back to Login</Button>
               </form>
             )}
           </CardContent>

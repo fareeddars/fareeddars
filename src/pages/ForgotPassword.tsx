@@ -26,8 +26,10 @@ const ForgotPassword = () => {
     setLoading(true);
     try {
       const siteUrl = (import.meta.env.VITE_PUBLIC_SITE_URL ?? window.location.origin).replace(/\/+$/, "");
+      // Include an explicit marker so the app can detect the recovery flow even
+      // when Supabase's PKCE flow strips the hash and turns it into `?code=...`.
       const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-        redirectTo: `${siteUrl}/reset-password`,
+        redirectTo: `${siteUrl}/reset-password?type=recovery`,
       });
       if (error) throw error;
       setSent(true);

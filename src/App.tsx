@@ -41,20 +41,27 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const RECOVERY_FLAG = "pw_recovery_active";
+
 const RecoveryRedirect = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const type = params.get("type");
-    const accessToken = params.get("access_token");
-    const hash = window.location.hash;
-    const isRecoveryHash = hash.includes("access_token=") && hash.includes("type=recovery");
-    const isRecoveryQuery = type === "recovery" || Boolean(accessToken);
+    const hash = window.location.hash || "";
+    const hashParams = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+    const type = params.get("type") || hashParams.get("type");
+    const hasCode = params.has("code");
+    const hasAccessToken = hashParams.has("access_token");
+    const isRecovery = type === "recovery";
 
-    if ((isRecoveryHash || isRecoveryQuery) && location.pathname !== "/reset-password") {
-      navigate(`/reset-password${location.search}${hash}`, { replace: true });
+    // Any URL that looks like the recovery landing → lock into /reset-password
+    if (isRecovery || (hasCode && location.pathname === "/reset-password") || (hasAccessToken && type === "recovery")) {
+      try { sessionStorage.setItem(RECOVERY_FLAG, "1"); } catch {}
+      if (location.pathname !== "/reset-password") {
+        navigate(`/reset-password${location.search}${hash}`, { replace: true });
+      }
     }
   }, [location, navigate]);
 
