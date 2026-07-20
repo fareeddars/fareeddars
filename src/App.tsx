@@ -20,6 +20,7 @@ import Settings from "@/pages/Settings";
 import Seasons from "@/pages/Seasons";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
+import OAuthConsent from "@/pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ const App = () => (
             <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
             <Route path="/forgot-password" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/seasons" element={<ProtectedRoute><Seasons /></ProtectedRoute>} />
             <Route path="/farmers" element={<ProtectedRoute><Farmers /></ProtectedRoute>} />
