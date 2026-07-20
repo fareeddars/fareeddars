@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://quegwrgjqedkhxztvtpa.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "agri-ledger-mcp",
+      "version": "0.1.0",
+      "title": "Agri Ledger"
+    },
+    "tools": [
+      {
+        "name": "list_farmers",
+        "title": "List farmers",
+        "description": "List farmers visible to the signed-in user, optionally filtered by name.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "description": "Optional case-insensitive name filter"
+            },
+            "limit": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Max rows (default 50)"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_ledger_entries",
+        "title": "List ledger entries",
+        "description": "List ledger entries (expense/sale/payment) for the signed-in user, optionally filtered by farmer, type, or date range.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "farmer_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "entry_type": {
+              "type": "string",
+              "enum": [
+                "expense",
+                "sale",
+                "payment"
+              ]
+            },
+            "from_date": {
+              "type": "string",
+              "description": "ISO date lower bound (inclusive)"
+            },
+            "to_date": {
+              "type": "string",
+              "description": "ISO date upper bound (inclusive)"
+            },
+            "limit": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_inventory",
+        "title": "List inventory items",
+        "description": "List inventory items (name, stock, price per unit) for the signed-in user.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "low_stock_only": {
+              "type": "boolean",
+              "description": "Only return items at or below their low-stock threshold"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_ledger_entry",
+        "title": "Create ledger entry",
+        "description": "Create a ledger entry (expense, sale, or payment) for a farmer as the signed-in user.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "farmer_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "entry_type": {
+              "type": "string",
+              "enum": [
+                "expense",
+                "sale",
+                "payment"
+              ]
+            },
+            "amount": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "category": {
+              "type": "string"
+            },
+            "entry_date": {
+              "type": "string",
+              "description": "ISO date; defaults to today"
+            },
+            "season_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "farmer_season_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "farmer_id",
+            "entry_type",
+            "amount",
+            "description"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
