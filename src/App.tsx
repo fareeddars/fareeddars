@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading, isPasswordRecovery } = useAuth();
-  if (loading) return null;
+  if (loading) return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading...</div>;
   if (session && isPasswordRecovery) return <Navigate to="/reset-password" replace />;
   if (session) return <Navigate to="/" replace />;
   return <>{children}</>;

@@ -90,31 +90,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializedRef.current = true;
 
     const initializeAuth = async () => {
-      // Detect recovery from URL OR from a flag we persist across the PKCE
-      // code-exchange redirect (Supabase strips ?code=... after using it).
-      const urlParams = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
-      const isRecoveryType = urlParams.get('type') === 'recovery' || hashParams.get('type') === 'recovery';
-      let recoveryFlag = false;
-      try { recoveryFlag = sessionStorage.getItem('pw_recovery_active') === '1'; } catch {}
-      const onResetPage = window.location.pathname === '/reset-password';
-      const hasRecoveryToken = Boolean(accessToken || isRecoveryType || (recoveryFlag && onResetPage));
+      try {
+        // Detect recovery from URL OR from a flag we persist across the PKCE
+        // code-exchange redirect (Supabase strips ?code=... after using it).
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+        const isRecoveryType = urlParams.get('type') === 'recovery' || hashParams.get('type') === 'recovery';
+        let recoveryFlag = false;
+        try { recoveryFlag = sessionStorage.getItem('pw_recovery_active') === '1'; } catch {}
+        const onResetPage = window.location.pathname === '/reset-password';
+        const hasRecoveryToken = Boolean(accessToken || isRecoveryType || (recoveryFlag && onResetPage));
 
-      if (hasRecoveryToken) {
-        console.log('[Auth] Recovery flow detected');
-        setIsPasswordRecovery(true);
-        try { sessionStorage.setItem('pw_recovery_active', '1'); } catch {}
-      }
+        if (hasRecoveryToken) {
+          console.log('[Auth] Recovery flow detected');
+          setIsPasswordRecovery(true);
+          try { sessionStorage.setItem('pw_recovery_active', '1'); } catch {}
+        }
 
-      const { data: { session: restoredSession } } = await supabase.auth.getSession();
-      if (restoredSession?.user) {
-        setSession(restoredSession);
-        setUser(restoredSession.user);
-        fetchUserData(restoredSession.user.id);
-        bootOfflineSync();
+        const { data: { session: restoredSession } } = await supabase.auth.getSession();
+        if (restoredSession?.user) {
+          setSession(restoredSession);
+          setUser(restoredSession.user);
+          fetchUserData(restoredSession.user.id);
+          bootOfflineSync();
+        }
+      } catch (error) {
+        console.error('[Auth] initialization failed:', error);
+        currentUserIdRef.current = null;
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setUserRole(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initializeAuth();
