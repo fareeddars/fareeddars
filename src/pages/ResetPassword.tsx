@@ -22,11 +22,6 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Any visit to /reset-password is considered a recovery attempt — persist
-    // the flag so the AuthContext keeps us here after the PKCE code exchange
-    // fires a normal SIGNED_IN event.
-    try { sessionStorage.setItem(RECOVERY_FLAG, "1"); } catch {}
-
     const checkRecoverySession = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -34,6 +29,11 @@ const ResetPassword = () => {
         const hasCode = urlParams.has("code");
         const hasAccessToken = urlParams.has("access_token") || hashParams.has("access_token");
         const isRecoveryType = urlParams.get("type") === "recovery" || hashParams.get("type") === "recovery";
+        const hasRecoveryMarker = hasCode || hasAccessToken || isRecoveryType;
+
+        if (hasRecoveryMarker) {
+          try { sessionStorage.setItem(RECOVERY_FLAG, "1"); } catch {}
+        }
 
         // Wait up to ~2.5s for Supabase's detectSessionInUrl to finish the
         // implicit-hash pickup OR the PKCE ?code=... exchange.
@@ -45,9 +45,10 @@ const ResetPassword = () => {
         }
 
         if (!sessionFound) {
-          if (hasCode || hasAccessToken || isRecoveryType) {
+          if (hasRecoveryMarker) {
             setRecoveryError("The reset link is invalid or has expired. Please request a new password reset link.");
           } else {
+            try { sessionStorage.removeItem(RECOVERY_FLAG); } catch {}
             setRecoveryError("This page is only accessible from the reset link sent to your email.");
           }
         }
@@ -117,8 +118,14 @@ const ResetPassword = () => {
                   <CheckCircle2 className="mx-auto mb-2 h-10 w-10 text-primary" />
                   <p className="text-sm">Please open the password reset link from your email. If you didn’t receive one, request a new link.</p>
                 </div>
-                <Button variant="outline" className="w-full h-12 rounded-xl" onClick={() => navigate("/forgot-password")}>Request new link</Button>
-                <Button variant="ghost" className="w-full h-12 rounded-xl" onClick={() => navigate("/auth")}>Back to Login</Button>
+                <Button variant="outline" className="w-full h-12 rounded-xl" onClick={() => {
+                  try { sessionStorage.removeItem(RECOVERY_FLAG); } catch {}
+                  navigate("/forgot-password");
+                }}>Request new link</Button>
+                <Button variant="ghost" className="w-full h-12 rounded-xl" onClick={() => {
+                  try { sessionStorage.removeItem(RECOVERY_FLAG); } catch {}
+                  navigate("/auth");
+                }}>Back to Login</Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
