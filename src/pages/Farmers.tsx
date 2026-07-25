@@ -473,8 +473,8 @@ const Farmers = () => {
               <div className="px-6 relative pb-2 -mt-12">
                 <div className="flex justify-between items-end">
                   <div className="h-24 w-24 rounded-full bg-card p-1 shadow-xl">
-                    <div className="h-full w-full rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900 dark:to-blue-900 flex items-center justify-center text-3xl font-bold text-indigo-700 dark:text-indigo-300 font-serif border border-indigo-200 dark:border-indigo-800">
-                      {selectedFarmer.name.charAt(0).toUpperCase()}
+                    <div className="h-full w-full rounded-full overflow-hidden bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900 dark:to-blue-900 border border-indigo-200 dark:border-indigo-800">
+                      <img src={selectedFarmer.photo_url || dynamicFarmerAvatar(selectedFarmer.name)} alt={selectedFarmer.name} className="h-full w-full object-cover" />
                     </div>
                   </div>
                   {isManagerOrAdmin && (
