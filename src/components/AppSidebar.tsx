@@ -4,18 +4,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
-  SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  LayoutDashboard, Users, BookOpen, Package, TrendingUp, FileText, Settings, LogOut, Sprout, Shield, Leaf,
+  LayoutDashboard, Users, BookOpen, Package, TrendingUp, FileText, Settings, LogOut, Shield, Leaf, ExternalLink
 } from "lucide-react";
 
 const AppSidebar = () => {
-  const { profile, userRole, isAdmin, signOut } = useAuth();
+  const { profile, isAdmin, signOut } = useAuth();
   const { t } = useLanguage();
   const { seasons, selectedSeason, setSelectedSeasonId } = useSeason();
   const navigate = useNavigate();
@@ -47,30 +46,37 @@ const AppSidebar = () => {
   ];
 
   return (
-    <Sidebar className="border-none bg-[var(--gradient-sidebar)]">
-      <SidebarHeader className="border-b border-sidebar-border/30 p-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sidebar-primary/20 backdrop-blur-sm shadow-lg">
-            <Sprout className="h-6 w-6 text-sidebar-foreground" />
+    <Sidebar className="border-r border-[#2A4D3B]/40 bg-[#12281D] text-[#F4EFEA] min-w-0 shadow-2xl">
+      {/* Sidebar Header User Card */}
+      <SidebarHeader className="border-b border-[#2A4D3B]/30 p-4">
+        <div className="flex items-center justify-between gap-3 bg-[#1B3B2B]/60 p-2.5 rounded-2xl border border-[#2A4D3B]/40">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2A4D3B]/60 text-lg font-serif font-bold text-[#E2C391] border border-[#C5A880]/30 shadow-inner">
+              {(profile?.full_name || "F").charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col truncate min-w-0">
+              <span className="text-sm font-semibold text-[#F4EFEA] truncate leading-tight">
+                {profile?.full_name || "Fareed Hussain"}
+              </span>
+              <span className="text-[11px] text-[#A6C0B2] truncate">
+                {profile?.email || "user@agriledger.com"}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-base font-bold text-sidebar-foreground leading-none tracking-tight">{t("nav.appName")}</span>
-            <Badge variant="outline" className="text-[10px] px-2 py-0 w-fit capitalize border-sidebar-foreground/30 text-sidebar-foreground/80 bg-sidebar-primary/10">
-              {userRole?.role ?? "staff"}
-            </Badge>
-          </div>
+          <ExternalLink className="h-4 w-4 shrink-0 text-[#A6C0B2] hover:text-[#E2C391] cursor-pointer transition-colors" />
         </div>
+
         {/* Season Selector */}
         {seasons.length > 0 && (
           <div className="mt-3">
             <Select value={selectedSeason?.id || ""} onValueChange={(v) => setSelectedSeasonId(v)}>
-              <SelectTrigger className="h-8 text-xs bg-sidebar-primary/10 border-sidebar-foreground/20 text-sidebar-foreground rounded-lg">
-                <Leaf className="h-3 w-3 mr-1" />
+              <SelectTrigger className="h-9 text-xs bg-[#1B3B2B]/80 border-[#2A4D3B]/60 text-[#F4EFEA] rounded-xl focus:ring-[#C5A880]">
+                <Leaf className="h-3.5 w-3.5 mr-1.5 text-[#C5A880]" />
                 <SelectValue placeholder={t("seasons.selectSeason")} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#12281D] border-[#2A4D3B] text-[#F4EFEA]">
                 {seasons.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
+                  <SelectItem key={s.id} value={s.id} className="focus:bg-[#1B3B2B] focus:text-[#E2C391]">
                     {s.name} {s.status === "active" ? "🟢" : "🔒"}
                   </SelectItem>
                 ))}
@@ -80,61 +86,109 @@ const AppSidebar = () => {
         )}
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-3">
+      <SidebarContent className="min-h-0 px-3 py-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50 px-3 mb-1">{t("nav.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNav.map((item, i) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    isActive={location.pathname === item.path}
-                    onClick={() => handleNav(item.path)}
-                    className={`rounded-xl h-10 px-3 transition-all duration-200 ${location.pathname === item.path ? "!bg-sidebar-accent !text-sidebar-accent-foreground shadow-lg shadow-sidebar-accent/40 border-l-4 border-primary-foreground" : ""}`}
-                    style={{ animationDelay: `${i * 50}ms` }}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className="font-medium">{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+            <SidebarMenu className="space-y-1.5">
+              {mainNav.map((item, i) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      onClick={() => handleNav(item.path)}
+                      className={`h-11 rounded-2xl px-4 text-sm font-medium transition-all duration-300 relative overflow-hidden ${
+                        isActive
+                          ? "text-[#F4EFEA] font-semibold border border-[#C5A880]/50 shadow-xl scale-[1.02]"
+                          : "text-[#C2D6CB] hover:bg-[#1B3B2B]/50 hover:text-[#F4EFEA]"
+                      }`}
+                      style={
+                        isActive
+                          ? {
+                              backgroundImage: `linear-gradient(rgba(27, 59, 43, 0.75), rgba(18, 40, 29, 0.85)), url('/images/wood_texture.png')`,
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                            }
+                          : undefined
+                      }
+                    >
+                      <item.icon
+                        className={`h-5 w-5 mr-2.5 transition-transform duration-300 ${
+                          isActive ? "text-[#E2C391] scale-110" : "text-[#8CA899]"
+                        }`}
+                      />
+                      <span className="tracking-wide">{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50 px-3 mb-1">{t("nav.administration")}</SidebarGroupLabel>
+          <SidebarGroup className="mt-4">
             <SidebarGroupContent>
-              <SidebarMenu>
-                {adminNav.map((item) => (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      isActive={location.pathname === item.path}
-                      onClick={() => handleNav(item.path)}
-                      className={`rounded-xl h-10 px-3 transition-all duration-200 ${location.pathname === item.path ? "!bg-sidebar-accent !text-sidebar-accent-foreground shadow-lg shadow-sidebar-accent/40 border-l-4 border-primary-foreground" : ""}`}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span className="font-medium">{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+              <SidebarMenu className="space-y-1.5">
+                {adminNav.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        onClick={() => handleNav(item.path)}
+                        className={`h-11 rounded-2xl px-4 text-sm font-medium transition-all duration-300 relative overflow-hidden ${
+                          isActive
+                            ? "text-[#F4EFEA] font-semibold border border-[#C5A880]/50 shadow-xl scale-[1.02]"
+                            : "text-[#C2D6CB] hover:bg-[#1B3B2B]/50 hover:text-[#F4EFEA]"
+                        }`}
+                        style={
+                          isActive
+                            ? {
+                                backgroundImage: `linear-gradient(rgba(27, 59, 43, 0.75), rgba(18, 40, 29, 0.85)), url('/images/wood_texture.png')`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                              }
+                            : undefined
+                        }
+                      >
+                        <item.icon
+                          className={`h-5 w-5 mr-2.5 ${
+                            isActive ? "text-[#E2C391]" : "text-[#8CA899]"
+                          }`}
+                        />
+                        <span className="tracking-wide">{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border/30 p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sidebar-primary/20 text-sidebar-foreground font-bold text-sm shrink-0">
-            {(profile?.full_name || "U").charAt(0).toUpperCase()}
+      <SidebarFooter className="border-t border-[#2A4D3B]/30 p-4">
+        <div className="flex items-center justify-between gap-3 bg-[#1B3B2B]/40 p-2.5 rounded-2xl border border-[#2A4D3B]/30">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#2A4D3B] text-sm font-serif font-bold text-[#E2C391] border border-[#C5A880]/30">
+              {(profile?.full_name || "F").charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col truncate min-w-0">
+              <span className="text-xs font-semibold text-[#F4EFEA] truncate">
+                {profile?.full_name || "Fareed Hussain"}
+              </span>
+              <span className="text-[10px] text-[#A6C0B2] truncate">
+                {profile?.email || "user@agriledger.com"}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col truncate flex-1 min-w-0">
-            <span className="text-sm font-semibold text-sidebar-foreground truncate">{profile?.full_name || "User"}</span>
-            <span className="text-[11px] text-sidebar-foreground/60 truncate">{profile?.email}</span>
-          </div>
-          <Button variant="ghost" size="icon" onClick={signOut} className="shrink-0 h-9 w-9 rounded-xl text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-primary/20">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={signOut}
+            className="shrink-0 h-8 w-8 rounded-xl text-[#A6C0B2] hover:text-[#E2C391] hover:bg-[#2A4D3B]/60"
+          >
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

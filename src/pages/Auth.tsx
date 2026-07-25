@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Sprout, Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Sprout, Loader2, Eye, EyeOff, ArrowRight, Mail, Lock } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -60,79 +60,95 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
-      {/* Gradient Background Blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute top-1/3 -right-32 w-80 h-80 rounded-full bg-accent/15 blur-3xl" />
-        <div className="absolute -bottom-32 left-1/3 w-72 h-72 rounded-full bg-destructive/8 blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-md relative z-10 animate-scale-in">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-xl mb-4">
-            <Sprout className="h-8 w-8" />
+    <div className="flex h-dvh max-h-dvh w-full items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.18),_transparent_40%),linear-gradient(135deg,_#f0fdf4_0%,_#ecfeff_45%,_#f0fdfa_100%)] px-2 py-2 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
+      <div className="mx-auto flex w-full max-w-4xl items-center justify-center">
+        <div className="w-full max-w-full rounded-[28px] border border-white/70 bg-white/85 p-3 shadow-[0_25px_90px_-30px_rgba(15,23,42,0.55)] backdrop-blur-2xl sm:rounded-[32px] sm:p-6 lg:p-8">
+          <div className="mx-auto max-w-md text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-emerald-200 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 sm:h-14 sm:w-14 lg:h-16 lg:w-16">
+              <Sprout className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
+            </div>
+            <h1 className="mt-3 text-xl font-semibold tracking-tight text-slate-950 sm:mt-4 sm:text-2xl lg:mt-6 lg:text-3xl">Agriculture Ledger</h1>
+            <p className="mt-1 text-sm font-medium text-slate-600 sm:mt-2 sm:text-base">Manage your farm business smartly</p>
           </div>
-          <h1 className="text-3xl font-serif font-bold text-foreground">Agriculture Ledger</h1>
-          <p className="text-muted-foreground mt-1">Manage your farm business smartly</p>
-        </div>
 
-        <Card className="shadow-xl border-border/50 backdrop-blur-sm">
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-xl">
-              {isLogin ? "Welcome Back" : "Create Account"}
-            </CardTitle>
-            <CardDescription>
-              {isLogin ? "Sign in to continue" : "Get started for free"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your name" required className="h-11 rounded-xl" />
-                </div>
-              )}
+          <div className="mx-auto mt-4 max-w-md rounded-[22px] border border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_40px_-20px_rgba(15,23,42,0.35)] sm:mt-6 sm:p-6 lg:mt-8 lg:p-8">
+            <div className="text-center">
+              <p className="text-base font-semibold text-slate-900 sm:text-lg">Welcome Back</p>
+              <p className="mt-1 text-sm text-slate-600">Sign in to continue</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" inputMode="email" autoComplete={isLogin ? "username" : "email"} autoCapitalize="none" autoCorrect="off" maxLength={255} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" required className="h-11 rounded-xl" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="email" className="text-sm font-semibold text-slate-700">
+                  Email
+                </Label>
                 <div className="relative">
-                  <Input id="password" type={showPw ? "text" : "password"} autoComplete={isLogin ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} maxLength={72} className="h-11 rounded-xl pr-10" />
-                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-emerald-900/70" />
+                  <Input
+                    id="email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete={isLogin ? "username" : "email"}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    maxLength={255}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="email@example.com"
+                    required
+                    className="h-14 w-full rounded-3xl border border-slate-200 bg-slate-50 pl-14 pr-4 text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-semibold text-slate-700">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-emerald-900/70" />
+                  <Input
+                    id="password"
+                    type={showPw ? "text" : "password"}
+                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    minLength={6}
+                    maxLength={72}
+                    className="h-14 w-full rounded-3xl border border-slate-200 bg-slate-50 pl-14 pr-14 text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(!showPw)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-700"
+                  >
+                    {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
-              {isLogin && (
-                <div className="text-right">
-                  <button type="button" onClick={() => navigate("/forgot-password")} className="text-sm font-semibold text-primary hover:underline">
-                    Forgot Password?
-                  </button>
-                </div>
-              )}
-              <Button type="submit" className="w-full h-12 text-base rounded-xl font-semibold gap-2 group" disabled={loading}>
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    {isLogin ? "Sign In" : "Create Account"}
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
+
+              <div className="flex justify-end">
+                <button type="button" onClick={() => navigate("/forgot-password")} className="text-sm font-semibold text-emerald-800 transition hover:text-emerald-950">
+                  Forgot Password?
+                </button>
+              </div>
+
+              <Button type="submit" className="flex w-full items-center justify-center gap-2 rounded-3xl bg-emerald-800 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-emerald-900/10 transition hover:bg-emerald-900" disabled={loading}>
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Sign In"}
+                {!loading ? <ArrowRight className="h-4 w-4" /> : null}
               </Button>
             </form>
-            <div className="mt-6 text-center text-sm">
-              <button type="button" className="text-primary hover:underline font-semibold transition-colors" onClick={() => setIsLogin(!isLogin)}>
-                {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+
+            <p className="mt-6 text-center text-sm text-slate-600">
+              Don&apos;t have an account?{' '}
+              <button type="button" className="font-semibold text-emerald-900 underline decoration-emerald-600" onClick={() => setIsLogin(false)}>
+                Sign up
               </button>
-            </div>
-          </CardContent>
-        </Card>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
