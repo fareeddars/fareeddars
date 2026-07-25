@@ -166,6 +166,54 @@ const Farmers = () => {
 
   const renderFarmerFormFields = (formData: typeof form, setFormData: (v: typeof form) => void) => (
     <div className="space-y-5 px-1 py-2">
+      {/* Photo picker */}
+      <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2"><Camera className="h-4 w-4"/> Farmer Photo</p>
+        <div className="flex items-center gap-4">
+          <div className="h-20 w-20 rounded-2xl overflow-hidden bg-muted border border-border/60 shrink-0">
+            <img
+              src={formData.photo_url || dynamicFarmerAvatar(formData.name || "farmer")}
+              alt="Farmer preview"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div className="flex-1 flex flex-col gap-2">
+            <label className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-background border border-border cursor-pointer text-sm font-semibold hover:bg-muted/60 transition">
+              <Camera className="h-4 w-4" />
+              {formData.photo_url ? "Change photo" : "Upload photo"}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const url = await fileToCompressedDataUrl(file);
+                    setFormData({ ...formData, photo_url: url });
+                  } catch {
+                    toast({ title: "Could not read image", variant: "destructive" });
+                  } finally {
+                    e.target.value = "";
+                  }
+                }}
+              />
+            </label>
+            {formData.photo_url && (
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, photo_url: "" })}
+                className="inline-flex items-center gap-1.5 text-xs text-destructive hover:underline self-start"
+              >
+                <X className="h-3 w-3" /> Remove photo (use dynamic avatar)
+              </button>
+            )}
+            <p className="text-[11px] text-muted-foreground leading-snug">Optional. If not provided, a dynamic avatar will be generated automatically.</p>
+          </div>
+        </div>
+      </div>
+
       {/* Personal Info */}
       <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
         <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2"><User className="h-4 w-4"/> {t("farmers.personalInfo")}</p>
