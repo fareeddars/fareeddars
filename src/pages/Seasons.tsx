@@ -192,12 +192,17 @@ const Seasons = () => {
           return (
             <Card
               key={season.id}
-              className={`cursor-pointer group relative overflow-hidden bg-card/60 backdrop-blur-xl transition-all duration-500 hover:-translate-y-1.5 animate-fade-in ${
+              className={`cursor-pointer group relative overflow-hidden transition-all duration-500 hover:-translate-y-1.5 animate-fade-in ${
                 isSelected 
                   ? "ring-2 ring-emerald-500 shadow-2xl shadow-emerald-500/20" 
                   : "hover:shadow-xl shadow-sm border-border/50"
               } ${isActive ? "border-emerald-500/30" : "opacity-80 hover:opacity-100"}`}
-              style={{ animationDelay: `${i * 100}ms` }}
+              style={{
+                animationDelay: `${i * 100}ms`,
+                backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${getSeasonBackground(season.name)})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
               onClick={() => setSelectedSeasonId(season.id)}
             >
               {/* Top Accent Bar */}
@@ -209,13 +214,13 @@ const Seasons = () => {
                     <div className={`flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 shrink-0 ${
                       isActive 
                         ? "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 dark:from-emerald-900/50 dark:to-teal-900/50 dark:text-emerald-400" 
-                        : "bg-muted text-muted-foreground"
+                        : "bg-white/90 text-emerald-800"
                     }`}>
                       <Leaf className="h-4 w-4 sm:h-6 sm:w-6" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-sm sm:text-lg font-bold text-foreground font-serif tracking-tight truncate">{season.name}</h3>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground font-medium mt-0.5 truncate">
+                      <h3 className="text-sm sm:text-lg font-bold text-white font-serif tracking-tight drop-shadow-sm truncate">{season.name}</h3>
+                      <p className="text-[10px] sm:text-xs text-white/80 font-medium mt-0.5 truncate">
                         {season.start_date} {season.end_date ? `→ ${season.end_date}` : ""}
                       </p>
                     </div>
