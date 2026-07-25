@@ -57,9 +57,10 @@ interface Farmer {
   cnic: string | null;
   landlord: string | null;
   notes: string | null;
+  photo_url: string | null;
 }
 
-const emptyForm = { name: "", phone: "", address: "", farm_details: "", initial_balance: "0", cnic: "", landlord: "", notes: "" };
+const emptyForm = { name: "", phone: "", address: "", farm_details: "", initial_balance: "0", cnic: "", landlord: "", notes: "", photo_url: "" };
 
 const Farmers = () => {
   const { user, isManagerOrAdmin, isAdmin } = useAuth();
