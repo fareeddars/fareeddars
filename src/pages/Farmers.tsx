@@ -11,8 +11,38 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Phone, MapPin, Pencil, Trash2, Users, UserPlus, CreditCard, User, Home, StickyNote, BadgeDollarSign, Wallet, Leaf } from "lucide-react";
+import { Plus, Search, Phone, MapPin, Pencil, Trash2, Users, UserPlus, CreditCard, User, Home, StickyNote, BadgeDollarSign, Wallet, Leaf, Camera, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+
+// Compress an image file to a small JPEG data URL (~max 384px, ~0.8 quality)
+async function fileToCompressedDataUrl(file: File, maxDim = 384, quality = 0.82): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = reject;
+    i.src = dataUrl;
+  });
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, w, h);
+  return canvas.toDataURL("image/jpeg", quality);
+}
+
+// Deterministic dynamic farmer avatar based on name
+function dynamicFarmerAvatar(name: string): string {
+  const seed = encodeURIComponent((name || "farmer").trim().toLowerCase());
+  return `https://api.dicebear.com/7.x/personas/svg?seed=${seed}&backgroundType=gradientLinear&backgroundColor=b6e3f4,c0aede,ffd5dc,ffdfbf`;
+}
 
 interface Farmer {
   id: string;
