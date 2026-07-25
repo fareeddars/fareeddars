@@ -395,8 +395,8 @@ const Farmers = () => {
             
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-5 pt-3 sm:pt-5 flex flex-row items-start justify-between relative z-10">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 text-indigo-700 dark:text-indigo-400 text-base sm:text-xl font-bold shadow-md shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
-                  {farmer.name.charAt(0).toUpperCase()}
+                <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 shadow-md shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                  <img src={farmer.photo_url || dynamicFarmerAvatar(farmer.name)} alt={farmer.name} className="h-full w-full object-cover" loading="lazy" />
                 </div>
                 <div className="min-w-0">
                   <CardTitle className="text-sm sm:text-lg font-bold font-serif leading-tight truncate">{farmer.name}</CardTitle>
