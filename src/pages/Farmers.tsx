@@ -106,6 +106,7 @@ const Farmers = () => {
         name: trimmedName, phone: form.phone.trim() || null, address: form.address.trim() || null,
         farm_details: form.farm_details.trim() || null, initial_balance: bal || 0, created_by: user.id,
         cnic: form.cnic.trim() || null, landlord: form.landlord.trim() || null, notes: form.notes.trim() || null,
+        photo_url: form.photo_url || null,
       });
       toast({ title: isOnline() ? "Farmer added successfully" : "Saved offline — will sync" });
       setForm({ ...emptyForm }); setOpen(false); setConfirmOpen(false); fetchFarmers();
@@ -120,6 +121,7 @@ const Farmers = () => {
       name: farmer.name, phone: farmer.phone || "", address: farmer.address || "",
       farm_details: farmer.farm_details || "", initial_balance: String(farmer.initial_balance),
       cnic: farmer.cnic || "", landlord: farmer.landlord || "", notes: farmer.notes || "",
+      photo_url: farmer.photo_url || "",
     });
     setEditOpen(true);
   };
@@ -131,6 +133,7 @@ const Farmers = () => {
         name: editForm.name, phone: editForm.phone || null, address: editForm.address || null,
         farm_details: editForm.farm_details || null, initial_balance: Number(editForm.initial_balance) || 0,
         cnic: editForm.cnic || null, landlord: editForm.landlord || null, notes: editForm.notes || null,
+        photo_url: editForm.photo_url || null,
       });
       toast({ title: isOnline() ? "Farmer updated successfully" : "Updated offline — will sync" });
       setEditOpen(false); setEditingFarmer(null); fetchFarmers();
