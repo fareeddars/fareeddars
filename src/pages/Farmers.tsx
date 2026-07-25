@@ -11,8 +11,38 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Phone, MapPin, Pencil, Trash2, Users, UserPlus, CreditCard, User, Home, StickyNote, BadgeDollarSign, Wallet, Leaf } from "lucide-react";
+import { Plus, Search, Phone, MapPin, Pencil, Trash2, Users, UserPlus, CreditCard, User, Home, StickyNote, BadgeDollarSign, Wallet, Leaf, Camera, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+
+// Compress an image file to a small JPEG data URL (~max 384px, ~0.8 quality)
+async function fileToCompressedDataUrl(file: File, maxDim = 384, quality = 0.82): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = reject;
+    i.src = dataUrl;
+  });
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, w, h);
+  return canvas.toDataURL("image/jpeg", quality);
+}
+
+// Deterministic dynamic farmer avatar based on name
+function dynamicFarmerAvatar(name: string): string {
+  const seed = encodeURIComponent((name || "farmer").trim().toLowerCase());
+  return `https://api.dicebear.com/7.x/personas/svg?seed=${seed}&backgroundType=gradientLinear&backgroundColor=b6e3f4,c0aede,ffd5dc,ffdfbf`;
+}
 
 interface Farmer {
   id: string;
@@ -27,9 +57,10 @@ interface Farmer {
   cnic: string | null;
   landlord: string | null;
   notes: string | null;
+  photo_url: string | null;
 }
 
-const emptyForm = { name: "", phone: "", address: "", farm_details: "", initial_balance: "0", cnic: "", landlord: "", notes: "" };
+const emptyForm = { name: "", phone: "", address: "", farm_details: "", initial_balance: "0", cnic: "", landlord: "", notes: "", photo_url: "" };
 
 const Farmers = () => {
   const { user, isManagerOrAdmin, isAdmin } = useAuth();
@@ -75,6 +106,7 @@ const Farmers = () => {
         name: trimmedName, phone: form.phone.trim() || null, address: form.address.trim() || null,
         farm_details: form.farm_details.trim() || null, initial_balance: bal || 0, created_by: user.id,
         cnic: form.cnic.trim() || null, landlord: form.landlord.trim() || null, notes: form.notes.trim() || null,
+        photo_url: form.photo_url || null,
       });
       toast({ title: isOnline() ? "Farmer added successfully" : "Saved offline — will sync" });
       setForm({ ...emptyForm }); setOpen(false); setConfirmOpen(false); fetchFarmers();
@@ -89,6 +121,7 @@ const Farmers = () => {
       name: farmer.name, phone: farmer.phone || "", address: farmer.address || "",
       farm_details: farmer.farm_details || "", initial_balance: String(farmer.initial_balance),
       cnic: farmer.cnic || "", landlord: farmer.landlord || "", notes: farmer.notes || "",
+      photo_url: farmer.photo_url || "",
     });
     setEditOpen(true);
   };
@@ -100,6 +133,7 @@ const Farmers = () => {
         name: editForm.name, phone: editForm.phone || null, address: editForm.address || null,
         farm_details: editForm.farm_details || null, initial_balance: Number(editForm.initial_balance) || 0,
         cnic: editForm.cnic || null, landlord: editForm.landlord || null, notes: editForm.notes || null,
+        photo_url: editForm.photo_url || null,
       });
       toast({ title: isOnline() ? "Farmer updated successfully" : "Updated offline — will sync" });
       setEditOpen(false); setEditingFarmer(null); fetchFarmers();
@@ -132,6 +166,54 @@ const Farmers = () => {
 
   const renderFarmerFormFields = (formData: typeof form, setFormData: (v: typeof form) => void) => (
     <div className="space-y-5 px-1 py-2">
+      {/* Photo picker */}
+      <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2"><Camera className="h-4 w-4"/> Farmer Photo</p>
+        <div className="flex items-center gap-4">
+          <div className="h-20 w-20 rounded-2xl overflow-hidden bg-muted border border-border/60 shrink-0">
+            <img
+              src={formData.photo_url || dynamicFarmerAvatar(formData.name || "farmer")}
+              alt="Farmer preview"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div className="flex-1 flex flex-col gap-2">
+            <label className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-background border border-border cursor-pointer text-sm font-semibold hover:bg-muted/60 transition">
+              <Camera className="h-4 w-4" />
+              {formData.photo_url ? "Change photo" : "Upload photo"}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const url = await fileToCompressedDataUrl(file);
+                    setFormData({ ...formData, photo_url: url });
+                  } catch {
+                    toast({ title: "Could not read image", variant: "destructive" });
+                  } finally {
+                    e.target.value = "";
+                  }
+                }}
+              />
+            </label>
+            {formData.photo_url && (
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, photo_url: "" })}
+                className="inline-flex items-center gap-1.5 text-xs text-destructive hover:underline self-start"
+              >
+                <X className="h-3 w-3" /> Remove photo (use dynamic avatar)
+              </button>
+            )}
+            <p className="text-[11px] text-muted-foreground leading-snug">Optional. If not provided, a dynamic avatar will be generated automatically.</p>
+          </div>
+        </div>
+      </div>
+
       {/* Personal Info */}
       <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
         <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2"><User className="h-4 w-4"/> {t("farmers.personalInfo")}</p>
@@ -313,8 +395,8 @@ const Farmers = () => {
             
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-5 pt-3 sm:pt-5 flex flex-row items-start justify-between relative z-10">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 text-indigo-700 dark:text-indigo-400 text-base sm:text-xl font-bold shadow-md shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
-                  {farmer.name.charAt(0).toUpperCase()}
+                <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 shadow-md shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                  <img src={farmer.photo_url || dynamicFarmerAvatar(farmer.name)} alt={farmer.name} className="h-full w-full object-cover" loading="lazy" />
                 </div>
                 <div className="min-w-0">
                   <CardTitle className="text-sm sm:text-lg font-bold font-serif leading-tight truncate">{farmer.name}</CardTitle>
@@ -391,8 +473,8 @@ const Farmers = () => {
               <div className="px-6 relative pb-2 -mt-12">
                 <div className="flex justify-between items-end">
                   <div className="h-24 w-24 rounded-full bg-card p-1 shadow-xl">
-                    <div className="h-full w-full rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900 dark:to-blue-900 flex items-center justify-center text-3xl font-bold text-indigo-700 dark:text-indigo-300 font-serif border border-indigo-200 dark:border-indigo-800">
-                      {selectedFarmer.name.charAt(0).toUpperCase()}
+                    <div className="h-full w-full rounded-full overflow-hidden bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900 dark:to-blue-900 border border-indigo-200 dark:border-indigo-800">
+                      <img src={selectedFarmer.photo_url || dynamicFarmerAvatar(selectedFarmer.name)} alt={selectedFarmer.name} className="h-full w-full object-cover" />
                     </div>
                   </div>
                   {isManagerOrAdmin && (
