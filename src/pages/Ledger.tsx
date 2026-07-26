@@ -401,14 +401,6 @@ const Ledger = () => {
       )}
 
       {/* --- Premium Header Banner with crop background --- */}
-      {(() => {
-        const seasonName = (selectedSeason?.name || "").toLowerCase();
-        const bg = seasonName.includes("cotton") || seasonName.includes("kapas") ? "/cotton-bg.jpg"
-          : seasonName.includes("wheat") || seasonName.includes("gandum") ? "/wheat-bg.jpg"
-          : seasonName.includes("cane") || seasonName.includes("kamad") ? "/sugarcane-bg.jpg"
-          : "/sugarcane-bg.jpg";
-        return null;
-      })()}
       <div
         className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-10 text-white shadow-2xl border border-violet-900/40 bg-cover bg-center"
         style={{
