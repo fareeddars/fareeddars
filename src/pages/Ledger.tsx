@@ -930,10 +930,11 @@ const Ledger = () => {
                       </TableCell>
                     )}
                   </TableRow>
-                ))}
+                  );
+                })}
                 {filteredEntries.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 6 : 5} className="h-32 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center">
                         <BookOpen className="h-8 w-8 mb-2 opacity-20" />
                         {hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}
