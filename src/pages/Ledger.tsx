@@ -255,7 +255,9 @@ const Ledger = () => {
       }
 
       // ===== Optimistic UI: update list instantly =====
-      const farmerName = (farmerSeasons.find((x: any) => x.farmer_id === farmerId) as any)?.farmers?.name || "";
+      const farmerRow = (farmerSeasons.find((x: any) => x.farmer_id === farmerId) as any)?.farmers;
+      const farmerName = farmerRow?.name || "";
+      const farmerPhoto = farmerRow?.photo_url || null;
       const nowIso = new Date().toISOString();
 
       if (editingId) {
@@ -271,7 +273,7 @@ const Ledger = () => {
           id: tempId,
           created_at: nowIso,
           updated_at: nowIso,
-          farmers: { name: farmerName },
+          farmers: { name: farmerName, photo_url: farmerPhoto },
         };
         (entryData as any).id = tempId;
         setEntries((prev) => [optimisticEntry, ...prev]);
