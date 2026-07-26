@@ -400,22 +400,40 @@ const Ledger = () => {
         </div>
       )}
 
-      {/* --- Premium Header Banner --- */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-violet-950 via-purple-900 to-violet-900 p-4 sm:p-10 text-white shadow-2xl border border-violet-700/50">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-purple-400/10 -translate-y-1/3 translate-x-1/4 blur-[80px] animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-violet-400/20 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
-        
+      {/* --- Premium Header Banner with crop background --- */}
+      {(() => {
+        const seasonName = (selectedSeason?.name || "").toLowerCase();
+        const bg = seasonName.includes("cotton") || seasonName.includes("kapas") ? "/cotton-bg.jpg"
+          : seasonName.includes("wheat") || seasonName.includes("gandum") ? "/wheat-bg.jpg"
+          : seasonName.includes("cane") || seasonName.includes("kamad") ? "/sugarcane-bg.jpg"
+          : "/sugarcane-bg.jpg";
+        return null;
+      })()}
+      <div
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-10 text-white shadow-2xl border border-violet-900/40 bg-cover bg-center"
+        style={{
+          backgroundImage: `linear-gradient(120deg, rgba(46,16,101,0.92) 0%, rgba(76,29,149,0.82) 45%, rgba(88,28,135,0.75) 100%), url(${
+            (() => {
+              const n = (selectedSeason?.name || "").toLowerCase();
+              if (n.includes("cotton") || n.includes("kapas")) return "/cotton-bg.jpg";
+              if (n.includes("wheat") || n.includes("gandum")) return "/wheat-bg.jpg";
+              return "/sugarcane-bg.jpg";
+            })()
+          })`,
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
         <div className="relative z-10 flex flex-col xl:flex-row gap-4 sm:gap-8 justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-            <div className="hidden sm:flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner shrink-0">
-              <BookOpen className="h-10 w-10 text-purple-100" />
+            <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-xl border border-white/20 shadow-inner shrink-0">
+              <BookOpen className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-sm mb-1 sm:mb-2">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-lg mb-1 sm:mb-2">
                 {t("ledger.title")}
               </h1>
-              <p className="text-purple-100/80 text-xs sm:text-base font-medium tracking-wide max-w-lg">
-                {t("ledger.subtitle")} {selectedSeason ? `— ${selectedSeason.name}` : ""}
+              <p className="text-white/85 text-xs sm:text-base font-medium tracking-wide max-w-lg drop-shadow">
+                Track expenses, sales, and payments{selectedSeason ? ` — ${selectedSeason.name}` : ""}
               </p>
             </div>
           </div>
