@@ -400,22 +400,32 @@ const Ledger = () => {
         </div>
       )}
 
-      {/* --- Premium Header Banner --- */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-violet-950 via-purple-900 to-violet-900 p-4 sm:p-10 text-white shadow-2xl border border-violet-700/50">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-purple-400/10 -translate-y-1/3 translate-x-1/4 blur-[80px] animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-violet-400/20 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
-        
+      {/* --- Premium Header Banner with crop background --- */}
+      <div
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-10 text-white shadow-2xl border border-violet-900/40 bg-cover bg-center"
+        style={{
+          backgroundImage: `linear-gradient(120deg, rgba(46,16,101,0.92) 0%, rgba(76,29,149,0.82) 45%, rgba(88,28,135,0.75) 100%), url(${
+            (() => {
+              const n = (selectedSeason?.name || "").toLowerCase();
+              if (n.includes("cotton") || n.includes("kapas")) return "/cotton-bg.jpg";
+              if (n.includes("wheat") || n.includes("gandum")) return "/wheat-bg.jpg";
+              return "/sugarcane-bg.jpg";
+            })()
+          })`,
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
         <div className="relative z-10 flex flex-col xl:flex-row gap-4 sm:gap-8 justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-            <div className="hidden sm:flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner shrink-0">
-              <BookOpen className="h-10 w-10 text-purple-100" />
+            <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-xl border border-white/20 shadow-inner shrink-0">
+              <BookOpen className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-sm mb-1 sm:mb-2">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white drop-shadow-lg mb-1 sm:mb-2">
                 {t("ledger.title")}
               </h1>
-              <p className="text-purple-100/80 text-xs sm:text-base font-medium tracking-wide max-w-lg">
-                {t("ledger.subtitle")} {selectedSeason ? `— ${selectedSeason.name}` : ""}
+              <p className="text-white/85 text-xs sm:text-base font-medium tracking-wide max-w-lg drop-shadow">
+                Track expenses, sales, and payments{selectedSeason ? ` — ${selectedSeason.name}` : ""}
               </p>
             </div>
           </div>
@@ -612,59 +622,33 @@ const Ledger = () => {
       </div>
 
       {/* --- Premium Summary Cards --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="border-red-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-3 sm:p-5">
-            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3">
-              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-                <TrendingDown className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-red-500" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        {[
+          { key: "expense", label: t("ledger.expense"), value: totalExpenses, Icon: TrendingDown, accent: "from-rose-50 to-rose-100/40 dark:from-rose-950/40 dark:to-rose-900/20", ring: "ring-rose-200/70 dark:ring-rose-900/40", iconBg: "bg-rose-100 dark:bg-rose-900/40", iconText: "text-rose-500", valueText: "text-rose-600 dark:text-rose-400" },
+          { key: "sale", label: t("ledger.sale"), value: totalSales, Icon: TrendingUp, accent: "from-emerald-50 to-emerald-100/40 dark:from-emerald-950/40 dark:to-emerald-900/20", ring: "ring-emerald-200/70 dark:ring-emerald-900/40", iconBg: "bg-emerald-100 dark:bg-emerald-900/40", iconText: "text-emerald-500", valueText: "text-emerald-600 dark:text-emerald-400" },
+          { key: "payment", label: t("ledger.payment"), value: totalPayments, Icon: Wallet, accent: "from-amber-50 to-amber-100/40 dark:from-amber-950/40 dark:to-amber-900/20", ring: "ring-amber-200/70 dark:ring-amber-900/40", iconBg: "bg-amber-100 dark:bg-amber-900/40", iconText: "text-amber-500", valueText: "text-amber-600 dark:text-amber-400" },
+          { key: "loan", label: t("ledger.loan"), value: totalLoans, Icon: HandCoins, accent: "from-sky-50 to-sky-100/40 dark:from-sky-950/40 dark:to-sky-900/20", ring: "ring-sky-200/70 dark:ring-sky-900/40", iconBg: "bg-sky-100 dark:bg-sky-900/40", iconText: "text-sky-500", valueText: "text-sky-600 dark:text-sky-400" },
+        ].map(({ key, label, value, Icon, accent, ring, iconBg, iconText, valueText }) => (
+          <Card key={key} className={cn("relative overflow-hidden rounded-2xl border-0 ring-1 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 bg-gradient-to-br", accent, ring)}>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
+                <div className={cn("h-9 w-9 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center shrink-0", iconBg)}>
+                  <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", iconText)} />
+                </div>
               </div>
-              <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.expense")}</span>
-            </div>
-            <p className="text-sm sm:text-2xl font-bold font-mono text-red-600 dark:text-red-400 truncate">₨ {totalExpenses.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-emerald-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-3 sm:p-5">
-            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3">
-              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <TrendingUp className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-emerald-500" />
+              <div className="flex items-baseline gap-1.5">
+                <span className={cn("text-xs sm:text-sm font-semibold", valueText, "opacity-70")}>Rs</span>
+                <span className={cn("text-xl sm:text-3xl font-bold font-mono tracking-tight truncate", valueText)}>
+                  {value.toLocaleString()}
+                </span>
               </div>
-              <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.sale")}</span>
-            </div>
-            <p className="text-sm sm:text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 truncate">₨ {totalSales.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-3 sm:p-5">
-            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3">
-              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
-                <Wallet className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-amber-500" />
-              </div>
-              <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.payment")}</span>
-            </div>
-            <p className="text-sm sm:text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 truncate">₨ {totalPayments.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-500/20 bg-card/60 backdrop-blur-xl shadow-lg hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-3 sm:p-5">
-            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3">
-              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                <HandCoins className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-blue-500" />
-              </div>
-              <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("ledger.loan")}</span>
-            </div>
-            <p className="text-sm sm:text-2xl font-bold font-mono text-blue-600 dark:text-blue-400 truncate">₨ {totalLoans.toLocaleString()}</p>
-          </CardContent>
-        </Card>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2 font-medium">Total from all farmers</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
 
       {/* --- Premium Entries Table Card --- */}
       <Card className="shadow-2xl border-border/50 bg-card/80 backdrop-blur-xl rounded-3xl overflow-hidden">
@@ -832,42 +816,43 @@ const Ledger = () => {
                 <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border/40">
                   <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("common.date")}</TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.farmer")}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.type")}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden lg:table-cell">{t("ledger.category")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.category")}</TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden md:table-cell">{t("common.description")}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden sm:table-cell">{t("ledger.costAllocation")}</TableHead>
-                  <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11">{t("common.amount")} (₨)</TableHead>
+                  <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11">{t("common.amount")} (Rs)</TableHead>
                   {(canEdit || canDelete) && !isSeasonClosed && <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11 w-[100px]">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredEntries.map((e) => (
+                {filteredEntries.map((e) => {
+                  const catObj = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase());
+                  const catLabel = catObj ? t(catObj.label) : ((e as any).category ? String((e as any).category) : null);
+                  const typeLabel = e.entry_type === "expense" ? t("ledger.expense") : e.entry_type === "sale" ? t("ledger.sale") : e.entry_type === "payment" ? t("ledger.payment") : t("ledger.loan");
+                  const displayCategory = catLabel || typeLabel;
+                  return (
                   <TableRow key={e.id} className="hover:bg-muted/30 transition-colors border-b border-border/30">
-                    <TableCell className="text-xs font-medium py-3 text-muted-foreground">
+                    <TableCell className="text-xs font-medium py-3 text-muted-foreground whitespace-nowrap">
                       {e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-sm font-bold text-foreground">
-                      <div className="flex items-center gap-2">
-                        <FarmerAvatar name={e.farmers?.name} photoUrl={(e.farmers as any)?.photo_url} className="h-8 w-8" />
+                    <TableCell className="text-sm font-semibold text-foreground">
+                      <div className="flex items-center gap-2.5">
+                        <FarmerAvatar name={e.farmers?.name} photoUrl={(e.farmers as any)?.photo_url} className="h-9 w-9 ring-2 ring-white dark:ring-background shadow-sm" />
                         <span className="truncate">{e.farmers?.name ?? "—"}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{typeBadge(e.entry_type)}</TableCell>
-                    <TableCell className="capitalize text-xs hidden lg:table-cell font-medium text-muted-foreground">
-                      {(() => { const cat = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase()); return cat ? t(cat.label) : ((e as any).category || "—"); })()}
+                    <TableCell>
+                      <span className="capitalize text-sm font-medium text-foreground/90">{displayCategory}</span>
                     </TableCell>
-                    <TableCell className="text-xs hidden md:table-cell max-w-[180px] truncate text-muted-foreground" title={e.description || ""}>
+                    <TableCell className="text-sm hidden md:table-cell max-w-[260px] truncate text-muted-foreground" title={e.description || ""}>
                       {e.description || "—"}
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{getAllocationLabel(e)}</TableCell>
                     <TableCell className={cn(
-                      "text-right font-mono font-bold text-sm",
-                      e.entry_type === "expense" && "text-red-600 dark:text-red-400",
+                      "text-right font-mono font-bold text-sm whitespace-nowrap",
+                      e.entry_type === "expense" && "text-rose-600 dark:text-rose-400",
                       e.entry_type === "sale" && "text-emerald-600 dark:text-emerald-400",
                       e.entry_type === "payment" && "text-amber-600 dark:text-amber-400",
-                      e.entry_type === "loan" && "text-blue-600 dark:text-blue-400"
+                      e.entry_type === "loan" && "text-sky-600 dark:text-sky-400"
                     )}>
-                      ₨ {Number(e.amount).toLocaleString()}
+                      Rs {Number(e.amount).toLocaleString()}
                     </TableCell>
                     {(canEdit || canDelete) && !isSeasonClosed && (
                       <TableCell className="text-right py-2">
@@ -945,10 +930,11 @@ const Ledger = () => {
                       </TableCell>
                     )}
                   </TableRow>
-                ))}
+                  );
+                })}
                 {filteredEntries.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 8 : 7} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 6 : 5} className="h-32 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center">
                         <BookOpen className="h-8 w-8 mb-2 opacity-20" />
                         {hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}
