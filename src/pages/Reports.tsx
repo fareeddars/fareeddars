@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Printer, FileText, Leaf } from "lucide-react";
 import { translations, type Language } from "@/i18n/translations";
 import type { Tables } from "@/integrations/supabase/types";
+import FarmerAvatar from "@/components/FarmerAvatar";
 
 type Farmer = Tables<"farmers">;
 type LedgerEntry = Tables<"ledger_entries">;
@@ -679,7 +680,12 @@ const Reports = () => {
             const { totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, finalBalance, netProfit } = calcSections(farmerId);
             return (
               <Card key={farmerId}>
-                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4"><CardTitle className="text-sm sm:text-base">{getFarmerName(farmerId)}</CardTitle></CardHeader>
+                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                  <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                    <FarmerAvatar name={getFarmer(farmerId)?.name} photoUrl={getFarmer(farmerId)?.photo_url} className="h-8 w-8 sm:h-9 sm:w-9" />
+                    <span className="truncate">{getFarmerName(farmerId)}</span>
+                  </CardTitle>
+                </CardHeader>
                 <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
                   <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.totalSales")}</p><p className="font-mono font-medium text-emerald-600 text-sm sm:text-base">{fmt(totalSales)}</p></div>

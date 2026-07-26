@@ -74,7 +74,7 @@ export const SeasonProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user || !selectedSeasonId) return;
     const { data } = await supabase
       .from("farmer_seasons")
-      .select("*, farmers(name, phone, address)")
+      .select("*, farmers(name, phone, address, photo_url)")
       .eq("season_id", selectedSeasonId)
       .order("created_at", { ascending: false });
     if (data) setFarmerSeasons(data as unknown as FarmerSeason[]);
