@@ -816,42 +816,43 @@ const Ledger = () => {
                 <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border/40">
                   <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("common.date")}</TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.farmer")}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.type")}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden lg:table-cell">{t("ledger.category")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.category")}</TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden md:table-cell">{t("common.description")}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden sm:table-cell">{t("ledger.costAllocation")}</TableHead>
-                  <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11">{t("common.amount")} (₨)</TableHead>
+                  <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11">{t("common.amount")} (Rs)</TableHead>
                   {(canEdit || canDelete) && !isSeasonClosed && <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11 w-[100px]">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredEntries.map((e) => (
+                {filteredEntries.map((e) => {
+                  const catObj = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase());
+                  const catLabel = catObj ? t(catObj.label) : ((e as any).category ? String((e as any).category) : null);
+                  const typeLabel = e.entry_type === "expense" ? t("ledger.expense") : e.entry_type === "sale" ? t("ledger.sale") : e.entry_type === "payment" ? t("ledger.payment") : t("ledger.loan");
+                  const displayCategory = catLabel || typeLabel;
+                  return (
                   <TableRow key={e.id} className="hover:bg-muted/30 transition-colors border-b border-border/30">
-                    <TableCell className="text-xs font-medium py-3 text-muted-foreground">
+                    <TableCell className="text-xs font-medium py-3 text-muted-foreground whitespace-nowrap">
                       {e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-sm font-bold text-foreground">
-                      <div className="flex items-center gap-2">
-                        <FarmerAvatar name={e.farmers?.name} photoUrl={(e.farmers as any)?.photo_url} className="h-8 w-8" />
+                    <TableCell className="text-sm font-semibold text-foreground">
+                      <div className="flex items-center gap-2.5">
+                        <FarmerAvatar name={e.farmers?.name} photoUrl={(e.farmers as any)?.photo_url} className="h-9 w-9 ring-2 ring-white dark:ring-background shadow-sm" />
                         <span className="truncate">{e.farmers?.name ?? "—"}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{typeBadge(e.entry_type)}</TableCell>
-                    <TableCell className="capitalize text-xs hidden lg:table-cell font-medium text-muted-foreground">
-                      {(() => { const cat = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase()); return cat ? t(cat.label) : ((e as any).category || "—"); })()}
+                    <TableCell>
+                      <span className="capitalize text-sm font-medium text-foreground/90">{displayCategory}</span>
                     </TableCell>
-                    <TableCell className="text-xs hidden md:table-cell max-w-[180px] truncate text-muted-foreground" title={e.description || ""}>
+                    <TableCell className="text-sm hidden md:table-cell max-w-[260px] truncate text-muted-foreground" title={e.description || ""}>
                       {e.description || "—"}
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{getAllocationLabel(e)}</TableCell>
                     <TableCell className={cn(
-                      "text-right font-mono font-bold text-sm",
-                      e.entry_type === "expense" && "text-red-600 dark:text-red-400",
+                      "text-right font-mono font-bold text-sm whitespace-nowrap",
+                      e.entry_type === "expense" && "text-rose-600 dark:text-rose-400",
                       e.entry_type === "sale" && "text-emerald-600 dark:text-emerald-400",
                       e.entry_type === "payment" && "text-amber-600 dark:text-amber-400",
-                      e.entry_type === "loan" && "text-blue-600 dark:text-blue-400"
+                      e.entry_type === "loan" && "text-sky-600 dark:text-sky-400"
                     )}>
-                      ₨ {Number(e.amount).toLocaleString()}
+                      Rs {Number(e.amount).toLocaleString()}
                     </TableCell>
                     {(canEdit || canDelete) && !isSeasonClosed && (
                       <TableCell className="text-right py-2">
