@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Printer, FileText, Leaf } from "lucide-react";
 import { translations, type Language } from "@/i18n/translations";
 import type { Tables } from "@/integrations/supabase/types";
+import FarmerAvatar from "@/components/FarmerAvatar";
 
 type Farmer = Tables<"farmers">;
 type LedgerEntry = Tables<"ledger_entries">;

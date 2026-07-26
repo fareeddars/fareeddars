@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Leaf, Lock, Users, CheckCircle2, ArrowRight, Sprout, Trash2, RotateCcw } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import FarmerAvatar from "@/components/FarmerAvatar";
 
 const Seasons = () => {
   const { user, isAdmin, isManagerOrAdmin } = useAuth();
@@ -350,11 +351,11 @@ const Seasons = () => {
                     }`}>
                       <div className="flex items-center justify-between mb-2 sm:mb-3">
                         <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-                          <div className={`flex h-7 w-7 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br text-white text-[10px] sm:text-sm font-bold shadow-sm shrink-0 ${
-                            fs.status === 'left' ? 'from-destructive to-destructive/70' : 'from-emerald-500 to-teal-600'
-                          }`}>
-                            {fs.farmers?.name?.charAt(0).toUpperCase() || "?"}
-                          </div>
+                          <FarmerAvatar
+                            name={fs.farmers?.name}
+                            photoUrl={(fs.farmers as any)?.photo_url}
+                            className={`h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl shadow-sm ${fs.status === 'left' ? 'ring-2 ring-destructive/40' : ''}`}
+                          />
                           <div className="min-w-0">
                             <h4 className="font-bold text-xs sm:text-base text-foreground leading-tight truncate">{fs.farmers?.name || "—"}</h4>
                             <Badge variant="outline" className={`mt-0.5 text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0 shadow-sm ${
@@ -417,6 +418,7 @@ const Seasons = () => {
                     onCheckedChange={() => toggleFarmer(farmer.id)} 
                     className={isChecked ? "data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" : ""}
                   />
+                  <FarmerAvatar name={farmer.name} photoUrl={(farmer as any).photo_url} className="h-9 w-9 sm:h-10 sm:w-10" />
                   <div className="flex-1 min-w-0">
                     <span className="font-semibold text-xs sm:text-sm block truncate">{farmer.name}</span>
                     {alreadyAssigned && <span className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t("seasons.alreadyAssigned")}</span>}
