@@ -81,7 +81,7 @@ const Ledger = () => {
 
   const fetchData = async () => {
     if (isOnline()) {
-      let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name)").order("created_at", { ascending: false });
+      let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name, photo_url)").order("created_at", { ascending: false });
       if (selectedSeason) {
         entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
       }
@@ -105,9 +105,9 @@ const Ledger = () => {
       offlineRepo.listLocal("inventory"),
       offlineRepo.listLocal("farmers"),
     ]);
-    const farmerMap = new Map(localFarmers.map((f: any) => [f.id, f.name]));
+    const farmerMap = new Map(localFarmers.map((f: any) => [f.id, { name: f.name, photo_url: f.photo_url }]));
     const merged = localEntries
-      .map((e: any) => ({ ...e, farmers: farmerMap.has(e.farmer_id) ? { name: farmerMap.get(e.farmer_id) } : null }))
+      .map((e: any) => ({ ...e, farmers: farmerMap.has(e.farmer_id) ? farmerMap.get(e.farmer_id) : null }))
       .sort((a: any, b: any) => (b.created_at || "").localeCompare(a.created_at || ""));
     setEntries(merged as any);
     setInventory(localInv as any);
