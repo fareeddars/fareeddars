@@ -22,6 +22,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
+import FarmerAvatar from "@/components/FarmerAvatar";
 
 const EXPENSE_CATEGORIES = [
   { key: "Seed", label: "expense.seed" },
@@ -765,7 +766,10 @@ const Ledger = () => {
                         {e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-sm font-bold text-foreground truncate">{e.farmers?.name ?? "—"}</p>
+                    <div className="flex items-center gap-2">
+                      <FarmerAvatar name={e.farmers?.name} photoUrl={(e.farmers as any)?.photo_url} className="h-8 w-8" />
+                      <p className="text-sm font-bold text-foreground truncate">{e.farmers?.name ?? "—"}</p>
+                    </div>
                     {e.description && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{e.description}</p>
                     )}
@@ -842,7 +846,12 @@ const Ledger = () => {
                     <TableCell className="text-xs font-medium py-3 text-muted-foreground">
                       {e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-sm font-bold text-foreground">{e.farmers?.name ?? "—"}</TableCell>
+                    <TableCell className="text-sm font-bold text-foreground">
+                      <div className="flex items-center gap-2">
+                        <FarmerAvatar name={e.farmers?.name} photoUrl={(e.farmers as any)?.photo_url} className="h-8 w-8" />
+                        <span className="truncate">{e.farmers?.name ?? "—"}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>{typeBadge(e.entry_type)}</TableCell>
                     <TableCell className="capitalize text-xs hidden lg:table-cell font-medium text-muted-foreground">
                       {(() => { const cat = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase()); return cat ? t(cat.label) : ((e as any).category || "—"); })()}
