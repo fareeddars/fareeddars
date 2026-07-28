@@ -53,25 +53,25 @@ const Dashboard = () => {
       title: t("dashboard.totalFarmers") || "Total Farmers",
       value: stats.farmers || 1,
       icon: Users,
-      bgImage: "/images/farmer_card.png",
+      bgImage: "/images/farmer_card.jpg",
     },
     {
       title: t("dashboard.ledgerEntries") || "Ledger Entries",
       value: stats.entries || 1,
       icon: BookOpen,
-      bgImage: "/images/ledger_card.png",
+      bgImage: "/images/ledger_card.jpg",
     },
     {
       title: t("dashboard.inventoryItems") || "Inventory Items",
       value: stats.inventory || 6,
       icon: Package,
-      bgImage: "/images/inventory_card.png",
+      bgImage: "/images/inventory_card.jpg",
     },
     {
       title: t("dashboard.totalRevenue") || "Total Revenue",
       value: `Rs ${stats.revenue.toLocaleString()}`,
       icon: TrendingUp,
-      bgImage: "/images/revenue_card.png",
+      bgImage: "/images/revenue_card.jpg",
     },
   ];
 
@@ -87,7 +87,7 @@ const Dashboard = () => {
         {/* Farmland Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-          style={{ backgroundImage: `url('/images/hero_farmland.png')` }}
+          style={{ backgroundImage: `url('/images/hero_farmland.jpg')` }}
         />
         {/* Dark Forest Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#12281D]/95 via-[#12281D]/75 to-[#12281D]/40" />
@@ -109,7 +109,7 @@ const Dashboard = () => {
       <div 
         className="rounded-3xl p-3 sm:p-5 border border-[#2A4D3B]/40 shadow-2xl relative overflow-hidden"
         style={{
-          backgroundImage: `linear-gradient(rgba(27, 59, 43, 0.85), rgba(18, 40, 29, 0.95)), url('/images/wood_texture.png')`,
+          backgroundImage: `linear-gradient(rgba(27, 59, 43, 0.85), rgba(18, 40, 29, 0.95)), url('/images/wood_texture.jpg')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
