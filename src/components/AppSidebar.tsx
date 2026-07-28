@@ -105,7 +105,7 @@ const AppSidebar = () => {
                       style={
                         isActive
                           ? {
-                              backgroundImage: `linear-gradient(rgba(27, 59, 43, 0.75), rgba(18, 40, 29, 0.85)), url('/images/wood_texture.png')`,
+                              backgroundImage: `linear-gradient(rgba(27, 59, 43, 0.75), rgba(18, 40, 29, 0.85)), url('/images/wood_texture.jpg')`,
                               backgroundSize: "cover",
                               backgroundPosition: "center",
                             }
@@ -145,7 +145,7 @@ const AppSidebar = () => {
                         style={
                           isActive
                             ? {
-                                backgroundImage: `linear-gradient(rgba(27, 59, 43, 0.75), rgba(18, 40, 29, 0.85)), url('/images/wood_texture.png')`,
+                                backgroundImage: `linear-gradient(rgba(27, 59, 43, 0.75), rgba(18, 40, 29, 0.85)), url('/images/wood_texture.jpg')`,
                                 backgroundSize: "cover",
                                 backgroundPosition: "center",
                               }
