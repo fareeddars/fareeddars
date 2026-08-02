@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { offlineRepo, isOnline } from "@/lib/offline";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,6 +57,15 @@ const Inventory = () => {
   };
 
   useEffect(() => { fetchItems(); }, []);
+
+  // Deep-link from Dashboard quick actions
+  const location = useLocation();
+  useEffect(() => {
+    if ((location.state as { openAdd?: boolean } | null)?.openAdd) {
+      setOpen(true);
+      window.history.replaceState({}, "");
+    }
+  }, [location.state]);
 
   const downloadPDF = async () => {
     const { data: ledgerData } = await supabase
