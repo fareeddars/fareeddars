@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { offlineRepo, isOnline } from "@/lib/offline";
 import { useAuth } from "@/contexts/AuthContext";
@@ -115,6 +116,17 @@ const Ledger = () => {
   };
 
   useEffect(() => { fetchData(); }, [selectedSeason?.id]);
+
+  // Deep-link from Dashboard quick actions: open the existing entry dialog on a tab
+  const location = useLocation();
+  useEffect(() => {
+    const state = location.state as { openEntry?: boolean; tab?: string } | null;
+    if (state?.openEntry) {
+      if (state.tab) setActiveTab(state.tab);
+      setOpen(true);
+      window.history.replaceState({}, "");
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (inventoryItemId && inventoryItemId !== "none") {

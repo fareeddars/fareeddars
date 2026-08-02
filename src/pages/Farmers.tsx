@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { offlineRepo, isOnline, useOnlineStatus } from "@/lib/offline";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,6 +92,15 @@ const Farmers = () => {
   };
 
   useEffect(() => { fetchFarmers(); }, []);
+
+  // Deep-link from Dashboard quick actions
+  const location = useLocation();
+  useEffect(() => {
+    if ((location.state as { openAdd?: boolean } | null)?.openAdd) {
+      setOpen(true);
+      window.history.replaceState({}, "");
+    }
+  }, [location.state]);
 
   const handleSave = async () => {
     if (!user) return;
