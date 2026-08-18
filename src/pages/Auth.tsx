@@ -4,9 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Sprout, Loader2, Eye, EyeOff, ArrowRight, Mail, Lock } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowRight, Mail, Lock, User, Leaf, ShieldCheck, WifiOff, BarChart3 } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -59,31 +58,92 @@ const Auth = () => {
     }
   };
 
+  const highlights = [
+    { icon: BarChart3, label: "Season-wise profit & loss" },
+    { icon: WifiOff, label: "Works fully offline" },
+    { icon: ShieldCheck, label: "Secure farmer records" },
+  ];
+
   return (
-    <div className="flex h-dvh max-h-dvh w-full items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.18),_transparent_40%),linear-gradient(135deg,_#f0fdf4_0%,_#ecfeff_45%,_#f0fdfa_100%)] px-2 py-2 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
-      <div className="mx-auto flex w-full max-w-4xl items-center justify-center">
-        <div className="w-full max-w-full rounded-[28px] border border-white/70 bg-white/85 p-3 shadow-[0_25px_90px_-30px_rgba(15,23,42,0.55)] backdrop-blur-2xl sm:rounded-[32px] sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-md text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-emerald-200 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 sm:h-14 sm:w-14 lg:h-16 lg:w-16">
-              <Sprout className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
+    <div className="flex h-dvh w-full overflow-hidden bg-background">
+      {/* Brand panel */}
+      <aside className="relative hidden w-[46%] shrink-0 lg:block">
+        <img src="/images/hero_farmland.jpg" alt="Farmland at sunrise" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-[linear-gradient(160deg,hsl(var(--primary)/0.92),hsl(var(--primary)/0.72)_45%,hsl(var(--accent)/0.65))]" />
+        <div className="relative flex h-full flex-col justify-between p-10 text-primary-foreground">
+          <div className="flex items-center gap-3">
+            <img src="/favicon.png" alt="Agri Ledger logo" className="h-11 w-11 rounded-xl bg-white/15 p-1 backdrop-blur" />
+            <div>
+              <p className="text-lg font-semibold tracking-tight">Agri Ledger</p>
+              <p className="text-xs opacity-80">Farm accounting, simplified</p>
             </div>
-            <h1 className="mt-3 text-xl font-semibold tracking-tight text-slate-950 sm:mt-4 sm:text-2xl lg:mt-6 lg:text-3xl">Agriculture Ledger</h1>
-            <p className="mt-1 text-sm font-medium text-slate-600 sm:mt-2 sm:text-base">Manage your farm business smartly</p>
           </div>
 
-          <div className="mx-auto mt-4 max-w-md rounded-[22px] border border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_40px_-20px_rgba(15,23,42,0.35)] sm:mt-6 sm:p-6 lg:mt-8 lg:p-8">
-            <div className="text-center">
-              <p className="text-base font-semibold text-slate-900 sm:text-lg">Welcome Back</p>
-              <p className="mt-1 text-sm text-slate-600">Sign in to continue</p>
+          <div className="space-y-6">
+            <h2 className="max-w-sm font-serif text-4xl leading-tight">Every acre, every rupee — accounted for.</h2>
+            <ul className="space-y-3">
+              {highlights.map(({ icon: Icon, label }) => (
+                <li key={label} className="flex items-center gap-3 text-sm opacity-90">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 backdrop-blur">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <p className="text-xs opacity-70">© {new Date().getFullYear()} Agri Ledger</p>
+        </div>
+      </aside>
+
+      {/* Form panel */}
+      <main className="relative flex h-full flex-1 items-center justify-center overflow-y-auto px-5 py-6 sm:px-8">
+        <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-accent/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+
+        <div className="relative w-full max-w-md">
+          <div className="mb-6 flex flex-col items-center text-center lg:hidden">
+            <img src="/favicon.png" alt="Agri Ledger logo" className="h-14 w-14 rounded-2xl shadow-md" />
+            <h1 className="mt-3 font-serif text-2xl font-semibold text-foreground">Agri Ledger</h1>
+            <p className="text-sm text-muted-foreground">Farm accounting, simplified</p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
+            <div className="mb-6">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                <Leaf className="h-3.5 w-3.5" /> {isLogin ? "Welcome back" : "Get started"}
+              </span>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                {isLogin ? "Sign in to your account" : "Create your account"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {isLogin ? "Continue managing your farm ledger." : "Set up your farm ledger in a minute."}
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-semibold text-slate-700">
-                  Email
-                </Label>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="fullName" className="text-sm font-medium">Full name</Label>
+                  <div className="relative">
+                    <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="fullName"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Your name"
+                      maxLength={80}
+                      className="h-12 rounded-xl pl-10"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-emerald-900/70" />
+                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
@@ -96,17 +156,15 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="email@example.com"
                     required
-                    className="h-14 w-full rounded-3xl border border-slate-200 bg-slate-50 pl-14 pr-4 text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                    className="h-12 rounded-xl pl-10"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-semibold text-slate-700">
-                  Password
-                </Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-emerald-900/70" />
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPw ? "text" : "password"}
@@ -117,39 +175,42 @@ const Auth = () => {
                     required
                     minLength={6}
                     maxLength={72}
-                    className="h-14 w-full rounded-3xl border border-slate-200 bg-slate-50 pl-14 pr-14 text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                    className="h-12 rounded-xl pl-10 pr-11"
                   />
                   <button
                     type="button"
+                    aria-label={showPw ? "Hide password" : "Show password"}
                     onClick={() => setShowPw(!showPw)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
                   >
-                    {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <button type="button" onClick={() => navigate("/forgot-password")} className="text-sm font-semibold text-emerald-800 transition hover:text-emerald-950">
-                  Forgot Password?
-                </button>
-              </div>
+              {isLogin && (
+                <div className="flex justify-end">
+                  <button type="button" onClick={() => navigate("/forgot-password")} className="text-sm font-medium text-primary hover:underline">
+                    Forgot password?
+                  </button>
+                </div>
+              )}
 
-              <Button type="submit" className="flex w-full items-center justify-center gap-2 rounded-3xl bg-emerald-800 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-emerald-900/10 transition hover:bg-emerald-900" disabled={loading}>
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Sign In"}
-                {!loading ? <ArrowRight className="h-4 w-4" /> : null}
+              <Button type="submit" className="h-12 w-full gap-2 rounded-xl text-base font-semibold" disabled={loading}>
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (isLogin ? "Sign In" : "Create Account")}
+                {!loading && <ArrowRight className="h-4 w-4" />}
               </Button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-slate-600">
-              Don&apos;t have an account?{' '}
-              <button type="button" className="font-semibold text-emerald-900 underline decoration-emerald-600" onClick={() => setIsLogin(false)}>
-                Sign up
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+              <button type="button" className="font-semibold text-primary hover:underline" onClick={() => setIsLogin(!isLogin)}>
+                {isLogin ? "Sign up" : "Sign in"}
               </button>
             </p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
