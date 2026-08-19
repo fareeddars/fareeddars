@@ -65,51 +65,30 @@ const Auth = () => {
   ];
 
   return (
-    <div className="flex h-dvh w-full overflow-hidden bg-background">
-      {/* Brand panel */}
-      <aside className="relative hidden w-[46%] shrink-0 lg:block">
-        <img src="/images/hero_farmland.jpg" alt="Farmland at sunrise" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-[linear-gradient(160deg,hsl(var(--primary)/0.92),hsl(var(--primary)/0.72)_45%,hsl(var(--accent)/0.65))]" />
-        <div className="relative flex h-full flex-col justify-between p-10 text-primary-foreground">
-          <div className="flex items-center gap-3">
-            <img src="/favicon.png" alt="Agri Ledger logo" className="h-11 w-11 rounded-xl bg-white/15 p-1 backdrop-blur" />
-            <div>
-              <p className="text-lg font-semibold tracking-tight">Agri Ledger</p>
-              <p className="text-xs opacity-80">Farm accounting, simplified</p>
-            </div>
-          </div>
+    <div className="relative flex h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-8">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_-10%,hsl(var(--primary)/0.18),transparent_70%)]" />
+      <div className="pointer-events-none absolute -top-32 -right-24 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
 
-          <div className="space-y-6">
-            <h2 className="max-w-sm font-serif text-4xl leading-tight">Every acre, every rupee — accounted for.</h2>
-            <ul className="space-y-3">
-              {highlights.map(({ icon: Icon, label }) => (
-                <li key={label} className="flex items-center gap-3 text-sm opacity-90">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 backdrop-blur">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  {label}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <p className="text-xs opacity-70">© {new Date().getFullYear()} Agri Ledger</p>
+      <div className="relative w-full max-w-md animate-fade-in">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <img src="/favicon.png" alt="Agri Ledger logo" className="h-16 w-16 rounded-2xl shadow-lg" />
+          <h1 className="mt-3 font-serif text-3xl font-semibold tracking-tight text-foreground">Agri Ledger</h1>
+          <p className="text-sm text-muted-foreground">Farm accounting, simplified</p>
         </div>
-      </aside>
 
-      {/* Form panel */}
-      <main className="relative flex h-full flex-1 items-center justify-center overflow-y-auto px-5 py-6 sm:px-8">
-        <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-accent/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+        <div className="grid grid-cols-3 gap-2">
+          {highlights.map(({ icon: Icon, label }) => (
+            <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl border border-border/60 bg-card/60 px-2 py-3 text-center backdrop-blur">
+              <Icon className="h-4 w-4 text-accent" />
+              <span className="text-[11px] leading-tight text-muted-foreground">{label}</span>
+            </div>
+          ))}
+        </div>
 
-        <div className="relative w-full max-w-md">
-          <div className="mb-6 flex flex-col items-center text-center lg:hidden">
-            <img src="/favicon.png" alt="Agri Ledger logo" className="h-14 w-14 rounded-2xl shadow-md" />
-            <h1 className="mt-3 font-serif text-2xl font-semibold text-foreground">Agri Ledger</h1>
-            <p className="text-sm text-muted-foreground">Farm accounting, simplified</p>
-          </div>
+        <div className="mt-4 rounded-2xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur sm:p-8">
 
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
             <div className="mb-6">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 <Leaf className="h-3.5 w-3.5" /> {isLogin ? "Welcome back" : "Get started"}
