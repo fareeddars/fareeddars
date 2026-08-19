@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff, ArrowRight, Mail, Lock, User, Leaf } from "lucide-react";
+import agriLogo from "@/assets/agri-logo.png";
+
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -59,35 +61,32 @@ const Auth = () => {
   };
 
   return (
-    <div className="relative flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-10">
+    <div className="relative flex h-dvh w-full items-center justify-center overflow-hidden bg-background px-4 py-4">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_-10%,hsl(var(--primary)/0.18),transparent_70%)]" />
       <div className="pointer-events-none absolute -top-32 -right-24 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
 
-      <div className="relative w-full max-w-md animate-fade-in">
-        <div className="mb-6 flex flex-col items-center text-center">
-          <img src="/favicon.png" alt="Agri Ledger logo" className="h-16 w-16 rounded-2xl shadow-lg" />
-          <h1 className="mt-4 pb-1 font-serif text-3xl font-semibold leading-[1.3] tracking-tight text-foreground">Agri Ledger</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Farm accounting, simplified</p>
+      <div className="relative max-h-full w-full max-w-md animate-fade-in overflow-y-auto">
+        <div className="mb-3 flex flex-col items-center text-center">
+          <img src={agriLogo} alt="Agri Ledger logo" width={512} height={512} className="h-12 w-12 object-contain" />
+          <h1 className="mt-1.5 pb-1 font-serif text-2xl font-semibold leading-[1.3] tracking-tight text-foreground">Agri Ledger</h1>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur sm:p-8">
+        <div className="rounded-2xl border border-border bg-card/80 p-5 shadow-xl backdrop-blur sm:p-6">
 
 
-            <div className="mb-6">
+            <div className="mb-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 <Leaf className="h-3.5 w-3.5" /> {isLogin ? "Welcome back" : "Get started"}
               </span>
-              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+              <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
                 {isLogin ? "Sign in to your account" : "Create your account"}
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {isLogin ? "Continue managing your farm ledger." : "Set up your farm ledger in a minute."}
-              </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+
+            <form onSubmit={handleSubmit} className="space-y-3">
               {!isLogin && (
                 <div className="space-y-1.5">
                   <Label htmlFor="fullName" className="text-sm font-medium">Full name</Label>
@@ -99,7 +98,7 @@ const Auth = () => {
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Your name"
                       maxLength={80}
-                      className="h-12 rounded-xl pl-10"
+                      className="h-11 rounded-xl pl-10"
                     />
                   </div>
                 </div>
@@ -121,7 +120,7 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="email@example.com"
                     required
-                    className="h-12 rounded-xl pl-10"
+                    className="h-11 rounded-xl pl-10"
                   />
                 </div>
               </div>
@@ -140,7 +139,7 @@ const Auth = () => {
                     required
                     minLength={6}
                     maxLength={72}
-                    className="h-12 rounded-xl pl-10 pr-11"
+                    className="h-11 rounded-xl pl-10 pr-11"
                   />
                   <button
                     type="button"
@@ -161,13 +160,13 @@ const Auth = () => {
                 </div>
               )}
 
-              <Button type="submit" className="h-12 w-full gap-2 rounded-xl text-base font-semibold" disabled={loading}>
+              <Button type="submit" className="h-11 w-full gap-2 rounded-xl text-base font-semibold" disabled={loading}>
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (isLogin ? "Sign In" : "Create Account")}
                 {!loading && <ArrowRight className="h-4 w-4" />}
               </Button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
+            <p className="mt-4 text-center text-sm text-muted-foreground">
               {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
               <button type="button" className="font-semibold text-primary hover:underline" onClick={() => setIsLogin(!isLogin)}>
                 {isLogin ? "Sign up" : "Sign in"}
@@ -175,7 +174,7 @@ const Auth = () => {
             </p>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Agri Ledger</p>
+        <p className="mt-3 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Agri Ledger</p>
       </div>
     </div>
 
