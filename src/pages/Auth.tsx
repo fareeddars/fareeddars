@@ -187,10 +187,12 @@ const Auth = () => {
                 {isLogin ? "Sign up" : "Sign in"}
               </button>
             </p>
-          </div>
         </div>
-      </main>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Agri Ledger</p>
+      </div>
     </div>
+
   );
 };
 
