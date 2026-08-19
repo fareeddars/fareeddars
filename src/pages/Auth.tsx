@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Eye, EyeOff, ArrowRight, Mail, Lock, User, Leaf, ShieldCheck, WifiOff, BarChart3 } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowRight, Mail, Lock, User, Leaf } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
