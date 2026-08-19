@@ -86,7 +86,7 @@ const Auth = () => {
             </div>
 
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {!isLogin && (
                 <div className="space-y-1.5">
                   <Label htmlFor="fullName" className="text-sm font-medium">Full name</Label>
@@ -98,7 +98,7 @@ const Auth = () => {
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Your name"
                       maxLength={80}
-                      className="h-12 rounded-xl pl-10"
+                      className="h-11 rounded-xl pl-10"
                     />
                   </div>
                 </div>
@@ -120,7 +120,7 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="email@example.com"
                     required
-                    className="h-12 rounded-xl pl-10"
+                    className="h-11 rounded-xl pl-10"
                   />
                 </div>
               </div>
@@ -139,7 +139,7 @@ const Auth = () => {
                     required
                     minLength={6}
                     maxLength={72}
-                    className="h-12 rounded-xl pl-10 pr-11"
+                    className="h-11 rounded-xl pl-10 pr-11"
                   />
                   <button
                     type="button"
@@ -160,13 +160,13 @@ const Auth = () => {
                 </div>
               )}
 
-              <Button type="submit" className="h-12 w-full gap-2 rounded-xl text-base font-semibold" disabled={loading}>
+              <Button type="submit" className="h-11 w-full gap-2 rounded-xl text-base font-semibold" disabled={loading}>
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (isLogin ? "Sign In" : "Create Account")}
                 {!loading && <ArrowRight className="h-4 w-4" />}
               </Button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
+            <p className="mt-4 text-center text-sm text-muted-foreground">
               {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
               <button type="button" className="font-semibold text-primary hover:underline" onClick={() => setIsLogin(!isLogin)}>
                 {isLogin ? "Sign up" : "Sign in"}
@@ -174,7 +174,7 @@ const Auth = () => {
             </p>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Agri Ledger</p>
+        <p className="mt-3 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Agri Ledger</p>
       </div>
     </div>
 
