@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Eye, EyeOff, ArrowRight, Mail, Lock, User, Leaf, ShieldCheck, WifiOff, BarChart3 } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowRight, Mail, Lock, User, Leaf } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -58,14 +58,8 @@ const Auth = () => {
     }
   };
 
-  const highlights = [
-    { icon: BarChart3, label: "Season-wise profit & loss" },
-    { icon: WifiOff, label: "Works fully offline" },
-    { icon: ShieldCheck, label: "Secure farmer records" },
-  ];
-
   return (
-    <div className="relative flex h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-8">
+    <div className="relative flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-10">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_-10%,hsl(var(--primary)/0.18),transparent_70%)]" />
       <div className="pointer-events-none absolute -top-32 -right-24 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
@@ -74,20 +68,12 @@ const Auth = () => {
       <div className="relative w-full max-w-md animate-fade-in">
         <div className="mb-6 flex flex-col items-center text-center">
           <img src="/favicon.png" alt="Agri Ledger logo" className="h-16 w-16 rounded-2xl shadow-lg" />
-          <h1 className="mt-3 font-serif text-3xl font-semibold tracking-tight text-foreground">Agri Ledger</h1>
-          <p className="text-sm text-muted-foreground">Farm accounting, simplified</p>
+          <h1 className="mt-4 pb-1 font-serif text-3xl font-semibold leading-[1.3] tracking-tight text-foreground">Agri Ledger</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Farm accounting, simplified</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          {highlights.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl border border-border/60 bg-card/60 px-2 py-3 text-center backdrop-blur">
-              <Icon className="h-4 w-4 text-accent" />
-              <span className="text-[11px] leading-tight text-muted-foreground">{label}</span>
-            </div>
-          ))}
-        </div>
+        <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur sm:p-8">
 
-        <div className="mt-4 rounded-2xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur sm:p-8">
 
             <div className="mb-6">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
