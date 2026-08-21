@@ -1,0 +1,16 @@
+ALTER TABLE public.ledger_entries
+  ADD COLUMN IF NOT EXISTS weight_unit text,
+  ADD COLUMN IF NOT EXISTS rate_unit text,
+  ADD COLUMN IF NOT EXISTS buyer text,
+  ADD COLUMN IF NOT EXISTS field_name text,
+  ADD COLUMN IF NOT EXISTS transport_cost numeric NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS labour_cost numeric NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS commission_cost numeric NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS other_costs numeric NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_area numeric,
+  ADD COLUMN IF NOT EXISTS area_unit text,
+  ADD COLUMN IF NOT EXISTS total_yield numeric,
+  ADD COLUMN IF NOT EXISTS yield_unit text,
+  ADD COLUMN IF NOT EXISTS paid_amount numeric NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS payment_status text,
+  ADD COLUMN IF NOT EXISTS notes text;

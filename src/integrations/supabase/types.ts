@@ -187,7 +187,10 @@ export type Database = {
       ledger_entries: {
         Row: {
           amount: number
+          area_unit: string | null
+          buyer: string | null
           category: string | null
+          commission_cost: number
           created_at: string
           created_by: string
           crop_type: string | null
@@ -198,21 +201,36 @@ export type Database = {
           entry_type: string
           farmer_id: string
           farmer_season_id: string | null
+          field_name: string | null
           gross_weight: number | null
           id: string
           inventory_item_id: string | null
           is_shared: boolean
+          labour_cost: number
           net_weight: number | null
+          notes: string | null
+          other_costs: number
+          paid_amount: number
           payment_method: string | null
+          payment_status: string | null
           quantity: number | null
           rate: number | null
+          rate_unit: string | null
           season_id: string | null
           shared_amount: number | null
+          total_area: number | null
+          total_yield: number | null
+          transport_cost: number
           updated_at: string
+          weight_unit: string | null
+          yield_unit: string | null
         }
         Insert: {
           amount?: number
+          area_unit?: string | null
+          buyer?: string | null
           category?: string | null
+          commission_cost?: number
           created_at?: string
           created_by: string
           crop_type?: string | null
@@ -223,21 +241,36 @@ export type Database = {
           entry_type: string
           farmer_id: string
           farmer_season_id?: string | null
+          field_name?: string | null
           gross_weight?: number | null
           id?: string
           inventory_item_id?: string | null
           is_shared?: boolean
+          labour_cost?: number
           net_weight?: number | null
+          notes?: string | null
+          other_costs?: number
+          paid_amount?: number
           payment_method?: string | null
+          payment_status?: string | null
           quantity?: number | null
           rate?: number | null
+          rate_unit?: string | null
           season_id?: string | null
           shared_amount?: number | null
+          total_area?: number | null
+          total_yield?: number | null
+          transport_cost?: number
           updated_at?: string
+          weight_unit?: string | null
+          yield_unit?: string | null
         }
         Update: {
           amount?: number
+          area_unit?: string | null
+          buyer?: string | null
           category?: string | null
+          commission_cost?: number
           created_at?: string
           created_by?: string
           crop_type?: string | null
@@ -248,17 +281,29 @@ export type Database = {
           entry_type?: string
           farmer_id?: string
           farmer_season_id?: string | null
+          field_name?: string | null
           gross_weight?: number | null
           id?: string
           inventory_item_id?: string | null
           is_shared?: boolean
+          labour_cost?: number
           net_weight?: number | null
+          notes?: string | null
+          other_costs?: number
+          paid_amount?: number
           payment_method?: string | null
+          payment_status?: string | null
           quantity?: number | null
           rate?: number | null
+          rate_unit?: string | null
           season_id?: string | null
           shared_amount?: number | null
+          total_area?: number | null
+          total_yield?: number | null
+          transport_cost?: number
           updated_at?: string
+          weight_unit?: string | null
+          yield_unit?: string | null
         }
         Relationships: [
           {
