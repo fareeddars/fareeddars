@@ -29,13 +29,8 @@ const Seasons = () => {
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [form, setForm] = useState({ name: "", start_date: "", end_date: "" });
 
-  const getSeasonBackground = (name: string) => {
-    const n = name.toLowerCase();
-    if (n.includes("cotton") || n.includes("kapas")) return "/cotton-bg.jpg";
-    if (n.includes("wheat") || n.includes("gandum")) return "/wheat-bg.jpg";
-    if (n.includes("sugarcane") || n.includes("kamad")) return "/sugarcane-bg.jpg";
-    return "/default-farm-bg.jpg";
-  };
+
+
 
   const fetchAllFarmers = async () => {
     const { data } = await supabase.from("farmers").select("*").order("name");
