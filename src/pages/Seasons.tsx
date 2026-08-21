@@ -188,43 +188,41 @@ const Seasons = () => {
           return (
             <Card
               key={season.id}
-              className={`cursor-pointer group relative overflow-hidden transition-all duration-500 hover:-translate-y-1.5 animate-fade-in ${
-                isSelected 
-                  ? "ring-2 ring-emerald-500 shadow-2xl shadow-emerald-500/20" 
-                  : "hover:shadow-xl shadow-sm border-border/50"
-              } ${isActive ? "border-emerald-500/30" : "opacity-80 hover:opacity-100"}`}
-              style={{
-                animationDelay: `${i * 100}ms`,
-                backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${getSeasonBackground(season.name)})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
+              className={`cursor-pointer group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-1 animate-fade-in ${
+                isSelected
+                  ? "ring-2 ring-emerald-500 shadow-lg shadow-emerald-500/15 border-emerald-500/40"
+                  : "hover:shadow-lg shadow-sm border-border/60"
+              } ${isActive ? "bg-gradient-to-br from-emerald-50 via-card to-teal-50/60 dark:from-emerald-950/40 dark:via-card dark:to-teal-950/30" : "bg-muted/40"}`}
+              style={{ animationDelay: `${i * 60}ms` }}
               onClick={() => setSelectedSeasonId(season.id)}
             >
+              {/* Decorative corner glow */}
+              <div className={`pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl ${isActive ? "bg-emerald-400/20" : "bg-slate-400/10"}`} />
               {/* Top Accent Bar */}
               <div className={`h-1.5 w-full ${isActive ? "bg-gradient-to-r from-emerald-400 to-teal-500" : "bg-slate-300 dark:bg-slate-700"}`} />
-              
+
               <CardContent className="p-3 sm:p-6 relative z-10">
                 <div className="flex items-start justify-between gap-1 sm:gap-2.5 mb-2 sm:mb-3">
                   <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-                    <div className={`flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 shrink-0 ${
-                      isActive 
-                        ? "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 dark:from-emerald-900/50 dark:to-teal-900/50 dark:text-emerald-400" 
-                        : "bg-white/90 text-emerald-800"
+                    <div className={`flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-105 shrink-0 ${
+                      isActive
+                        ? "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 dark:from-emerald-900/50 dark:to-teal-900/50 dark:text-emerald-400"
+                        : "bg-muted text-muted-foreground"
                     }`}>
                       <Leaf className="h-4 w-4 sm:h-6 sm:w-6" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-sm sm:text-lg font-bold text-white font-serif tracking-tight drop-shadow-sm truncate">{season.name}</h3>
-                      <p className="text-[10px] sm:text-xs text-white/80 font-medium mt-0.5 truncate">
+                      <h3 className="text-sm sm:text-lg font-bold text-foreground font-serif tracking-tight truncate">{season.name}</h3>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground font-medium mt-0.5 truncate">
                         {season.start_date} {season.end_date ? `→ ${season.end_date}` : ""}
                       </p>
                     </div>
                   </div>
-                  <Badge variant={isActive ? "default" : "secondary"} className={`font-semibold text-[8px] sm:text-xs shrink-0 ${isActive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/20 shadow-sm" : ""}`}>
+                  <Badge variant={isActive ? "default" : "secondary"} className={`font-semibold text-[8px] sm:text-xs shrink-0 ${isActive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/20" : ""}`}>
                     {isActive ? t("seasons.active") : t("seasons.closedStatus")}
                   </Badge>
                 </div>
+
 
                 {/* Actions Area */}
                 {isSelected && (
