@@ -204,6 +204,21 @@ const Ledger = () => {
       setGrossWeight(e.gross_weight != null ? String(e.gross_weight) : "");
       setDeductionsVal(e.deductions != null ? String(e.deductions) : "");
       setSaleRate(e.rate != null ? String(e.rate) : "");
+      setWeightUnit((e.weight_unit as WeightUnit) || "kg");
+      setRateUnit((e.rate_unit as WeightUnit) || "kg");
+      setBuyer(e.buyer || "");
+      setFieldName(e.field_name || "");
+      setCropType(e.crop_type || "");
+      setTransportCost(e.transport_cost ? String(e.transport_cost) : "");
+      setLabourCost(e.labour_cost ? String(e.labour_cost) : "");
+      setCommissionCost(e.commission_cost ? String(e.commission_cost) : "");
+      setOtherCosts(e.other_costs ? String(e.other_costs) : "");
+      setTotalArea(e.total_area != null ? String(e.total_area) : "");
+      setAreaUnit((e.area_unit as AreaUnit) || "acre");
+      setTotalYield(e.total_yield != null ? String(e.total_yield) : "");
+      setYieldUnit((e.yield_unit as WeightUnit) || "maund");
+      setPaidAmount(e.paid_amount ? String(e.paid_amount) : "");
+      setSaleNotes(e.notes || "");
     } else if (e.entry_type === "payment") {
       setPaymentMethod(e.payment_method || "cash");
       if ((e.payment_method || "cash") === "cash") setCashAmount(String(e.amount ?? ""));
