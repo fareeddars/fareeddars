@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import FarmerAvatar from "@/components/FarmerAvatar";
+import { computeSale, averageYieldPerAcre, WEIGHT_UNITS, AREA_UNITS, num, money, qty, type WeightUnit, type AreaUnit } from "@/lib/ledger/calc";
 
 const EXPENSE_CATEGORIES = [
   { key: "Seed", label: "expense.seed" },
@@ -63,6 +64,20 @@ const Ledger = () => {
   const [grossWeight, setGrossWeight] = useState("");
   const [deductionsVal, setDeductionsVal] = useState("");
   const [saleRate, setSaleRate] = useState("");
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>("kg");
+  const [rateUnit, setRateUnit] = useState<WeightUnit>("kg");
+  const [buyer, setBuyer] = useState("");
+  const [fieldName, setFieldName] = useState("");
+  const [transportCost, setTransportCost] = useState("");
+  const [labourCost, setLabourCost] = useState("");
+  const [commissionCost, setCommissionCost] = useState("");
+  const [otherCosts, setOtherCosts] = useState("");
+  const [totalArea, setTotalArea] = useState("");
+  const [areaUnit, setAreaUnit] = useState<AreaUnit>("acre");
+  const [totalYield, setTotalYield] = useState("");
+  const [yieldUnit, setYieldUnit] = useState<WeightUnit>("maund");
+  const [paidAmount, setPaidAmount] = useState("");
+  const [saleNotes, setSaleNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [cashAmount, setCashAmount] = useState("");
   const [cropType, setCropType] = useState("");
@@ -140,14 +155,33 @@ const Ledger = () => {
     return Number(expenseAmount) || 0;
   };
 
-  const netWeight = () => (Number(grossWeight) || 0) - (Number(deductionsVal) || 0);
-  const saleTotal = () => netWeight() * (Number(saleRate) || 0);
+  const sale = computeSale({
+    grossWeight: num(grossWeight),
+    deductions: num(deductionsVal),
+    weightUnit,
+    rate: num(saleRate),
+    rateUnit,
+    transportCost: num(transportCost),
+    labourCost: num(labourCost),
+    commissionCost: num(commissionCost),
+    otherCosts: num(otherCosts),
+    totalArea: num(totalArea),
+    areaUnit,
+    totalYield: num(totalYield),
+    yieldUnit,
+    paidAmount: num(paidAmount),
+  });
+  const avgYield = averageYieldPerAcre(entries as any[], { cropType: cropType || description, excludeId: editingId });
+  const netWeight = () => sale.netWeight;
+  const saleTotal = () => sale.grossSale;
   const cropTotal = () => (Number(cropWeight) || 0) * (Number(cropRate) || 0);
 
   const resetForm = () => {
     setFarmerId(""); setEntryDate(new Date()); setDescription("");
     setCategory(""); setInventoryItemId(""); setPrice(""); setQuantity(""); setExpenseAmount(""); setCostAllocation("farmer");
-    setGrossWeight(""); setDeductionsVal(""); setSaleRate("");
+    setGrossWeight(""); setDeductionsVal(""); setSaleRate(""); setWeightUnit("kg"); setRateUnit("kg");
+    setBuyer(""); setFieldName(""); setTransportCost(""); setLabourCost(""); setCommissionCost(""); setOtherCosts("");
+    setTotalArea(""); setAreaUnit("acre"); setTotalYield(""); setYieldUnit("maund"); setPaidAmount(""); setSaleNotes("");
     setPaymentMethod("cash"); setCashAmount(""); setCropType(""); setCropWeight(""); setCropRate("");
     setLoanAmount(""); setActiveTab("expense");
     setEditingId(null);
@@ -170,6 +204,21 @@ const Ledger = () => {
       setGrossWeight(e.gross_weight != null ? String(e.gross_weight) : "");
       setDeductionsVal(e.deductions != null ? String(e.deductions) : "");
       setSaleRate(e.rate != null ? String(e.rate) : "");
+      setWeightUnit((e.weight_unit as WeightUnit) || "kg");
+      setRateUnit((e.rate_unit as WeightUnit) || "kg");
+      setBuyer(e.buyer || "");
+      setFieldName(e.field_name || "");
+      setCropType(e.crop_type || "");
+      setTransportCost(e.transport_cost ? String(e.transport_cost) : "");
+      setLabourCost(e.labour_cost ? String(e.labour_cost) : "");
+      setCommissionCost(e.commission_cost ? String(e.commission_cost) : "");
+      setOtherCosts(e.other_costs ? String(e.other_costs) : "");
+      setTotalArea(e.total_area != null ? String(e.total_area) : "");
+      setAreaUnit((e.area_unit as AreaUnit) || "acre");
+      setTotalYield(e.total_yield != null ? String(e.total_yield) : "");
+      setYieldUnit((e.yield_unit as WeightUnit) || "maund");
+      setPaidAmount(e.paid_amount ? String(e.paid_amount) : "");
+      setSaleNotes(e.notes || "");
     } else if (e.entry_type === "payment") {
       setPaymentMethod(e.payment_method || "cash");
       if ((e.payment_method || "cash") === "cash") setCashAmount(String(e.amount ?? ""));
@@ -260,7 +309,19 @@ const Ledger = () => {
           payment_method: costAllocation === "landlord" ? "landlord_only" : null,
         };
       } else if (activeTab === "sale") {
-        entryData = { ...entryData, amount, gross_weight: Number(grossWeight), deductions: Number(deductionsVal) || 0, net_weight: netWeight(), rate: Number(saleRate), crop_type: cropType.trim() || description.trim() || null };
+        entryData = {
+          ...entryData, amount,
+          gross_weight: num(grossWeight), deductions: num(deductionsVal), net_weight: sale.netWeight,
+          rate: num(saleRate), weight_unit: weightUnit, rate_unit: rateUnit,
+          buyer: buyer.trim() || null, field_name: fieldName.trim() || null,
+          crop_type: cropType.trim() || description.trim() || null,
+          transport_cost: num(transportCost), labour_cost: num(labourCost),
+          commission_cost: num(commissionCost), other_costs: num(otherCosts),
+          total_area: num(totalArea) || null, area_unit: areaUnit,
+          total_yield: num(totalYield) || null, yield_unit: yieldUnit,
+          paid_amount: num(paidAmount), payment_status: sale.paymentStatus,
+          notes: saleNotes.trim() || null,
+        };
       } else if (activeTab === "payment") {
         entryData = { ...entryData, amount, payment_method: paymentMethod, crop_type: paymentMethod === "crop_return" ? cropType : null, crop_weight: paymentMethod === "crop_return" && cropWeight ? Number(cropWeight) : null, rate: paymentMethod === "crop_return" && cropRate ? Number(cropRate) : null };
       } else if (activeTab === "loan") {
@@ -575,15 +636,119 @@ const Ledger = () => {
                       </TabsContent>
 
                       {/* SALE TAB */}
-                      <TabsContent value="sale" className="space-y-1.5 sm:space-y-4">
-                        <div className="hidden sm:block space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
-                        <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
-                          <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.grossWeight")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" /></div>
-                          <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.deductions")}</Label><Input className="h-8 sm:h-11 bg-background text-red-600 font-medium text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" /></div>
+                      <TabsContent value="sale" className="space-y-2 sm:space-y-4">
+                        {/* --- Crop & Buyer --- */}
+                        <div className="rounded-lg sm:rounded-xl border border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">🌾 Crop Details</p>
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.cropType")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="Wheat / Cotton" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Buyer</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={buyer} onChange={(e) => setBuyer(e.target.value)} placeholder="Buyer / Mill name" /></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Field / Plot</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={fieldName} onChange={(e) => setFieldName(e.target.value)} placeholder="Field name" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("common.description")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
+                          </div>
                         </div>
-                        <div className="rounded sm:rounded-xl bg-muted/40 border border-border p-1 sm:p-3 text-[8px] sm:text-sm flex justify-between"><span className="font-semibold text-muted-foreground">{t("ledger.netWeight")}:</span> <span className="font-mono font-bold">{netWeight().toLocaleString()} kg</span></div>
-                        <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
-                        <div className="rounded sm:rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-1.5 sm:p-4 text-[9px] sm:text-sm font-semibold flex justify-between items-center"><span className="text-emerald-700 dark:text-emerald-400">{t("ledger.totalAmount")}:</span> <span className="text-xs sm:text-xl font-mono text-emerald-600 dark:text-emerald-400">₨ {saleTotal().toLocaleString()}</span></div>
+
+                        {/* --- Weight & Rate --- */}
+                        <div className="rounded-lg sm:rounded-xl border border-border bg-muted/30 p-2 sm:p-4 space-y-2 sm:space-y-3">
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">⚖️ Weight & Rate</p>
+                          <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.grossWeight")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.deductions")}</Label><Input className="h-8 sm:h-11 bg-background text-red-600 font-medium text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">Unit</Label>
+                              <Select value={weightUnit} onValueChange={(v) => setWeightUnit(v as WeightUnit)}>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>{WEIGHT_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}</SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="rounded-md sm:rounded-lg bg-background border border-border p-1.5 sm:p-3 text-[9px] sm:text-sm flex justify-between items-center">
+                            <span className="font-semibold text-muted-foreground">{t("ledger.netWeight")} <span className="text-[7px] sm:text-[10px] uppercase tracking-wider text-emerald-600">Auto Calculated</span></span>
+                            <span className="font-mono font-bold">{qty(sale.netWeight)} {weightUnit}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Rate (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">Rate per</Label>
+                              <Select value={rateUnit} onValueChange={(v) => setRateUnit(v as WeightUnit)}>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>{WEIGHT_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>Per {u.label}</SelectItem>)}</SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="rounded-md sm:rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-1.5 sm:p-3 text-[9px] sm:text-sm font-semibold flex justify-between items-center">
+                            <span className="text-emerald-700 dark:text-emerald-400">Gross Sale <span className="text-[7px] sm:text-[10px] uppercase tracking-wider">Auto</span></span>
+                            <span className="text-xs sm:text-lg font-mono text-emerald-600 dark:text-emerald-400">{money(sale.grossSale)}</span>
+                          </div>
+                        </div>
+
+                        {/* --- Costs --- */}
+                        <div className="rounded-lg sm:rounded-xl border border-red-500/20 bg-red-50/40 dark:bg-red-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400">💸 Sale Costs</p>
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Transport (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={transportCost} onChange={(e) => setTransportCost(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Labour (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={labourCost} onChange={(e) => setLabourCost(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Commission (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={commissionCost} onChange={(e) => setCommissionCost(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Other (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={otherCosts} onChange={(e) => setOtherCosts(e.target.value)} placeholder="0" /></div>
+                          </div>
+                          <div className="rounded-md sm:rounded-lg bg-background border border-red-500/20 p-1.5 sm:p-3 text-[9px] sm:text-sm font-semibold flex justify-between items-center">
+                            <span className="text-red-700 dark:text-red-400">Total Costs <span className="text-[7px] sm:text-[10px] uppercase tracking-wider">Auto</span></span>
+                            <span className="font-mono text-red-600">{money(sale.totalCosts)}</span>
+                          </div>
+                        </div>
+
+                        {/* --- Yield Summary --- */}
+                        <div className="rounded-lg sm:rounded-xl border border-amber-500/20 bg-amber-50/40 dark:bg-amber-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">🌱 Yield Summary</p>
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Total Area</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={totalArea} onChange={(e) => setTotalArea(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">Area Unit</Label>
+                              <Select value={areaUnit} onValueChange={(v) => setAreaUnit(v as AreaUnit)}>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>{AREA_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}</SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Total Yield</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={totalYield} onChange={(e) => setTotalYield(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">Yield Unit</Label>
+                              <Select value={yieldUnit} onValueChange={(v) => setYieldUnit(v as WeightUnit)}>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>{WEIGHT_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}</SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-3 text-[8px] sm:text-xs">
+                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Yield / Acre</span><span className="font-mono font-bold text-amber-700 dark:text-amber-400">{sale.yieldPerAcre != null ? `${qty(sale.yieldPerAcre)} ${yieldUnit}` : "—"}</span></div>
+                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Cost / Acre</span><span className="font-mono font-bold text-red-600">{sale.costPerAcre != null ? money(sale.costPerAcre) : "—"}</span></div>
+                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Sale / Acre</span><span className="font-mono font-bold text-emerald-600">{sale.saleValuePerAcre != null ? money(sale.saleValuePerAcre) : "—"}</span></div>
+                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Effective Rate</span><span className="font-mono font-bold">{sale.effectiveRate != null ? `${money(sale.effectiveRate)}/${weightUnit}` : "—"}</span></div>
+                          </div>
+                          <p className="text-[8px] sm:text-[11px] text-muted-foreground">
+                            {avgYield ? `Your average: ${qty(avgYield.value)} ${avgYield.unit}/acre (${avgYield.samples} records)` : "Not enough history yet for average yield comparison."}
+                          </p>
+                        </div>
+
+                        {/* --- Payment --- */}
+                        <div className="rounded-lg sm:rounded-xl border border-blue-500/20 bg-blue-50/40 dark:bg-blue-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">💰 Payment</p>
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Paid Amount (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Notes</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={saleNotes} onChange={(e) => setSaleNotes(e.target.value)} placeholder="Optional" /></div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1.5 sm:gap-3 text-[8px] sm:text-xs">
+                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Net Sale</span><span className="font-mono font-bold text-emerald-600">{money(sale.netSale)}</span></div>
+                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Remaining</span><span className="font-mono font-bold text-red-600">{money(sale.remaining)}</span></div>
+                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Status</span><span className={cn("font-bold uppercase", sale.paymentStatus === "paid" ? "text-emerald-600" : sale.paymentStatus === "partial" ? "text-amber-600" : "text-red-600")}>{sale.paymentStatus}</span></div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/30 p-2 sm:p-4 text-[10px] sm:text-sm font-semibold flex justify-between items-center">
+                          <span className="text-emerald-700 dark:text-emerald-400">{t("ledger.totalAmount")}</span>
+                          <span className="text-sm sm:text-xl font-mono text-emerald-600 dark:text-emerald-400">{money(sale.grossSale)}</span>
+                        </div>
                       </TabsContent>
 
                       {/* PAYMENT TAB */}
