@@ -309,7 +309,19 @@ const Ledger = () => {
           payment_method: costAllocation === "landlord" ? "landlord_only" : null,
         };
       } else if (activeTab === "sale") {
-        entryData = { ...entryData, amount, gross_weight: Number(grossWeight), deductions: Number(deductionsVal) || 0, net_weight: netWeight(), rate: Number(saleRate), crop_type: cropType.trim() || description.trim() || null };
+        entryData = {
+          ...entryData, amount,
+          gross_weight: num(grossWeight), deductions: num(deductionsVal), net_weight: sale.netWeight,
+          rate: num(saleRate), weight_unit: weightUnit, rate_unit: rateUnit,
+          buyer: buyer.trim() || null, field_name: fieldName.trim() || null,
+          crop_type: cropType.trim() || description.trim() || null,
+          transport_cost: num(transportCost), labour_cost: num(labourCost),
+          commission_cost: num(commissionCost), other_costs: num(otherCosts),
+          total_area: num(totalArea) || null, area_unit: areaUnit,
+          total_yield: num(totalYield) || null, yield_unit: yieldUnit,
+          paid_amount: num(paidAmount), payment_status: sale.paymentStatus,
+          notes: saleNotes.trim() || null,
+        };
       } else if (activeTab === "payment") {
         entryData = { ...entryData, amount, payment_method: paymentMethod, crop_type: paymentMethod === "crop_return" ? cropType : null, crop_weight: paymentMethod === "crop_return" && cropWeight ? Number(cropWeight) : null, rate: paymentMethod === "crop_return" && cropRate ? Number(cropRate) : null };
       } else if (activeTab === "loan") {
