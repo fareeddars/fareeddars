@@ -155,14 +155,33 @@ const Ledger = () => {
     return Number(expenseAmount) || 0;
   };
 
-  const netWeight = () => (Number(grossWeight) || 0) - (Number(deductionsVal) || 0);
-  const saleTotal = () => netWeight() * (Number(saleRate) || 0);
+  const sale = computeSale({
+    grossWeight: num(grossWeight),
+    deductions: num(deductionsVal),
+    weightUnit,
+    rate: num(saleRate),
+    rateUnit,
+    transportCost: num(transportCost),
+    labourCost: num(labourCost),
+    commissionCost: num(commissionCost),
+    otherCosts: num(otherCosts),
+    totalArea: num(totalArea),
+    areaUnit,
+    totalYield: num(totalYield),
+    yieldUnit,
+    paidAmount: num(paidAmount),
+  });
+  const avgYield = averageYieldPerAcre(entries as any[], { cropType: cropType || description, excludeId: editingId });
+  const netWeight = () => sale.netWeight;
+  const saleTotal = () => sale.grossSale;
   const cropTotal = () => (Number(cropWeight) || 0) * (Number(cropRate) || 0);
 
   const resetForm = () => {
     setFarmerId(""); setEntryDate(new Date()); setDescription("");
     setCategory(""); setInventoryItemId(""); setPrice(""); setQuantity(""); setExpenseAmount(""); setCostAllocation("farmer");
-    setGrossWeight(""); setDeductionsVal(""); setSaleRate("");
+    setGrossWeight(""); setDeductionsVal(""); setSaleRate(""); setWeightUnit("kg"); setRateUnit("kg");
+    setBuyer(""); setFieldName(""); setTransportCost(""); setLabourCost(""); setCommissionCost(""); setOtherCosts("");
+    setTotalArea(""); setAreaUnit("acre"); setTotalYield(""); setYieldUnit("maund"); setPaidAmount(""); setSaleNotes("");
     setPaymentMethod("cash"); setCashAmount(""); setCropType(""); setCropWeight(""); setCropRate("");
     setLoanAmount(""); setActiveTab("expense");
     setEditingId(null);
