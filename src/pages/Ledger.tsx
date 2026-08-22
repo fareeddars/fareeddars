@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import FarmerAvatar from "@/components/FarmerAvatar";
+import { computeSale, averageYieldPerAcre, WEIGHT_UNITS, AREA_UNITS, num, money, qty, type WeightUnit, type AreaUnit } from "@/lib/ledger/calc";
 
 const EXPENSE_CATEGORIES = [
   { key: "Seed", label: "expense.seed" },
