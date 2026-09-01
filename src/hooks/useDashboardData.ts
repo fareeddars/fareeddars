@@ -155,10 +155,18 @@ export const useDashboardData = () => {
       }
     }
 
+    // Season-wide totals (single source of truth for every KPI below)
+    const seasonTotals = computeTotals(entries as any[]);
+    const crops = groupByCrop((entries as any[]).filter((e) => e.entry_type === "sale"));
+    const avgYield = averageYield(entries as any[]);
+
     return {
       loading,
       entries,
       inventory,
+      totals: seasonTotals,
+      crops,
+      avgYield,
       kpis: {
         totalOutstanding,
         collectionToday,
@@ -167,6 +175,7 @@ export const useDashboardData = () => {
         profitTodayTrend: pct(profitToday, profitYesterday),
         totalFarmers: farmerSeasons.length,
       },
+
       overview: {
         salesMonth,
         salesTrend: pct(salesMonth, salesPrev),
