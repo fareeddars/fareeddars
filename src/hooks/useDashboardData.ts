@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { offlineRepo, isOnline } from "@/lib/offline";
 import { useSeason } from "@/contexts/SeasonContext";
+import { computeTotals, groupByCrop, summarizeFarmer, averageYield } from "@/lib/ledger/aggregate";
 import type { Tables } from "@/integrations/supabase/types";
+
 
 type Entry = Tables<"ledger_entries">;
 type Item = Tables<"inventory">;
