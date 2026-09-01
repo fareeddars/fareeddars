@@ -86,19 +86,26 @@ export const useDashboardData = () => {
     const inMonth = (m: string) => (e: Entry) => monthKey(dateOf(e)) === m;
     const onDay = (d: Date) => (e: Entry) => isSameDay(dateOf(e), d);
 
-    const salesMonth = sum(byType("sale", inMonth(thisMonth)));
-    const salesPrev = sum(byType("sale", inMonth(prevMonth)));
-    const expensesMonth = sum(byType("expense", inMonth(thisMonth)));
-    const expensesPrev = sum(byType("expense", inMonth(prevMonth)));
-    const collectionMonth = sum(byType("payment", inMonth(thisMonth)));
-    const collectionPrev = sum(byType("payment", inMonth(prevMonth)));
-    const profitMonth = salesMonth - expensesMonth;
-    const profitPrev = salesPrev - expensesPrev;
+    const totalsOf = (filter: (e: Entry) => boolean) => computeTotals(entries.filter(filter) as any[]);
+    const tMonth = totalsOf(inMonth(thisMonth));
+    const tPrev = totalsOf(inMonth(prevMonth));
+    const tToday = totalsOf(onDay(today));
+    const tYesterday = totalsOf(onDay(yesterday));
 
-    const collectionToday = sum(byType("payment", onDay(today)));
-    const collectionYesterday = sum(byType("payment", onDay(yesterday)));
-    const profitToday = sum(byType("sale", onDay(today))) - sum(byType("expense", onDay(today)));
-    const profitYesterday = sum(byType("sale", onDay(yesterday))) - sum(byType("expense", onDay(yesterday)));
+    const salesMonth = tMonth.grossSales;
+    const salesPrev = tPrev.grossSales;
+    const expensesMonth = tMonth.expenses + tMonth.saleCosts;
+    const expensesPrev = tPrev.expenses + tPrev.saleCosts;
+    const collectionMonth = tMonth.payments;
+    const collectionPrev = tPrev.payments;
+    const profitMonth = tMonth.netProfit;
+    const profitPrev = tPrev.netProfit;
+
+    const collectionToday = tToday.payments;
+    const collectionYesterday = tYesterday.payments;
+    const profitToday = tToday.netProfit;
+    const profitYesterday = tYesterday.netProfit;
+
 
     // Outstanding per farmer — derived from the shared aggregator so
     // Dashboard, Reports and Farmer pages never disagree.
