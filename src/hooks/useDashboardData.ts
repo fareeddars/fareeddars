@@ -100,14 +100,12 @@ export const useDashboardData = () => {
     const profitToday = sum(byType("sale", onDay(today))) - sum(byType("expense", onDay(today)));
     const profitYesterday = sum(byType("sale", onDay(yesterday))) - sum(byType("expense", onDay(yesterday)));
 
-    // Outstanding per farmer: opening balance + expenses + loans - payments
+    // Outstanding per farmer — derived from the shared aggregator so
+    // Dashboard, Reports and Farmer pages never disagree.
     const outstanding: OutstandingRow[] = farmerSeasons
       .map((fs: any) => {
+        const s = summarizeFarmer(entries as any[], fs.farmer_id, Number(fs.opening_balance || 0));
         const farmerEntries = entries.filter((e) => e.farmer_id === fs.farmer_id);
-        const exp = sum(farmerEntries.filter((e) => e.entry_type === "expense"));
-        const loans = sum(farmerEntries.filter((e) => e.entry_type === "loan"));
-        const pay = sum(farmerEntries.filter((e) => e.entry_type === "payment"));
-        const amount = Number(fs.opening_balance || 0) + exp + loans - pay;
         const lastPayment = farmerEntries
           .filter((e) => e.entry_type === "payment")
           .map((e) => new Date(dateOf(e)).getTime())
@@ -118,7 +116,7 @@ export const useDashboardData = () => {
           farmerId: fs.farmer_id,
           name: fs.farmers?.name ?? "—",
           photoUrl: fs.farmers?.photo_url ?? null,
-          amount,
+          amount: s.balanceDue,
           days,
         };
       })
@@ -126,6 +124,7 @@ export const useDashboardData = () => {
       .sort((a, b) => b.amount - a.amount);
 
     const totalOutstanding = outstanding.reduce((s, r) => s + r.amount, 0);
+
 
     const alerts = inventory
       .map((i) => {
