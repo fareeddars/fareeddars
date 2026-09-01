@@ -1,0 +1,343 @@
+// ────────────────────────────────────────────────────────────────
+// Centralised aggregation for ALL pages (Dashboard, P&L, Ledger,
+// Farmer, Reports). Every page must derive its numbers from here so
+// the same filter always produces the same totals.
+// ────────────────────────────────────────────────────────────────
+import { AreaUnit, WeightUnit, toAcres, toKg, fromKg } from "./calc";
+
+export interface LedgerRow {
+  id?: string;
+  farmer_id?: string | null;
+  entry_type: string;
+  amount: number | string | null;
+  category?: string | null;
+  crop_type?: string | null;
+  field_name?: string | null;
+  entry_date?: string | null;
+  created_at?: string | null;
+  season_id?: string | null;
+  // sale specific
+  gross_weight?: number | string | null;
+  deductions?: number | string | null;
+  net_weight?: number | string | null;
+  weight_unit?: string | null;
+  rate?: number | string | null;
+  rate_unit?: string | null;
+  transport_cost?: number | string | null;
+  labour_cost?: number | string | null;
+  commission_cost?: number | string | null;
+  other_costs?: number | string | null;
+  total_area?: number | string | null;
+  area_unit?: string | null;
+  total_yield?: number | string | null;
+  yield_unit?: string | null;
+  paid_amount?: number | string | null;
+  payment_status?: string | null;
+  payment_method?: string | null;
+  is_shared?: boolean | null;
+  shared_amount?: number | string | null;
+  [k: string]: any;
+}
+
+export const n = (v: unknown) => {
+  const x = typeof v === "number" ? v : parseFloat(String(v ?? ""));
+  return Number.isFinite(x) ? x : 0;
+};
+
+export const dateOf = (e: LedgerRow) => e.entry_date || e.created_at || null;
+
+/** Currency — one formatter for the whole app. */
+export const money = (v: number) => `Rs ${Math.round(v).toLocaleString("en-PK")}`;
+/** Weight / yield / area — 2 decimals, never more. */
+export const qty = (v: number, digits = 2) =>
+  v.toLocaleString("en-PK", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+export const withUnit = (v: number, unit: string, digits = 2) => `${qty(v, digits)} ${unit}`;
+
+/** Preferred display unit for weights across the app. */
+export const DISPLAY_WEIGHT_UNIT: WeightUnit = "maund";
+export const DISPLAY_AREA_UNIT: AreaUnit = "acre";
+
+// ── per-sale derivation ─────────────────────────────────────────
+export interface SaleDerived {
+  netWeight: number;
+  netWeightUnit: WeightUnit;
+  netWeightKg: number;
+  netWeightDisplay: number; // in DISPLAY_WEIGHT_UNIT
+  grossSale: number;
+  costs: number;
+  transport: number;
+  labour: number;
+  commission: number;
+  other: number;
+  netSale: number;
+  paid: number;
+  remaining: number;
+  paymentStatus: "unpaid" | "partial" | "paid";
+  areaAcres: number;
+  yieldKg: number;
+  yieldDisplay: number;
+  yieldPerAcre: number | null; // in DISPLAY_WEIGHT_UNIT per acre
+  revenuePerAcre: number | null;
+  costPerAcre: number | null;
+  profitPerAcre: number | null;
+}
+
+/** Derive every sale metric from a stored row. Backward compatible:
+ *  old rows without the new columns simply yield 0 / null. */
+export function deriveSale(e: LedgerRow): SaleDerived {
+  const weightUnit = ((e.weight_unit as WeightUnit) || "kg") as WeightUnit;
+  const gross = n(e.gross_weight);
+  const ded = n(e.deductions);
+  const stored = n(e.net_weight);
+  const netWeight = stored > 0 ? stored : Math.max(gross - ded, 0);
+  const netWeightKg = toKg(netWeight, weightUnit);
+
+  const grossSale = n(e.amount);
+  const transport = n(e.transport_cost);
+  const labour = n(e.labour_cost);
+  const commission = n(e.commission_cost);
+  const other = n(e.other_costs);
+  const costs = transport + labour + commission + other;
+  const netSale = grossSale - costs;
+
+  const paid = n(e.paid_amount);
+  const remaining = Math.max(netSale - paid, 0);
+  const paymentStatus: SaleDerived["paymentStatus"] =
+    paid <= 0 ? "unpaid" : paid >= netSale - 0.01 ? "paid" : "partial";
+
+  const areaAcres = n(e.total_area) > 0 ? toAcres(n(e.total_area), (e.area_unit as AreaUnit) || "acre") : 0;
+  const yieldKg = n(e.total_yield) > 0 ? toKg(n(e.total_yield), (e.yield_unit as WeightUnit) || "kg") : 0;
+  const yieldDisplay = fromKg(yieldKg, DISPLAY_WEIGHT_UNIT);
+
+  const ok = (v: number) => v > 0;
+  return {
+    netWeight,
+    netWeightUnit: weightUnit,
+    netWeightKg,
+    netWeightDisplay: fromKg(netWeightKg, DISPLAY_WEIGHT_UNIT),
+    grossSale,
+    costs,
+    transport,
+    labour,
+    commission,
+    other,
+    netSale,
+    paid,
+    remaining,
+    paymentStatus,
+    areaAcres,
+    yieldKg,
+    yieldDisplay,
+    yieldPerAcre: ok(areaAcres) && ok(yieldKg) ? yieldDisplay / areaAcres : null,
+    revenuePerAcre: ok(areaAcres) ? netSale / areaAcres : null,
+    costPerAcre: ok(areaAcres) && ok(costs) ? costs / areaAcres : null,
+    profitPerAcre: ok(areaAcres) ? netSale / areaAcres : null,
+  };
+}
+
+// ── filters (same rules on every page) ──────────────────────────
+export interface LedgerFilter {
+  seasonId?: string | null;
+  farmerId?: string | null;
+  crop?: string | null;
+  field?: string | null;
+  category?: string | null;
+  from?: string | null; // yyyy-mm-dd
+  to?: string | null;
+}
+
+const same = (a?: string | null, b?: string | null) =>
+  (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
+
+export function applyFilter(entries: LedgerRow[], f: LedgerFilter = {}): LedgerRow[] {
+  return entries.filter((e) => {
+    if (f.seasonId && e.season_id !== f.seasonId) return false;
+    if (f.farmerId && f.farmerId !== "all" && e.farmer_id !== f.farmerId) return false;
+    if (f.crop && f.crop !== "all" && !same(e.crop_type, f.crop)) return false;
+    if (f.field && f.field !== "all" && !same(e.field_name, f.field)) return false;
+    if (f.category && f.category !== "all" && !same(e.category, f.category)) return false;
+    const d = dateOf(e)?.slice(0, 10);
+    if (f.from && (!d || d < f.from)) return false;
+    if (f.to && (!d || d > f.to)) return false;
+    return true;
+  });
+}
+
+// ── totals ──────────────────────────────────────────────────────
+export interface LedgerTotals {
+  count: number;
+  salesCount: number;
+  grossSales: number;
+  saleCosts: number;
+  netSales: number;
+  expenses: number;
+  payments: number;
+  loans: number;
+  /** Money actually received against sales (buyer side). */
+  saleReceived: number;
+  /** Still receivable from buyers on recorded sales. */
+  saleOutstanding: number;
+  netProfit: number;
+  profitMargin: number;
+  totalAreaAcres: number;
+  totalYieldDisplay: number; // maund
+  totalQuantitySold: number; // maund (net weight)
+  yieldPerAcre: number | null;
+  revenuePerAcre: number | null;
+  costPerAcre: number | null;
+  profitPerAcre: number | null;
+  weightUnitLabel: string;
+  areaUnitLabel: string;
+}
+
+export function computeTotals(entries: LedgerRow[]): LedgerTotals {
+  let grossSales = 0,
+    saleCosts = 0,
+    expenses = 0,
+    payments = 0,
+    loans = 0,
+    saleReceived = 0,
+    saleOutstanding = 0,
+    area = 0,
+    yieldSum = 0,
+    qtySold = 0,
+    salesCount = 0;
+
+  entries.forEach((e) => {
+    const amt = n(e.amount);
+    if (e.entry_type === "sale") {
+      const s = deriveSale(e);
+      salesCount += 1;
+      grossSales += s.grossSale;
+      saleCosts += s.costs;
+      saleReceived += s.paid;
+      saleOutstanding += s.remaining;
+      area += s.areaAcres;
+      yieldSum += s.yieldDisplay;
+      qtySold += s.netWeightDisplay;
+    } else if (e.entry_type === "expense") expenses += amt;
+    else if (e.entry_type === "payment") payments += amt;
+    else if (e.entry_type === "loan") loans += amt;
+  });
+
+  const netSales = grossSales - saleCosts;
+  // Sale costs are stored on the sale row and are NOT separate expense
+  // entries, so counting both here does not double-count.
+  const netProfit = netSales - expenses;
+
+  return {
+    count: entries.length,
+    salesCount,
+    grossSales,
+    saleCosts,
+    netSales,
+    expenses,
+    payments,
+    loans,
+    saleReceived,
+    saleOutstanding,
+    netProfit,
+    profitMargin: grossSales > 0 ? (netProfit / grossSales) * 100 : 0,
+    totalAreaAcres: area,
+    totalYieldDisplay: yieldSum,
+    totalQuantitySold: qtySold,
+    yieldPerAcre: area > 0 && yieldSum > 0 ? yieldSum / area : null,
+    revenuePerAcre: area > 0 ? netSales / area : null,
+    costPerAcre: area > 0 ? (saleCosts + expenses) / area : null,
+    profitPerAcre: area > 0 ? netProfit / area : null,
+    weightUnitLabel: "Maund",
+    areaUnitLabel: "Acre",
+  };
+}
+
+// ── grouped views ───────────────────────────────────────────────
+export interface CropRow {
+  crop: string;
+  grossSales: number;
+  netSales: number;
+  expenses: number;
+  costs: number;
+  profit: number;
+  areaAcres: number;
+  yieldDisplay: number;
+  yieldPerAcre: number | null;
+  received: number;
+  outstanding: number;
+}
+
+export function groupByCrop(entries: LedgerRow[]): CropRow[] {
+  const map = new Map<string, LedgerRow[]>();
+  entries.forEach((e) => {
+    const key = (e.crop_type || "Uncategorized").trim() || "Uncategorized";
+    const arr = map.get(key) || [];
+    arr.push(e);
+    map.set(key, arr);
+  });
+  return Array.from(map, ([crop, rows]) => {
+    const t = computeTotals(rows);
+    return {
+      crop,
+      grossSales: t.grossSales,
+      netSales: t.netSales,
+      expenses: t.expenses,
+      costs: t.saleCosts,
+      profit: t.netProfit,
+      areaAcres: t.totalAreaAcres,
+      yieldDisplay: t.totalYieldDisplay,
+      yieldPerAcre: t.yieldPerAcre,
+      received: t.saleReceived,
+      outstanding: t.saleOutstanding,
+    };
+  }).sort((a, b) => b.profit - a.profit);
+}
+
+export interface FarmerSummary extends LedgerTotals {
+  farmerId: string;
+  openingBalance: number;
+  /** Opening + farmer expenses + loans − payments (running account balance). */
+  balanceDue: number;
+  lastActivity: string | null;
+}
+
+/** Farmer-share of an expense row (respects 50/50 split & landlord-only). */
+export const farmerShareOfExpense = (e: LedgerRow) => {
+  if (e.payment_method === "landlord_only") return 0;
+  if (e.is_shared) return n(e.shared_amount) || n(e.amount) / 2;
+  return n(e.amount);
+};
+
+export function summarizeFarmer(
+  entries: LedgerRow[],
+  farmerId: string,
+  openingBalance = 0
+): FarmerSummary {
+  const rows = entries.filter((e) => e.farmer_id === farmerId);
+  const totals = computeTotals(rows);
+  const farmerExpenses = rows
+    .filter((e) => e.entry_type === "expense")
+    .reduce((s, e) => s + farmerShareOfExpense(e), 0);
+  const balanceDue = openingBalance + farmerExpenses + totals.loans - totals.payments;
+  const last = rows
+    .map((e) => dateOf(e))
+    .filter(Boolean)
+    .sort()
+    .pop() as string | undefined;
+  return { ...totals, farmerId, openingBalance, balanceDue, lastActivity: last ?? null };
+}
+
+/** Average yield/acre across sales with usable area+yield. Null when <2 samples. */
+export function averageYield(entries: LedgerRow[], crop?: string | null) {
+  const usable = entries.filter(
+    (e) =>
+      e.entry_type === "sale" &&
+      n(e.total_area) > 0 &&
+      n(e.total_yield) > 0 &&
+      (!crop || same(e.crop_type, crop))
+  );
+  if (usable.length < 2) return null;
+  const vals = usable.map((e) => {
+    const s = deriveSale(e);
+    return s.yieldPerAcre ?? 0;
+  });
+  return { value: vals.reduce((a, b) => a + b, 0) / vals.length, samples: usable.length };
+}
