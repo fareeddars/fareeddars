@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { offlineRepo, isOnline, useOnlineStatus } from "@/lib/offline";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSeason } from "@/contexts/SeasonContext";
+import { summarizeFarmer } from "@/lib/ledger/aggregate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +78,35 @@ const Farmers = () => {
   const [form, setForm] = useState({ ...emptyForm });
   const [editForm, setEditForm] = useState({ ...emptyForm });
   const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
+
+  // Real running balances — derived from the SAME aggregator used by
+  // Dashboard / Reports so every page shows identical numbers.
+  const { selectedSeason, farmerSeasons } = useSeason();
+  const [entries, setEntries] = useState<any[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (isOnline()) {
+          let q = supabase.from("ledger_entries").select("*");
+          if (selectedSeason) q = q.eq("season_id", selectedSeason.id);
+          const { data } = await q;
+          if (!cancelled) setEntries((data as any[]) ?? []);
+        } else {
+          const local = await offlineRepo.listLocal("ledger_entries", (e: any) => !selectedSeason || e.season_id === selectedSeason.id);
+          if (!cancelled) setEntries(local as any[]);
+        }
+      } catch { /* keep last known entries */ }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedSeason?.id]);
+
+  const balanceOf = (farmerId: string) => {
+    const fs = farmerSeasons.find((f: any) => f.farmer_id === farmerId);
+    const opening = Number(fs?.opening_balance ?? farmers.find((f) => f.id === farmerId)?.initial_balance ?? 0);
+    return summarizeFarmer(entries as any[], farmerId, opening).balanceDue;
+  };
 
   const fetchFarmers = async () => {
     if (isOnline()) {
@@ -171,8 +202,8 @@ const Farmers = () => {
   });
 
   const totalPortfolioBalance = useMemo(() => {
-    return farmers.reduce((sum, f) => sum + Number(f.initial_balance || 0), 0);
-  }, [farmers]);
+    return farmers.reduce((sum, f) => sum + balanceOf(f.id), 0);
+  }, [farmers, entries, farmerSeasons]);
 
   const renderFarmerFormFields = (formData: typeof form, setFormData: (v: typeof form) => void) => (
     <div className="space-y-5 px-1 py-2">
@@ -451,8 +482,8 @@ const Farmers = () => {
               
               <div className="pt-2 sm:pt-3 border-t border-border/40 flex items-center justify-between">
                 <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-muted-foreground">{t("farmers.balance")}</span>
-                <span className="text-foreground font-bold font-mono text-sm sm:text-lg tracking-tight text-emerald-600 dark:text-emerald-400">
-                  ₨ {Number(farmer.initial_balance).toLocaleString()}
+                <span className={`font-bold font-mono text-sm sm:text-lg tracking-tight ${balanceOf(farmer.id) > 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                  ₨ {Math.round(balanceOf(farmer.id)).toLocaleString()}
                 </span>
               </div>
             </CardContent>
@@ -508,8 +539,8 @@ const Farmers = () => {
                 {/* Financial Highlight */}
                 <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 p-5 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><BadgeDollarSign className="h-4 w-4"/> {t("farmers.initialBalance")}</p>
-                    <p className="text-3xl font-bold font-mono text-emerald-700 dark:text-emerald-300">₨ {Number(selectedFarmer.initial_balance).toLocaleString()}</p>
+                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><BadgeDollarSign className="h-4 w-4"/> {t("farmers.balance")}</p>
+                    <p className="text-3xl font-bold font-mono text-emerald-700 dark:text-emerald-300">₨ {Math.round(balanceOf(selectedFarmer.id)).toLocaleString()}</p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
                     <Wallet className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
