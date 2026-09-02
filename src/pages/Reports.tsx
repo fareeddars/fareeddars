@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
+import { deriveSale } from "@/lib/ledger/aggregate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -96,8 +97,9 @@ const Reports = () => {
     }, 0);
     const totalExpenses = totalFarmerExpenses + totalLandlordExpenses; // === sum of every row
 
-    // Sales: amount is already net_weight * rate (validated in Ledger)
-    const totalSales = sales.reduce((sum, e) => sum + Number(e.amount), 0);
+    // Sales: net sale = gross sale (net_weight × rate) − sale-level costs.
+    // Centralised in src/lib/ledger/aggregate so every page agrees.
+    const totalSales = sales.reduce((sum, e) => sum + deriveSale(e as any).netSale, 0);
     const totalPayments = payments.reduce((sum, e) => sum + Number(e.amount), 0);
     const totalLoans = loans.reduce((sum, e) => sum + Number(e.amount), 0);
 

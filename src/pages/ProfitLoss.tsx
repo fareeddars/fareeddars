@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
+import { computeTotals } from "@/lib/ledger/aggregate";
 import { motion } from "framer-motion";
 import {
   ArrowDownRight,
@@ -159,7 +160,7 @@ const ProfitLoss = () => {
     const fetch = async () => {
       let query = supabase
         .from("ledger_entries")
-        .select("entry_type, amount, category, crop_type, entry_date, created_at, farmer_id");
+        .select("*");
       if (selectedSeason) query = query.eq("season_id", selectedSeason.id);
       const { data: entries } = await query;
       if (!entries) return;
@@ -195,15 +196,14 @@ const ProfitLoss = () => {
     });
   }, [rawEntries, applied, farmerMap]);
 
-  // ---- core calculations (unchanged logic) ----
+  // ---- core calculations (centralised — src/lib/ledger/aggregate) ----
   useEffect(() => {
-    let income = 0,
-      expenses = 0;
-    entries.forEach((e) => {
-      const amt = Number(e.amount) || 0;
-      if (e.entry_type === "sale") income += amt;
-      else if (e.entry_type === "expense") expenses += amt;
-    });
+    const t = computeTotals(entries as any[]);
+    // Gross sale is the revenue; sale-level costs (transport/labour/commission/
+    // other) live on the sale row and are NOT separate expense entries, so
+    // adding them to expenses here does not double-count.
+    const income = t.grossSales;
+    const expenses = t.expenses + t.saleCosts;
 
     setData({ income, expenses, entries: entries as any });
     setChartData([

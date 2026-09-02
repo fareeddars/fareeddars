@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import FarmerAvatar from "@/components/FarmerAvatar";
+import { deriveSale, money as fmtMoney, qty as fmtQty } from "@/lib/ledger/aggregate";
 import { computeSale, averageYieldPerAcre, WEIGHT_UNITS, AREA_UNITS, num, money, qty, type WeightUnit, type AreaUnit } from "@/lib/ledger/calc";
 
 const EXPENSE_CATEGORIES = [
@@ -39,6 +40,20 @@ const EXPENSE_CATEGORIES = [
 ];
 
 type CostAllocation = "farmer" | "shared" | "landlord";
+
+/** Compact sale details derived from the shared aggregator (single source of truth). */
+const SaleMeta = ({ e }: { e: any }) => {
+  const s = deriveSale(e);
+  const bits: string[] = [];
+  if (e.crop_type) bits.push(String(e.crop_type));
+  if (e.field_name) bits.push(String(e.field_name));
+  if (s.netWeight > 0) bits.push(`${fmtQty(s.netWeight)} ${e.weight_unit || "kg"}`);
+  if (s.costs > 0) bits.push(`Costs ${fmtMoney(s.costs)}`);
+  bits.push(`Net ${fmtMoney(s.netSale)}`);
+  if (s.paid > 0 || s.remaining > 0) bits.push(`Paid ${fmtMoney(s.paid)} · Due ${fmtMoney(s.remaining)}`);
+  if (s.yieldPerAcre != null) bits.push(`${fmtQty(s.yieldPerAcre)} Maund/Acre`);
+  return <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground/80">{bits.join(" • ")}</p>;
+};
 
 const Ledger = () => {
   const { user, canCreate, canEdit, canDelete } = useAuth();
@@ -934,6 +949,7 @@ const Ledger = () => {
                     {e.description && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{e.description}</p>
                     )}
+                    {e.entry_type === "sale" && <SaleMeta e={e} />}
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <span className={cn(
@@ -1019,8 +1035,9 @@ const Ledger = () => {
                     <TableCell>
                       <span className="capitalize text-sm font-medium text-foreground/90">{displayCategory}</span>
                     </TableCell>
-                    <TableCell className="text-sm hidden md:table-cell max-w-[260px] truncate text-muted-foreground" title={e.description || ""}>
-                      {e.description || "—"}
+                    <TableCell className="text-sm hidden md:table-cell max-w-[300px] text-muted-foreground" title={e.description || ""}>
+                      <span className="block truncate">{e.description || "—"}</span>
+                      {e.entry_type === "sale" && <SaleMeta e={e} />}
                     </TableCell>
                     <TableCell className={cn(
                       "text-right font-mono font-bold text-sm whitespace-nowrap",
