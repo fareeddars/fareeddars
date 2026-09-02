@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
+import { computeTotals } from "@/lib/ledger/aggregate";
 import { motion } from "framer-motion";
 import {
   ArrowDownRight,
