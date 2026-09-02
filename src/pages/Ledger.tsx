@@ -934,6 +934,7 @@ const Ledger = () => {
                     {e.description && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{e.description}</p>
                     )}
+                    {e.entry_type === "sale" && <SaleMeta e={e} />}
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <span className={cn(
@@ -1019,8 +1020,9 @@ const Ledger = () => {
                     <TableCell>
                       <span className="capitalize text-sm font-medium text-foreground/90">{displayCategory}</span>
                     </TableCell>
-                    <TableCell className="text-sm hidden md:table-cell max-w-[260px] truncate text-muted-foreground" title={e.description || ""}>
-                      {e.description || "—"}
+                    <TableCell className="text-sm hidden md:table-cell max-w-[300px] text-muted-foreground" title={e.description || ""}>
+                      <span className="block truncate">{e.description || "—"}</span>
+                      {e.entry_type === "sale" && <SaleMeta e={e} />}
                     </TableCell>
                     <TableCell className={cn(
                       "text-right font-mono font-bold text-sm whitespace-nowrap",
