@@ -294,7 +294,11 @@ export function groupByCrop(entries: LedgerRow[]): CropRow[] {
 export interface FarmerSummary extends LedgerTotals {
   farmerId: string;
   openingBalance: number;
-  /** Opening + farmer expenses + loans − payments (running account balance). */
+  /** Expense amount allocated to the farmer (respects 50/50 & landlord-only). */
+  farmerExpenses: number;
+  /** Farmer's 50% share of net profit. */
+  farmerProfitShare: number;
+  /** Opening + farmer expenses + loans − farmer profit share − payments. */
   balanceDue: number;
   lastActivity: string | null;
 }
@@ -316,14 +320,27 @@ export function summarizeFarmer(
   const farmerExpenses = rows
     .filter((e) => e.entry_type === "expense")
     .reduce((s, e) => s + farmerShareOfExpense(e), 0);
-  const balanceDue = openingBalance + farmerExpenses + totals.loans - totals.payments;
+  // Profit is split 50/50 between farmer and landlord — only the profit is
+  // split, never the expenses (those are already allocated per row).
+  const farmerProfitShare = totals.netProfit / 2;
+  const balanceDue =
+    openingBalance + farmerExpenses + totals.loans - farmerProfitShare - totals.payments;
   const last = rows
     .map((e) => dateOf(e))
     .filter(Boolean)
     .sort()
     .pop() as string | undefined;
-  return { ...totals, farmerId, openingBalance, balanceDue, lastActivity: last ?? null };
+  return {
+    ...totals,
+    farmerId,
+    openingBalance,
+    farmerExpenses,
+    farmerProfitShare,
+    balanceDue,
+    lastActivity: last ?? null,
+  };
 }
+
 
 /** Average yield/acre across sales with usable area+yield. Null when <2 samples. */
 export function averageYield(entries: LedgerRow[], crop?: string | null) {

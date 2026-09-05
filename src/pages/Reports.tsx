@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
-import { deriveSale } from "@/lib/ledger/aggregate";
+import { deriveSale, summarizeFarmer } from "@/lib/ledger/aggregate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -107,20 +107,14 @@ const Reports = () => {
     const fs = farmerSeasons.find(f => f.farmer_id === farmerId);
     const initialBalance = fs ? Number(fs.opening_balance) : Number(farmer?.initial_balance ?? 0);
 
-    // === PROFIT (only on net profit, NOT expenses) ===
-    const netProfit = totalSales - totalExpenses;
-    const farmerProfitShare = netProfit / 2;       // 50/50
-    const landlordProfitShare = netProfit / 2;
+    // === Single source of truth: same summary the Dashboard & Farmers use ===
+    const summary = summarizeFarmer(entries as any[], farmerId, initialBalance);
+    const netProfit = summary.netProfit;             // net sales − expenses
+    const farmerProfitShare = summary.farmerProfitShare; // 50/50, profit only
+    const landlordProfitShare = netProfit - farmerProfitShare;
 
-    // === FARMER ACCOUNT (positive = farmer owes landlord) ===
-    // Opening Balance
-    // − Farmer's Profit Share (income for farmer reduces debt)
-    // + Loans Taken from landlord (increases debt)
-    // + Expenses Paid by Landlord on farmer's behalf (here we treat shared/landlord_only landlord-paid expenses already in landlord side; only farmer-allocated expenses stay on farmer's books)
-    // − Payments Made by farmer (reduces debt)
-    //
-    // Simplified: Final Balance = Opening + FarmerExpenses + Loans − FarmerProfitShare − Payments
-    const finalBalance = initialBalance + totalFarmerExpenses + totalLoans - farmerProfitShare - totalPayments;
+    // Final Balance = Opening + FarmerExpenses + Loans − FarmerProfitShare − Payments
+    const finalBalance = summary.balanceDue;
 
     return {
       expenses, sales, payments, loans,
@@ -130,6 +124,7 @@ const Reports = () => {
       finalBalance,
     };
   };
+
 
   const selectedFarmerName = selectedFarmerId === "all" ? t("reports.allFarmers") : getFarmerName(selectedFarmerId);
 
