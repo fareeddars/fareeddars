@@ -16,7 +16,7 @@ const tones = {
 };
 
 const AIInsightsCard = ({ insights }: { insights: Insight[] }) => (
-  <section aria-label="AI insights" className="flex flex-col rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+  <section aria-label="AI insights" className="flex flex-col rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm">
     <h2 className="mb-3 text-sm font-semibold text-foreground">AI Insights</h2>
     {insights.length === 0 ? (
       <p className="py-8 text-center text-sm text-muted-foreground">Not enough data yet for insights.</p>

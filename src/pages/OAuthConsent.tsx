@@ -97,7 +97,7 @@ export default function OAuthConsent() {
     <main className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="max-w-md w-full shadow-xl">
         <CardHeader className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary mb-3">
             <Shield className="h-6 w-6" />
           </div>
           <CardTitle>Connect {clientName} to Agri Ledger?</CardTitle>

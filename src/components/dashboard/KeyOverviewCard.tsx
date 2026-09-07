@@ -18,13 +18,13 @@ const tones = {
 };
 
 const KeyOverviewCard = ({ items }: { items: OverviewItem[] }) => (
-  <section aria-label="Key overview" className="rounded-2xl border border-border bg-secondary/40 p-4 sm:p-5">
+  <section aria-label="Key overview" className="rounded-lg border border-border bg-secondary/40 p-4 sm:p-5">
     <h2 className="mb-3 text-sm font-semibold text-foreground">Key Overview</h2>
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((item) => (
         <article
           key={item.label}
-          className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+          className="rounded-lg border border-border bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
         >
           <div className="flex items-start gap-2.5">
             <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", tones[item.tone])}>

@@ -18,7 +18,7 @@ const statuses = {
 };
 
 const NotificationsCard = ({ items }: { items: NotificationItem[] }) => (
-  <section aria-label="Notifications" className="flex flex-col rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+  <section aria-label="Notifications" className="flex flex-col rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm">
     <h2 className="mb-3 text-sm font-semibold text-foreground">Notifications</h2>
     {items.length === 0 ? (
       <p className="py-8 text-center text-sm text-muted-foreground">You're all caught up.</p>

@@ -53,7 +53,7 @@ const SettingsNav = ({ active, onChange }: Props) => {
       {/* Desktop: vertical nav */}
       <nav
         aria-label="Settings sections"
-        className="hidden lg:block rounded-2xl border border-border/70 bg-card p-2 shadow-sm"
+        className="hidden lg:block rounded-lg border border-border/70 bg-card p-2 shadow-sm"
       >
         <p className="px-3 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
           Settings

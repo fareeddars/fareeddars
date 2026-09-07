@@ -73,7 +73,7 @@ const Auth = () => {
           <h1 className="mt-1.5 pb-1 font-serif text-2xl font-semibold leading-[1.3] tracking-tight text-foreground">Agri Ledger</h1>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card/80 p-5 shadow-xl backdrop-blur sm:p-6">
+        <div className="rounded-lg border border-border bg-card/80 p-5 shadow-xl backdrop-blur sm:p-6">
 
 
             <div className="mb-4">

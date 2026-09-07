@@ -17,7 +17,7 @@ const Metric = ({ label, value, tone = "" }: { label: string; value: string; ton
 
 /** Season / crop production + sales figures — all derived from saved sale transactions. */
 const CropPerformanceCard = ({ totals, crops, avgYield, seasonName }: Props) => (
-  <section aria-label="Crop and sales performance" className="rounded-2xl border border-border bg-secondary/40 p-4 sm:p-5">
+  <section aria-label="Crop and sales performance" className="rounded-lg border border-border bg-secondary/40 p-4 sm:p-5">
     <div className="mb-3 flex items-center gap-2">
       <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
         <Sprout className="h-4 w-4" aria-hidden="true" />

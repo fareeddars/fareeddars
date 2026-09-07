@@ -383,12 +383,12 @@ const ProfitLoss = () => {
       {/* ── Hero Banner ───────────────────────────────── */}
       <motion.header
         variants={fadeUp}
-        className="relative overflow-hidden rounded-[20px] border border-emerald-900/10 bg-gradient-to-br from-[#064E3B] via-[#10B981] to-[#10B981] p-5 sm:p-8 text-white shadow-lg print:hidden"
+        className="relative overflow-hidden rounded-lg border border-emerald-900/10 bg-gradient-to-br from-[#064E3B] via-[#10B981] to-[#10B981] p-5 sm:p-8 text-white shadow-lg print:hidden"
       >
-        <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-card/10 blur-2xl" />
         <div className="pointer-events-none absolute bottom-0 right-6 hidden md:flex items-end gap-1.5 opacity-30">
           {[28, 44, 60, 78, 100].map((h) => (
-            <div key={h} className="w-5 rounded-t-md bg-white/70" style={{ height: h }} />
+            <div key={h} className="w-5 rounded-t-md bg-card/70" style={{ height: h }} />
           ))}
           <Leaf className="ml-2 h-16 w-16 text-white/70" />
         </div>
@@ -398,7 +398,7 @@ const ProfitLoss = () => {
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">{labels.pageTitle}</h1>
             <p className="mt-1 text-sm sm:text-base text-emerald-50/90">{labels.subtitle}</p>
             {selectedSeason && (
-              <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+              <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-card/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
                 <Leaf className="h-3.5 w-3.5" /> {selectedSeason.name}
               </span>
             )}
@@ -406,7 +406,7 @@ const ProfitLoss = () => {
 
           <div className="flex flex-wrap items-center gap-2">
             <Select value={selectedSeason?.id ?? ""} onValueChange={(v) => setSelectedSeasonId(v)}>
-              <SelectTrigger className="h-10 w-[170px] rounded-xl border-white/25 bg-white/15 text-white backdrop-blur-sm">
+              <SelectTrigger className="h-10 w-[170px] rounded-xl border-white/25 bg-card/15 text-white backdrop-blur-sm">
                 <Calendar className="mr-1.5 h-4 w-4" />
                 <SelectValue placeholder="Season" />
               </SelectTrigger>
@@ -420,14 +420,14 @@ const ProfitLoss = () => {
             </Select>
             <Button
               variant="secondary"
-              className="h-10 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50"
+              className="h-10 rounded-xl bg-card text-emerald-800 hover:bg-emerald-50"
               onClick={() => window.print()}
             >
               <Download className="mr-2 h-4 w-4" /> Export PDF
             </Button>
             <Button
               variant="secondary"
-              className="h-10 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50"
+              className="h-10 rounded-xl bg-card text-emerald-800 hover:bg-emerald-50"
               onClick={exportExcel}
             >
               <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
@@ -444,7 +444,7 @@ const ProfitLoss = () => {
 
       {/* ── 1. Financial Summary ──────────────────────── */}
       <motion.div variants={fadeUp} className="space-y-3">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900">1. Financial Summary</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-foreground">1. Financial Summary</h2>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
           <StatCard label={labels.incomeLabel} value={data.income} prefix="Rs " icon={ArrowUpRight} tone="emerald" />
           <StatCard label={labels.expenseLabel} value={data.expenses} prefix="Rs " icon={ArrowDownRight} tone="red" />
@@ -513,7 +513,7 @@ const ProfitLoss = () => {
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: e.fill }} />
                       <span className="truncate text-slate-700">{e.name}</span>
                     </span>
-                    <span className="shrink-0 font-semibold text-slate-900 tabular-nums">{money(e.value)}</span>
+                    <span className="shrink-0 font-semibold text-foreground tabular-nums">{money(e.value)}</span>
                   </li>
                 ))}
               </ul>
@@ -545,7 +545,7 @@ const ProfitLoss = () => {
             <div className="-mx-2 overflow-x-auto">
               <table className="w-full min-w-[520px] text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                     <th className="px-2 py-2 font-semibold">Crop</th>
                     <th className="px-2 py-2 text-right font-semibold">Income</th>
                     <th className="px-2 py-2 text-right font-semibold">Expense</th>
@@ -557,7 +557,7 @@ const ProfitLoss = () => {
                 <tbody className="divide-y divide-slate-100">
                   {visibleCropRows.map((r) => (
                     <tr key={r.crop} className="transition-colors hover:bg-emerald-50/50">
-                      <td className="px-2 py-3 font-medium text-slate-900">{r.crop}</td>
+                      <td className="px-2 py-3 font-medium text-foreground">{r.crop}</td>
                       <td className="px-2 py-3 text-right tabular-nums text-emerald-700">{money(r.income)}</td>
                       <td className="px-2 py-3 text-right tabular-nums text-red-600">{money(r.expense)}</td>
                       <td className={`px-2 py-3 text-right font-semibold tabular-nums ${r.profit >= 0 ? "text-blue-700" : "text-orange-600"}`}>
@@ -596,7 +596,7 @@ const ProfitLoss = () => {
 
       {/* ── 6. KPI Insights ───────────────────────────── */}
       <motion.div variants={fadeUp} className="space-y-3">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900">6. KPI Insights</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-foreground">6. KPI Insights</h2>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {[
             { label: "Highest Profit Crop", value: bestCrop?.crop ?? "—", sub: bestCrop ? money(bestCrop.profit) : "—", icon: Trophy, color: "text-emerald-700 bg-emerald-50" },
@@ -607,14 +607,14 @@ const ProfitLoss = () => {
             <motion.div
               key={k.label}
               whileHover={{ y: -4 }}
-              className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-lg"
+              className="rounded-lg border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-lg"
             >
-              <div className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl ${k.color}`}>
+              <div className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${k.color}`}>
                 <k.icon className="h-5 w-5" />
               </div>
-              <p className="mt-3 text-xs font-medium text-slate-500">{k.label}</p>
-              <p className="mt-1 truncate text-lg font-bold text-slate-900">{k.value}</p>
-              <p className="text-xs text-slate-500">{k.sub}</p>
+              <p className="mt-3 text-xs font-medium text-muted-foreground">{k.label}</p>
+              <p className="mt-1 truncate text-lg font-bold text-foreground">{k.value}</p>
+              <p className="text-xs text-muted-foreground">{k.sub}</p>
             </motion.div>
           ))}
         </div>
@@ -624,14 +624,14 @@ const ProfitLoss = () => {
       <SectionCard title="7. AI Financial Insights" icon={Sparkles}>
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="flex shrink-0 items-start justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 ring-4 ring-emerald-50">
+            <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 ring-4 ring-emerald-50">
               <Bot className="h-10 w-10" />
             </div>
           </div>
           <ul className="flex-1 space-y-2">
-            {insights.length === 0 && <li className="text-sm text-slate-500">Add some entries to get insights.</li>}
+            {insights.length === 0 && <li className="text-sm text-muted-foreground">Add some entries to get insights.</li>}
             {insights.map((t) => (
-              <li key={t} className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm text-slate-700">
+              <li key={t} className="rounded-lg border border-slate-100 bg-secondary/70 px-4 py-3 text-sm text-slate-700">
                 {t}
               </li>
             ))}
@@ -650,15 +650,15 @@ const ProfitLoss = () => {
                 background: `conic-gradient(#10B981 ${healthScore * 3.6}deg, #E2E8F0 0deg)`,
               }}
             >
-              <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-white">
-                <span className="text-4xl font-bold text-slate-900 tabular-nums">
+              <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-card">
+                <span className="text-4xl font-bold text-foreground tabular-nums">
                   <Counter value={healthScore} />
                 </span>
-                <span className="text-xs text-slate-500">/100</span>
+                <span className="text-xs text-muted-foreground">/100</span>
               </div>
             </div>
             <p className="mt-4 text-lg font-semibold text-emerald-700">{healthLabel}</p>
-            <p className="mt-1 text-center text-xs text-slate-500">
+            <p className="mt-1 text-center text-xs text-muted-foreground">
               Based on profit margin, expense ratio and activity level.
             </p>
           </div>
@@ -666,29 +666,29 @@ const ProfitLoss = () => {
 
         <SectionCard title="9. ROI Calculator" icon={Calculator}>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
-              <p className="text-xs text-slate-500">Total Investment</p>
-              <p className="mt-1 text-lg font-bold text-slate-900 tabular-nums">{money(data.expenses)}</p>
+            <div className="rounded-lg border border-slate-100 bg-secondary/70 p-4">
+              <p className="text-xs text-muted-foreground">Total Investment</p>
+              <p className="mt-1 text-lg font-bold text-foreground tabular-nums">{money(data.expenses)}</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
-              <p className="text-xs text-slate-500">Total Profit</p>
-              <p className="mt-1 text-lg font-bold text-slate-900 tabular-nums">{money(profit)}</p>
+            <div className="rounded-lg border border-slate-100 bg-secondary/70 p-4">
+              <p className="text-xs text-muted-foreground">Total Profit</p>
+              <p className="mt-1 text-lg font-bold text-foreground tabular-nums">{money(profit)}</p>
             </div>
           </div>
-          <div className="mt-3 rounded-2xl bg-emerald-50 p-4">
+          <div className="mt-3 rounded-lg bg-emerald-50 p-4">
             <p className="text-xs font-medium text-emerald-700">ROI (Return on Investment)</p>
             <p className="text-3xl font-bold text-emerald-800 tabular-nums">
               <Counter value={data.expenses > 0 ? (profit / data.expenses) * 100 : 0} suffix="%" decimals={1} />
             </p>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-            <div className="rounded-2xl border border-slate-100 p-3">
-              <p className="text-xs text-slate-500">{labels.expenseRatio}</p>
-              <p className="font-semibold text-slate-900">{expenseRatio}%</p>
+            <div className="rounded-lg border border-slate-100 p-3">
+              <p className="text-xs text-muted-foreground">{labels.expenseRatio}</p>
+              <p className="font-semibold text-foreground">{expenseRatio}%</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 p-3">
-              <p className="text-xs text-slate-500">{labels.totalTransactions}</p>
-              <p className="font-semibold text-slate-900">{data.entries.length}</p>
+            <div className="rounded-lg border border-slate-100 p-3">
+              <p className="text-xs text-muted-foreground">{labels.totalTransactions}</p>
+              <p className="font-semibold text-foreground">{data.entries.length}</p>
             </div>
           </div>
           <p className={`mt-3 rounded-xl px-3 py-2 text-xs font-medium ${profitStatus === "positive" ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-orange-700"}`}>
@@ -725,7 +725,7 @@ const ProfitLoss = () => {
             allLabel="All Crops"
           />
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-500">Farmer</label>
+            <label className="text-xs font-medium text-muted-foreground">Farmer</label>
             <Select value={pending.farmer} onValueChange={(v) => setPending((p) => ({ ...p, farmer: v }))}>
               <SelectTrigger className="h-10 rounded-xl">
                 <SelectValue />
@@ -755,7 +755,7 @@ const ProfitLoss = () => {
             allLabel="All Villages"
           />
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-500">From</label>
+            <label className="text-xs font-medium text-muted-foreground">From</label>
             <Input
               type="date"
               value={pending.from}
@@ -764,7 +764,7 @@ const ProfitLoss = () => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-500">To</label>
+            <label className="text-xs font-medium text-muted-foreground">To</label>
             <Input
               type="date"
               value={pending.to}
@@ -800,7 +800,7 @@ const FilterSelect = ({
   allLabel: string;
 }) => (
   <div className="space-y-1">
-    <label className="text-xs font-medium text-slate-500">{label}</label>
+    <label className="text-xs font-medium text-muted-foreground">{label}</label>
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="h-10 rounded-xl">
         <SelectValue />

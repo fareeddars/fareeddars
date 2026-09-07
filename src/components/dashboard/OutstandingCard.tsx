@@ -8,7 +8,7 @@ const money = (n: number) => `Rs ${Math.round(n).toLocaleString()}`;
 const OutstandingCard = ({ rows, total }: { rows: OutstandingRow[]; total: number }) => {
   const navigate = useNavigate();
   return (
-    <section aria-label="Outstanding balances" className="flex flex-col rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+    <section aria-label="Outstanding balances" className="flex flex-col rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm">
       <header className="mb-3 flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-foreground">Outstanding Balances</h2>
         <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate("/farmers")}>

@@ -211,7 +211,7 @@ const Farmers = () => {
       <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
         <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2"><Camera className="h-4 w-4"/> Farmer Photo</p>
         <div className="flex items-center gap-4">
-          <div className="h-20 w-20 rounded-2xl overflow-hidden bg-muted border border-border/60 shrink-0">
+          <div className="h-20 w-20 rounded-lg overflow-hidden bg-muted border border-border/60 shrink-0">
             <img
               src={formData.photo_url || dynamicFarmerAvatar(formData.name || "farmer")}
               alt="Farmer preview"
@@ -331,13 +331,13 @@ const Farmers = () => {
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700">
       
       {/* --- Premium Page Header Banner --- */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-950 via-blue-900 to-indigo-900 p-4 sm:p-10 text-white shadow-2xl border border-indigo-700/50">
+      <div className="relative overflow-hidden rounded-lg sm:rounded-lg bg-gradient-to-br from-indigo-950 via-blue-900 to-indigo-900 p-4 sm:p-10 text-white shadow-2xl border border-indigo-700/50">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-blue-400/10 -translate-y-1/3 translate-x-1/4 blur-[80px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-indigo-400/20 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
         
          <div className="relative z-10 flex flex-col xl:flex-row gap-4 sm:gap-8 justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-            <div className="hidden sm:flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner shrink-0">
+            <div className="hidden sm:flex h-20 w-20 items-center justify-center rounded-lg bg-card/10 backdrop-blur-xl border border-white/10 shadow-inner shrink-0">
               <Users className="h-10 w-10 text-blue-100" />
             </div>
             <div>
@@ -353,11 +353,11 @@ const Farmers = () => {
           {/* Quick Stats & Action Area */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full xl:w-auto">
             <div className="flex w-full sm:w-auto gap-2 sm:gap-4">
-              <div className="flex-1 bg-black/20 backdrop-blur-md rounded-xl sm:rounded-2xl px-3 sm:px-5 py-2 sm:py-3 border border-white/10 flex flex-col justify-center min-w-0 sm:min-w-[140px]">
+              <div className="flex-1 bg-black/20 backdrop-blur-md rounded-xl sm:rounded-lg px-3 sm:px-5 py-2 sm:py-3 border border-white/10 flex flex-col justify-center min-w-0 sm:min-w-[140px]">
                 <p className="text-[9px] sm:text-xs text-blue-200/70 font-semibold uppercase tracking-widest mb-0.5 sm:mb-1">Total Farmers</p>
                 <p className="text-lg sm:text-3xl font-bold font-mono">{farmers.length}</p>
               </div>
-              <div className="flex-1 bg-emerald-500/10 backdrop-blur-md rounded-xl sm:rounded-2xl px-3 sm:px-5 py-2 sm:py-3 border border-emerald-400/20 flex flex-col justify-center min-w-0 sm:min-w-[160px]">
+              <div className="flex-1 bg-emerald-500/10 backdrop-blur-md rounded-xl sm:rounded-lg px-3 sm:px-5 py-2 sm:py-3 border border-emerald-400/20 flex flex-col justify-center min-w-0 sm:min-w-[160px]">
                 <p className="text-[9px] sm:text-xs text-emerald-200/80 font-semibold uppercase tracking-widest mb-0.5 sm:mb-1">Total Outstanding</p>
                 <p className="text-base sm:text-2xl font-bold font-mono text-emerald-300 truncate">₨ {totalPortfolioBalance.toLocaleString()}</p>
               </div>
@@ -366,11 +366,11 @@ const Farmers = () => {
             {isManagerOrAdmin && (
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto bg-white text-indigo-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl sm:rounded-2xl h-12 sm:h-14 px-5 sm:px-8 shrink-0 text-sm sm:text-base">
+                  <Button className="w-full sm:w-auto bg-card text-indigo-900 hover:bg-card/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl sm:rounded-lg h-12 sm:h-14 px-5 sm:px-8 shrink-0 text-sm sm:text-base">
                     <Plus className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />{t("farmers.addFarmer")}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl">
+                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-lg">
                   <DialogHeader className="px-6 py-5 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 border-b">
                     <DialogTitle className="font-serif text-2xl flex items-center gap-2 text-indigo-900 dark:text-indigo-100">
                       <UserPlus className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
@@ -388,7 +388,7 @@ const Farmers = () => {
                           {t("farmers.saveFarmer")}
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="rounded-2xl">
+                      <DialogContent className="rounded-lg">
                         <DialogHeader>
                           <DialogTitle className="font-serif text-xl">{t("common.confirm")}</DialogTitle>
                           <DialogDescription className="text-base mt-2">
@@ -418,7 +418,7 @@ const Farmers = () => {
           placeholder="Search by Name, CNIC, Phone, or Landlord..." 
           value={search} 
           onChange={(e) => setSearch(e.target.value)} 
-          className="pl-10 sm:pl-12 h-11 sm:h-14 rounded-xl sm:rounded-2xl border-border/60 bg-card/50 backdrop-blur-sm focus:border-indigo-500/50 shadow-sm text-sm sm:text-base transition-all group-focus-within:shadow-md group-focus-within:bg-card" 
+          className="pl-10 sm:pl-12 h-11 sm:h-14 rounded-xl sm:rounded-lg border-border/60 bg-card/50 backdrop-blur-sm focus:border-indigo-500/50 shadow-sm text-sm sm:text-base transition-all group-focus-within:shadow-md group-focus-within:bg-card" 
         />
       </div>
 
@@ -436,7 +436,7 @@ const Farmers = () => {
             
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-5 pt-3 sm:pt-5 flex flex-row items-start justify-between relative z-10">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 shadow-md shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-lg overflow-hidden bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 shadow-md shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <img src={farmer.photo_url || dynamicFarmerAvatar(farmer.name)} alt={farmer.name} className="h-full w-full object-cover" loading="lazy" />
                 </div>
                 <div className="min-w-0">
@@ -459,7 +459,7 @@ const Farmers = () => {
                         <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-2xl">
+                    <AlertDialogContent className="rounded-lg">
                       <AlertDialogHeader><AlertDialogTitle>{t("farmers.deleteFarmer")}</AlertDialogTitle>
                         <AlertDialogDescription>{t("farmers.deleteConfirm")} <strong className="text-foreground">{farmer.name}</strong>? {t("farmers.deleteWarning")}</AlertDialogDescription>
                       </AlertDialogHeader>
@@ -490,7 +490,7 @@ const Farmers = () => {
           </Card>
         ))}
         {filtered.length === 0 && (
-          <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center bg-card/30 backdrop-blur-sm rounded-3xl border border-dashed border-border/60">
+          <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center bg-card/30 backdrop-blur-sm rounded-lg border border-dashed border-border/60">
             <div className="h-20 w-20 bg-muted rounded-full flex items-center justify-center mb-4">
               <UserPlus className="h-10 w-10 text-muted-foreground/40" />
             </div>
@@ -502,7 +502,7 @@ const Farmers = () => {
 
       {/* --- Premium Profile Detail Popup --- */}
       <Dialog open={!!selectedFarmer} onOpenChange={(v) => !v && setSelectedFarmer(null)}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-3xl border-0 shadow-2xl">
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-lg border-0 shadow-2xl">
           {selectedFarmer && (
             <>
               {/* Profile Cover Image / Gradient */}
@@ -537,7 +537,7 @@ const Farmers = () => {
 
               <div className="p-6 pt-2 space-y-4 max-h-[50vh] overflow-y-auto">
                 {/* Financial Highlight */}
-                <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 p-5 flex items-center justify-between shadow-sm">
+                <div className="rounded-lg bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 p-5 flex items-center justify-between shadow-sm">
                   <div>
                     <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><BadgeDollarSign className="h-4 w-4"/> {t("farmers.balance")}</p>
                     <p className="text-3xl font-bold font-mono text-emerald-700 dark:text-emerald-300">₨ {Math.round(balanceOf(selectedFarmer.id)).toLocaleString()}</p>
@@ -549,30 +549,30 @@ const Farmers = () => {
 
                 {/* Details Grid */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
+                  <div className="rounded-lg bg-muted/30 p-4 border border-border/50">
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Phone className="h-3 w-3"/> {t("common.phone")}</p>
                     <p className="text-sm font-medium text-foreground break-all">{selectedFarmer.phone || "—"}</p>
                   </div>
-                  <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
+                  <div className="rounded-lg bg-muted/30 p-4 border border-border/50">
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Home className="h-3 w-3"/> {t("farmers.landlord")}</p>
                     <p className="text-sm font-medium text-foreground">{selectedFarmer.landlord || "—"}</p>
                   </div>
                 </div>
                 
-                <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
+                <div className="rounded-lg bg-muted/30 p-4 border border-border/50">
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><MapPin className="h-3 w-3"/> {t("common.address")}</p>
                   <p className="text-sm font-medium text-foreground">{selectedFarmer.address || "—"}</p>
                 </div>
 
                 {selectedFarmer.farm_details && (
-                  <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
+                  <div className="rounded-lg bg-muted/30 p-4 border border-border/50">
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Leaf className="h-3 w-3"/> {t("farmers.farmDetails")}</p>
                     <p className="text-sm text-foreground/90 leading-relaxed">{selectedFarmer.farm_details}</p>
                   </div>
                 )}
                 
                 {selectedFarmer.notes && (
-                  <div className="rounded-2xl bg-amber-500/5 p-4 border border-amber-500/20">
+                  <div className="rounded-lg bg-amber-500/5 p-4 border border-amber-500/20">
                     <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"><StickyNote className="h-3 w-3"/> {t("farmers.notes")}</p>
                     <p className="text-sm text-foreground/90 leading-relaxed italic">{selectedFarmer.notes}</p>
                   </div>
@@ -585,7 +585,7 @@ const Farmers = () => {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl">
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-lg">
           <DialogHeader className="px-6 py-5 bg-muted/30 border-b">
             <DialogTitle className="font-serif text-2xl flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
               <Pencil className="h-5 w-5" />

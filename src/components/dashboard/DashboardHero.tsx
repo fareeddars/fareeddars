@@ -16,7 +16,7 @@ const greeting = () => {
 };
 
 const DashboardHero = ({ name, seasons, selectedSeasonId, onSeasonChange }: Props) => (
-  <section className="relative overflow-hidden rounded-3xl border border-border shadow-lg">
+  <section className="relative overflow-hidden rounded-lg border border-border shadow-lg">
     <div
       className="absolute inset-0 bg-cover bg-center"
       style={{ backgroundImage: "url('/images/hero_farmland.jpg')" }}

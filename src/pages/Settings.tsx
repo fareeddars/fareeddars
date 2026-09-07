@@ -86,7 +86,7 @@ const Settings = () => {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 pb-12">
       {/* Header */}
-      <header className="relative overflow-hidden rounded-2xl border border-border/70 bg-card px-5 py-6 sm:px-8 sm:py-8">
+      <header className="relative overflow-hidden rounded-lg border border-border/70 bg-card px-5 py-6 sm:px-8 sm:py-8">
         <Leaf
           aria-hidden="true"
           className="pointer-events-none absolute -right-6 -top-6 h-32 w-32 text-primary/5"
@@ -324,7 +324,7 @@ const Settings = () => {
                       aria-checked={selected}
                       onClick={() => setLanguage(lang.value)}
                       className={cn(
-                        "relative flex min-h-11 flex-col items-center justify-center gap-1.5 rounded-2xl border p-5 transition-colors",
+                        "relative flex min-h-11 flex-col items-center justify-center gap-1.5 rounded-lg border p-5 transition-colors",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                         selected
                           ? "border-primary bg-primary/5"

@@ -118,13 +118,13 @@ const Seasons = () => {
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-700">
       
       {/* --- Premium Page Header Banner --- */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 p-4 sm:p-10 text-primary-foreground shadow-2xl border border-emerald-700/50">
+      <div className="relative overflow-hidden rounded-lg sm:rounded-lg bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 p-4 sm:p-10 text-primary-foreground shadow-2xl border border-emerald-700/50">
         <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-emerald-400/10 -translate-y-1/2 translate-x-1/3 blur-[60px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-teal-400/10 translate-y-1/3 -translate-x-1/4 blur-[50px]" />
         
         <div className="relative z-10 flex flex-col gap-4 sm:gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-            <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-inner">
+            <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-lg bg-card/10 backdrop-blur-xl border border-white/10 shadow-inner">
               <Sprout className="h-8 w-8 text-emerald-100" />
             </div>
             <div>
@@ -140,11 +140,11 @@ const Seasons = () => {
           {isAdmin && (
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-white text-emerald-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl h-11 sm:h-12 px-6 w-full sm:w-auto text-sm">
+                <Button className="bg-card text-emerald-900 hover:bg-card/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl h-11 sm:h-12 px-6 w-full sm:w-auto text-sm">
                   <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />{t("seasons.createSeason")}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[95vw] sm:w-full max-w-md rounded-2xl">
+              <DialogContent className="w-[95vw] sm:w-full max-w-md rounded-lg">
                 <DialogHeader>
                   <DialogTitle className="font-serif text-2xl flex items-center gap-2">
                     <Sprout className="h-6 w-6 text-emerald-600" />
@@ -188,7 +188,7 @@ const Seasons = () => {
           return (
             <Card
               key={season.id}
-              className={`cursor-pointer group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-1 animate-fade-in ${
+              className={`cursor-pointer group relative overflow-hidden rounded-lg border transition-all duration-300 hover:-translate-y-1 animate-fade-in ${
                 isSelected
                   ? "ring-2 ring-emerald-500 shadow-lg shadow-emerald-500/15 border-emerald-500/40"
                   : "hover:shadow-lg shadow-sm border-border/60"
@@ -204,7 +204,7 @@ const Seasons = () => {
               <CardContent className="p-3 sm:p-6 relative z-10">
                 <div className="flex items-start justify-between gap-1 sm:gap-2.5 mb-2 sm:mb-3">
                   <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-                    <div className={`flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-105 shrink-0 ${
+                    <div className={`flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105 shrink-0 ${
                       isActive
                         ? "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 dark:from-emerald-900/50 dark:to-teal-900/50 dark:text-emerald-400"
                         : "bg-muted text-muted-foreground"
@@ -241,7 +241,7 @@ const Seasons = () => {
                                 <Lock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />{t("seasons.closeSeason")}
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-2xl">
+                            <AlertDialogContent className="rounded-lg">
                               <AlertDialogHeader><AlertDialogTitle>{t("seasons.closeConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.closeConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
@@ -257,7 +257,7 @@ const Seasons = () => {
                                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-2xl">
+                            <AlertDialogContent className="rounded-lg">
                               <AlertDialogHeader><AlertDialogTitle>{t("seasons.deleteConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.deleteConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
@@ -277,7 +277,7 @@ const Seasons = () => {
                                   <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />{t("seasons.reopenSeason")}
                                 </Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent className="rounded-2xl">
+                              <AlertDialogContent className="rounded-lg">
                                 <AlertDialogHeader><AlertDialogTitle>{t("seasons.reopenConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.reopenConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
@@ -291,7 +291,7 @@ const Seasons = () => {
                                   <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />{t("seasons.deleteSeason")}
                                 </Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent className="rounded-2xl">
+                              <AlertDialogContent className="rounded-lg">
                                 <AlertDialogHeader><AlertDialogTitle>{t("seasons.deleteConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("seasons.deleteConfirmDesc")}</AlertDialogDescription></AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
@@ -311,7 +311,7 @@ const Seasons = () => {
         })}
 
         {seasons.length === 0 && (
-          <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center bg-card/30 backdrop-blur-sm rounded-3xl border border-dashed border-border/60">
+          <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center bg-card/30 backdrop-blur-sm rounded-lg border border-dashed border-border/60">
             <div className="h-20 w-20 bg-muted rounded-full flex items-center justify-center mb-4">
               <Sprout className="h-10 w-10 text-muted-foreground/40" />
             </div>
@@ -326,7 +326,7 @@ const Seasons = () => {
         <div className="space-y-3 sm:space-y-4 animate-in slide-in-from-bottom-4 duration-700">
 
           {/* Main Farmers Card */}
-          <Card className="shadow-2xl border-border/50 overflow-hidden bg-card/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl">
+          <Card className="shadow-2xl border-border/50 overflow-hidden bg-card/80 backdrop-blur-xl rounded-lg sm:rounded-lg">
             <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
             <CardHeader className="pb-3 pt-4 sm:pt-6 px-4 sm:px-6">
               <CardTitle className="text-lg sm:text-2xl font-serif flex items-center gap-2">
@@ -338,7 +338,7 @@ const Seasons = () => {
               {farmerSeasons.length > 0 ? (
                 <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-2 xl:grid-cols-3">
                   {farmerSeasons.map((fs) => (
-                    <div key={fs.id} className={`group relative rounded-xl sm:rounded-2xl border p-2.5 sm:p-5 transition-all duration-300 hover:shadow-lg bg-background/50 backdrop-blur-sm ${
+                    <div key={fs.id} className={`group relative rounded-xl sm:rounded-lg border p-2.5 sm:p-5 transition-all duration-300 hover:shadow-lg bg-background/50 backdrop-blur-sm ${
                       fs.status === "left" ? "opacity-60 border-destructive/30 bg-destructive/5" :
                       fs.status === "completed" ? "border-emerald-500/30 bg-emerald-500/5" : "border-border hover:border-emerald-500/30 hover:-translate-y-1"
                     }`}>
@@ -377,7 +377,7 @@ const Seasons = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 px-4 rounded-2xl bg-muted/20 border border-dashed border-border">
+                <div className="text-center py-12 px-4 rounded-lg bg-muted/20 border border-dashed border-border">
                   <Users className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
                   <p className="text-muted-foreground font-medium">{t("seasons.noFarmersInSeason")}</p>
                 </div>
@@ -389,7 +389,7 @@ const Seasons = () => {
 
       {/* Assign Farmers Dialog */}
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
-        <DialogContent className="w-[95vw] sm:w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl p-0 overflow-hidden">
+        <DialogContent className="w-[95vw] sm:w-full max-w-lg max-h-[85vh] flex flex-col rounded-lg p-0 overflow-hidden">
           <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2">
             <DialogTitle className="font-serif text-lg sm:text-2xl flex items-center gap-2">
               <Users className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
@@ -402,7 +402,7 @@ const Seasons = () => {
               const alreadyAssigned = farmerSeasons.some((fs) => fs.farmer_id === farmer.id);
               const isChecked = selectedFarmerIds.includes(farmer.id);
               return (
-                <div key={farmer.id} className={`flex items-center gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 ${
+                <div key={farmer.id} className={`flex items-center gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-xl sm:rounded-lg border transition-all duration-300 ${
                   alreadyAssigned ? "bg-muted/30 border-muted opacity-60" : isChecked ? "bg-emerald-500/5 border-emerald-500/30 shadow-sm" : "border-border hover:border-emerald-500/20 bg-card hover:shadow-sm"
                 }`}>
                   <Checkbox 

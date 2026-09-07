@@ -17,7 +17,7 @@ const fmt = (d?: string | null) => (d ? format(new Date(d), "dd MMM yyyy") : "â€
 const SeasonProgressCard = ({ seasonName, status, startDate, endDate, progress, daysLeft }: Props) => {
   const navigate = useNavigate();
   return (
-    <section aria-label="Season progress" className="flex flex-col rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+    <section aria-label="Season progress" className="flex flex-col rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm">
       <h2 className="mb-3 text-sm font-semibold text-foreground">Season Progress</h2>
 
       <div className="flex items-center justify-between gap-2">

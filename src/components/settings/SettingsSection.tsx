@@ -12,7 +12,7 @@ interface Props {
 }
 
 const SettingsSection = ({ icon: Icon, title, description, tone = "primary", children }: Props) => (
-  <Card className="rounded-2xl border-border/70 bg-card shadow-sm">
+  <Card className="rounded-lg border-border/70 bg-card shadow-sm">
     <CardHeader className="gap-1 pb-4">
       <div className="flex items-start gap-3">
         <span
