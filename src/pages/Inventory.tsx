@@ -25,10 +25,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip } fr
 import type { Tables } from "@/integrations/supabase/types";
 import heroImg from "@/assets/inventory-hero.png";
 
-const EMERALD = "#1F6B3A";
-const EMERALD_SOFT = "#E7F3EB";
-const AMBER = "#E8A93B";
-const RED = "#D9534F";
+const EMERALD = "#10B981";
+const EMERALD_SOFT = "#F0FDF4";
+const AMBER = "#F59E0B";
+const RED = "#DC2626";
 const SLATE = "#94A3B8";
 
 const Inventory = () => {
@@ -91,7 +91,7 @@ const Inventory = () => {
 
       itemsHTML += `
         <div style="margin-bottom:20px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;page-break-inside:avoid;">
-          <div style="background:linear-gradient(135deg,#1F6B3A,#2E8B57);padding:14px 18px;color:#fff;display:flex;justify-content:space-between;">
+          <div style="background:linear-gradient(135deg,#10B981,#059669);padding:14px 18px;color:#fff;display:flex;justify-content:space-between;">
             <div><h3 style="margin:0;font-size:16px;font-weight:700;">${item.item_name}</h3>
             <p style="margin:4px 0 0;opacity:.8;font-size:12px;">${tl("Unit", "اکائی", "اڪائي")}: ${item.unit}</p></div>
             <div style="text-align:${isRTL ? "left" : "right"};">
@@ -114,8 +114,8 @@ const Inventory = () => {
       <title>${tl("Inventory Report", "گودام کی رپورٹ", "گودام جي رپورٽ")}</title>
       <style>body{font-family:${isRTL ? "'Jameel Noori Nastaleeq','Noto Naskh Arabic',Arial,sans-serif" : "'Inter','Segoe UI',Arial,sans-serif"};color:#1e293b;padding:30px;font-size:13px;}@media print{@page{margin:15mm;}}</style>
       </head><body>
-      <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1F6B3A;">
-        <h1 style="font-size:22px;color:#1F6B3A;margin:0;">🌾 ${tl("Agri Ledger", "زرعی حساب کتاب", "زرعي حساب ڪتاب")}</h1>
+      <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #10B981;">
+        <h1 style="font-size:22px;color:#10B981;margin:0;">🌾 ${tl("Agri Ledger", "زرعی حساب کتاب", "زرعي حساب ڪتاب")}</h1>
         <p style="color:#64748b;margin-top:6px;">${tl("Inventory Report", "گودام کی رپورٹ", "گودام جي رپورٽ")} · ${new Date().toLocaleDateString()}</p>
         <p style="color:#64748b;margin-top:4px;">${tl("Total value", "کل قیمت", "ڪل قيمت")}: <b>₨ ${totalValue.toLocaleString()}</b></p>
       </div>
@@ -236,7 +236,7 @@ const Inventory = () => {
               <DialogTrigger asChild>
                 <Button size="sm"
                   className="rounded-2xl h-10 px-4 text-white shadow-lg shadow-emerald-900/20 hover:-translate-y-0.5 transition-all"
-                  style={{ background: `linear-gradient(135deg, ${EMERALD}, #2E8B57)` }}>
+                  style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}>
                   <Plus className="mr-2 h-4 w-4" />Add New Item
                 </Button>
               </DialogTrigger>
@@ -266,7 +266,7 @@ const Inventory = () => {
                 </div>
                 <DialogFooter>
                   <Button className="w-full rounded-xl text-white"
-                    style={{ background: `linear-gradient(135deg, ${EMERALD}, #2E8B57)` }}
+                    style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}
                     onClick={handleSave} disabled={!form.item_name}>Save Item</Button>
                 </DialogFooter>
               </DialogContent>
@@ -277,7 +277,7 @@ const Inventory = () => {
 
       {/* Hero */}
       <div className="relative overflow-hidden rounded-[28px] p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/20"
-        style={{ background: `linear-gradient(120deg, ${EMERALD} 0%, #2E8B57 55%, #4CA972 100%)` }}>
+        style={{ background: `linear-gradient(120deg, ${EMERALD} 0%, #059669 55%, #34D399 100%)` }}>
         <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -bottom-24 right-1/4 w-72 h-72 rounded-full bg-emerald-200/10 blur-3xl" />
         <div className="relative grid gap-6 sm:grid-cols-[1.6fr,1fr] items-center">
@@ -447,7 +447,7 @@ const Inventory = () => {
               </div>
               <div className="mt-2 h-1.5 rounded-full bg-emerald-100 overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${stats.health}%`, background: `linear-gradient(90deg, ${EMERALD}, #4CA972)` }} />
+                  style={{ width: `${stats.health}%`, background: `linear-gradient(90deg, ${EMERALD}, #34D399)` }} />
               </div>
             </div>
           </CardContent>
@@ -582,7 +582,7 @@ const Inventory = () => {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button className="text-white" style={{ background: `linear-gradient(135deg, ${EMERALD}, #2E8B57)` }}
+            <Button className="text-white" style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}
               onClick={handleUpdate} disabled={!editForm.item_name}>Update Item</Button>
           </DialogFooter>
         </DialogContent>

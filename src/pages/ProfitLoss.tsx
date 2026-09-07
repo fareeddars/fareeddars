@@ -74,7 +74,7 @@ interface ProfitLossData {
   entries: Array<{ entry_type: string; amount: number }>;
 }
 
-const PALETTE = ["#1F6B3A", "#2563eb", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4", "#84cc16", "#94a3b8"];
+const PALETTE = ["#10B981", "#2563eb", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4", "#84cc16", "#94a3b8"];
 
 const money = (n: number) => `Rs ${Math.round(n).toLocaleString()}`;
 
@@ -91,7 +91,7 @@ const ProfitLoss = () => {
   const [cropSearch, setCropSearch] = useState("");
 
   const [chartData, setChartData] = useState([
-    { name: "Income", value: 0, fill: "#1F6B3A" },
+    { name: "Income", value: 0, fill: "#10B981" },
     { name: "Expenses", value: 0, fill: "#ef4444" },
   ]);
 
@@ -207,7 +207,7 @@ const ProfitLoss = () => {
 
     setData({ income, expenses, entries: entries as any });
     setChartData([
-      { name: language === "en" ? "Income" : language === "ur" ? "آمدنی" : "آمدني", value: income, fill: "#1F6B3A" },
+      { name: language === "en" ? "Income" : language === "ur" ? "آمدنی" : "آمدني", value: income, fill: "#10B981" },
       { name: language === "en" ? "Expenses" : language === "ur" ? "اخراجات" : "خرچ", value: expenses, fill: "#ef4444" },
     ]);
 
@@ -378,12 +378,12 @@ const ProfitLoss = () => {
       initial="hidden"
       animate="show"
       variants={{ show: { transition: { staggerChildren: 0.05 } } }}
-      className="space-y-5 sm:space-y-6 bg-[#F8FAFC] -m-2 sm:-m-4 p-2 sm:p-4 md:p-6 min-h-screen"
+      className="space-y-5 sm:space-y-6 bg-[#F0FDF4] -m-2 sm:-m-4 p-2 sm:p-4 md:p-6 min-h-screen"
     >
       {/* ── Hero Banner ───────────────────────────────── */}
       <motion.header
         variants={fadeUp}
-        className="relative overflow-hidden rounded-[20px] border border-emerald-900/10 bg-gradient-to-br from-[#124728] via-[#1F6B3A] to-[#2f9457] p-5 sm:p-8 text-white shadow-lg print:hidden"
+        className="relative overflow-hidden rounded-[20px] border border-emerald-900/10 bg-gradient-to-br from-[#064E3B] via-[#10B981] to-[#10B981] p-5 sm:p-8 text-white shadow-lg print:hidden"
       >
         <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute bottom-0 right-6 hidden md:flex items-end gap-1.5 opacity-30">
@@ -586,7 +586,7 @@ const ProfitLoss = () => {
                   <XAxis type="number" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="name" width={90} stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip formatter={(value) => money(Number(value))} contentStyle={{ borderRadius: 12 }} />
-                  <Bar dataKey="value" name="Revenue" fill="#1F6B3A" radius={[0, 8, 8, 0]} barSize={18} />
+                  <Bar dataKey="value" name="Revenue" fill="#10B981" radius={[0, 8, 8, 0]} barSize={18} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -647,7 +647,7 @@ const ProfitLoss = () => {
             <div
               className="relative flex h-40 w-40 items-center justify-center rounded-full"
               style={{
-                background: `conic-gradient(#1F6B3A ${healthScore * 3.6}deg, #E2E8F0 0deg)`,
+                background: `conic-gradient(#10B981 ${healthScore * 3.6}deg, #E2E8F0 0deg)`,
               }}
             >
               <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-white">
@@ -705,7 +705,7 @@ const ProfitLoss = () => {
                 <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip formatter={(value) => money(Number(value))} contentStyle={{ borderRadius: 12 }} />
                 <Legend />
-                <Bar dataKey="income" name="Income" fill="#1F6B3A" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="income" name="Income" fill="#10B981" radius={[8, 8, 0, 0]} />
                 <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[8, 8, 0, 0]} />
                 <Bar dataKey="profit" name="Profit" fill="#2563eb" radius={[8, 8, 0, 0]} />
               </BarChart>
@@ -774,7 +774,7 @@ const ProfitLoss = () => {
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button className="h-11 rounded-xl bg-[#1F6B3A] px-6 hover:bg-[#175530]" onClick={() => setApplied(pending)}>
+          <Button className="h-11 rounded-xl bg-[#10B981] px-6 hover:bg-[#059669]" onClick={() => setApplied(pending)}>
             <Filter className="mr-2 h-4 w-4" /> Apply Filters
           </Button>
           <Button variant="outline" className="h-11 rounded-xl px-6" onClick={clearFilters}>
