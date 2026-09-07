@@ -91,13 +91,13 @@ export const StatCard = ({
       variants={fadeUp}
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      className="rounded-[20px] border border-slate-200 bg-white p-4 sm:p-5 shadow-sm hover:shadow-lg transition-shadow"
+      className="rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm hover:shadow-lg transition-shadow"
     >
       <div className="flex items-center gap-3">
-        <div className={cn("h-10 w-10 sm:h-11 sm:w-11 shrink-0 rounded-2xl flex items-center justify-center text-white ring-4", t.icon, t.ring)}>
+        <div className={cn("h-10 w-10 sm:h-11 sm:w-11 shrink-0 rounded-lg flex items-center justify-center text-white ring-4", t.icon, t.ring)}>
           <Icon className="h-5 w-5" />
         </div>
-        <p className="text-[13px] sm:text-sm font-medium text-slate-600 leading-tight">{label}</p>
+        <p className="text-[13px] sm:text-sm font-medium text-muted-foreground leading-tight">{label}</p>
       </div>
       <div className={cn("mt-3 text-xl sm:text-2xl font-bold tracking-tight tabular-nums", t.text)}>
         <Counter value={value} prefix={prefix} suffix={suffix} decimals={decimals} />
@@ -113,7 +113,7 @@ export const StatCard = ({
           {Math.abs(trend).toFixed(1)}%
         </div>
       )}
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </motion.div>
   );
 };
@@ -135,12 +135,12 @@ export const SectionCard = ({
   <motion.section
     variants={fadeUp}
     className={cn(
-      "rounded-[20px] border border-slate-200 bg-white p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow",
+      "rounded-lg border border-border bg-card p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow",
       className
     )}
   >
     <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold text-slate-900">
+      <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold text-foreground">
         {Icon && <Icon className="h-5 w-5 text-emerald-700" />}
         {title}
       </h2>
@@ -165,7 +165,7 @@ export const StatusBadge = ({ status }: { status: "Excellent" | "Good" | "Averag
 };
 
 export const EmptyState = ({ message }: { message: string }) => (
-  <div className="flex h-[180px] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 text-sm text-slate-500">
+  <div className="flex h-[180px] items-center justify-center rounded-lg border border-dashed border-border bg-secondary/60 text-sm text-muted-foreground">
     {message}
   </div>
 );

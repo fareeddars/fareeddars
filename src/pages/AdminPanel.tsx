@@ -132,15 +132,15 @@ const AdminPanel = () => {
   return (
     <div className="space-y-6">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-primary to-blue-500 p-5 sm:p-8 text-primary-foreground shadow-2xl shadow-primary/30">
-        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-indigo-600 via-primary to-blue-500 p-5 sm:p-8 text-primary-foreground shadow-2xl shadow-primary/30">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-card/10 blur-3xl" />
         <div className="absolute -bottom-24 -left-10 w-72 h-72 rounded-full bg-blue-300/20 blur-3xl" />
         <div className="absolute top-4 right-4 opacity-20">
           <Sparkles className="h-24 w-24" />
         </div>
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 shadow-inner">
+            <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-lg bg-card/15 backdrop-blur-md border border-white/20 shadow-inner">
               <Crown className="h-7 w-7 sm:h-8 sm:w-8" />
             </div>
             <div>
@@ -152,7 +152,7 @@ const AdminPanel = () => {
           </div>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-white text-primary hover:bg-white/95 font-semibold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl h-11 px-5">
+              <Button className="bg-card text-primary hover:bg-card/95 font-semibold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl h-11 px-5">
                 <UserPlus className="mr-2 h-4 w-4" /> {t("admin.createUser")}
               </Button>
             </DialogTrigger>
@@ -206,7 +206,7 @@ const AdminPanel = () => {
         ].map((s) => (
           <Card key={s.label} className="overflow-hidden border-border/50 bg-card hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 group">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${s.from} ${s.to} shadow-md group-hover:scale-110 transition-transform`}>
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${s.from} ${s.to} shadow-md group-hover:scale-110 transition-transform`}>
                 <s.icon className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0">

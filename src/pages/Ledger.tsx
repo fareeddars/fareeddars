@@ -478,19 +478,19 @@ const Ledger = () => {
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700">
       {/* Season Closed Banner */}
       {isSeasonClosed && (
-        <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 flex items-center gap-3 text-amber-700 dark:text-amber-400 shadow-sm">
+        <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-4 flex items-center gap-3 text-amber-700 dark:text-amber-400 shadow-sm">
           <Lock className="h-5 w-5 shrink-0" /> <span className="font-medium text-sm">{t("seasons.seasonClosed")}</span>
         </div>
       )}
       {!selectedSeason && (
-        <div className="rounded-2xl bg-muted border border-border p-5 text-center text-muted-foreground font-medium">
+        <div className="rounded-lg bg-muted border border-border p-5 text-center text-muted-foreground font-medium">
           {t("seasons.noActiveSeason")}
         </div>
       )}
 
       {/* --- Premium Header Banner with crop background --- */}
       <div
-        className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-10 text-white shadow-2xl border border-violet-900/40 bg-cover bg-center"
+        className="relative overflow-hidden rounded-lg sm:rounded-lg p-4 sm:p-10 text-white shadow-2xl border border-violet-900/40 bg-cover bg-center"
         style={{
           backgroundImage: `linear-gradient(120deg, rgba(46,16,101,0.92) 0%, rgba(76,29,149,0.82) 45%, rgba(88,28,135,0.75) 100%), url(${
             (() => {
@@ -505,7 +505,7 @@ const Ledger = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
         <div className="relative z-10 flex flex-col xl:flex-row gap-4 sm:gap-8 justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-            <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-xl border border-white/20 shadow-inner shrink-0">
+            <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-lg bg-card/15 backdrop-blur-xl border border-white/20 shadow-inner shrink-0">
               <BookOpen className="h-8 w-8 text-white" />
             </div>
             <div>
@@ -522,12 +522,12 @@ const Ledger = () => {
             <div className="flex items-center">
               <Dialog open={open} onOpenChange={(v) => { if (saving && !v) return; setOpen(v); if (!v) resetForm(); }}>
                 <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto bg-white text-violet-900 hover:bg-white/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl sm:rounded-2xl h-11 sm:h-14 px-5 sm:px-8 shrink-0 text-sm sm:text-base">
+                  <Button className="w-full sm:w-auto bg-card text-violet-900 hover:bg-card/90 font-bold shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl sm:rounded-lg h-11 sm:h-14 px-5 sm:px-8 shrink-0 text-sm sm:text-base">
                     <Plus className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />{t("ledger.newTransaction")}
                   </Button>
                 </DialogTrigger>
                     <DialogContent
-                  className="sm:max-w-xl h-dvh sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-none sm:rounded-2xl"
+                  className="sm:max-w-xl h-dvh sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-none sm:rounded-lg"
                   onKeyDown={(e) => { if (e.key === "Enter" && saving) { e.preventDefault(); e.stopPropagation(); } }}
                   onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}
                   onPointerDownOutside={(e) => { if (saving) e.preventDefault(); }}
@@ -821,7 +821,7 @@ const Ledger = () => {
           { key: "payment", label: t("ledger.payment"), value: totalPayments, Icon: Wallet, accent: "from-amber-50 to-amber-100/40 dark:from-amber-950/40 dark:to-amber-900/20", ring: "ring-amber-200/70 dark:ring-amber-900/40", iconBg: "bg-amber-100 dark:bg-amber-900/40", iconText: "text-amber-500", valueText: "text-amber-600 dark:text-amber-400" },
           { key: "loan", label: t("ledger.loan"), value: totalLoans, Icon: HandCoins, accent: "from-sky-50 to-sky-100/40 dark:from-sky-950/40 dark:to-sky-900/20", ring: "ring-sky-200/70 dark:ring-sky-900/40", iconBg: "bg-sky-100 dark:bg-sky-900/40", iconText: "text-sky-500", valueText: "text-sky-600 dark:text-sky-400" },
         ].map(({ key, label, value, Icon, accent, ring, iconBg, iconText, valueText }) => (
-          <Card key={key} className={cn("relative overflow-hidden rounded-2xl border-0 ring-1 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 bg-gradient-to-br", accent, ring)}>
+          <Card key={key} className={cn("relative overflow-hidden rounded-lg border-0 ring-1 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 bg-gradient-to-br", accent, ring)}>
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
@@ -843,7 +843,7 @@ const Ledger = () => {
 
 
       {/* --- Premium Entries Table Card --- */}
-      <Card className="shadow-2xl border-border/50 bg-card/80 backdrop-blur-xl rounded-3xl overflow-hidden">
+      <Card className="shadow-2xl border-border/50 bg-card/80 backdrop-blur-xl rounded-lg overflow-hidden">
         <div className="h-1.5 bg-gradient-to-r from-violet-500 to-purple-500" />
         <CardHeader className="pb-3 sm:pb-4 pt-4 sm:pt-6 px-4 sm:px-6 border-b border-border/40 space-y-3 sm:space-y-5">
           <div className="flex items-center justify-between gap-3 sm:gap-4 flex-wrap">
@@ -963,18 +963,18 @@ const Ledger = () => {
                     {(canEdit || canDelete) && !isSeasonClosed && (
                       <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
                         {canEdit && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-background hover:text-violet-600 shadow-sm transition-all" onClick={() => openEdit(e)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-card dark:hover:bg-background hover:text-violet-600 shadow-sm transition-all" onClick={() => openEdit(e)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         {canDelete && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md text-destructive hover:text-destructive hover:bg-white dark:hover:bg-background shadow-sm transition-all">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md text-destructive hover:text-destructive hover:bg-card dark:hover:bg-background shadow-sm transition-all">
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-2xl">
+                            <AlertDialogContent className="rounded-lg">
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete entry?</AlertDialogTitle>
                                 <AlertDialogDescription>
@@ -1066,7 +1066,7 @@ const Ledger = () => {
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent className="rounded-2xl">
+                              <AlertDialogContent className="rounded-lg">
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Delete {e.entry_type === "expense" ? "Expense" : e.entry_type === "sale" ? "Sale" : e.entry_type === "payment" ? "Payment" : "Entry"}?</AlertDialogTitle>
                                   <AlertDialogDescription asChild>

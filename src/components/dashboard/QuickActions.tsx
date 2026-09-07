@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const tileClass =
-  "flex min-h-[92px] w-[124px] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-auto";
+  "flex min-h-[92px] w-[124px] shrink-0 flex-col items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-3 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-auto";
 
 const Tile = ({ icon: Icon, label, onClick }: { icon: LucideIcon; label: string; onClick: () => void }) => (
   <button type="button" onClick={onClick} className={tileClass} aria-label={label}>
@@ -33,7 +33,7 @@ const QuickActions = () => {
   return (
     <section
       aria-label="Quick actions"
-      className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm"
+      className="rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm"
     >
       <h2 className="mb-3 text-sm font-semibold text-foreground">Quick Actions</h2>
       <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 sm:grid sm:grid-cols-4 sm:overflow-visible lg:grid-cols-7">

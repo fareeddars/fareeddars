@@ -13,7 +13,7 @@ export interface StatCardProps {
 const DashboardStatCard = ({ label, value, hint, trend, icon: Icon, className }: StatCardProps) => (
   <article
     className={cn(
-      "group rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-300",
+      "group rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-300",
       "hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1",
       className
     )}

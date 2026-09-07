@@ -598,11 +598,11 @@ const Reports = () => {
   return (
     <div className="space-y-6">
       {/* Page Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-4 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-4 sm:p-8 text-primary-foreground shadow-xl shadow-primary/20">
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/4 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 w-32 h-32 rounded-full bg-primary-foreground/10 translate-y-1/2 blur-xl" />
         <div className="relative z-10 flex items-center gap-3 sm:gap-4">
-          <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
+          <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-lg bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/10">
             <FileText className="h-7 w-7" />
           </div>
           <div>

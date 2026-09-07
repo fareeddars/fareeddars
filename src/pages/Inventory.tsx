@@ -25,10 +25,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip } fr
 import type { Tables } from "@/integrations/supabase/types";
 import heroImg from "@/assets/inventory-hero.png";
 
-const EMERALD = "#1F6B3A";
-const EMERALD_SOFT = "#E7F3EB";
-const AMBER = "#E8A93B";
-const RED = "#D9534F";
+const EMERALD = "#10B981";
+const EMERALD_SOFT = "#F0FDF4";
+const AMBER = "#F59E0B";
+const RED = "#DC2626";
 const SLATE = "#94A3B8";
 
 const Inventory = () => {
@@ -91,7 +91,7 @@ const Inventory = () => {
 
       itemsHTML += `
         <div style="margin-bottom:20px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;page-break-inside:avoid;">
-          <div style="background:linear-gradient(135deg,#1F6B3A,#2E8B57);padding:14px 18px;color:#fff;display:flex;justify-content:space-between;">
+          <div style="background:linear-gradient(135deg,#10B981,#059669);padding:14px 18px;color:#fff;display:flex;justify-content:space-between;">
             <div><h3 style="margin:0;font-size:16px;font-weight:700;">${item.item_name}</h3>
             <p style="margin:4px 0 0;opacity:.8;font-size:12px;">${tl("Unit", "اکائی", "اڪائي")}: ${item.unit}</p></div>
             <div style="text-align:${isRTL ? "left" : "right"};">
@@ -114,8 +114,8 @@ const Inventory = () => {
       <title>${tl("Inventory Report", "گودام کی رپورٹ", "گودام جي رپورٽ")}</title>
       <style>body{font-family:${isRTL ? "'Jameel Noori Nastaleeq','Noto Naskh Arabic',Arial,sans-serif" : "'Inter','Segoe UI',Arial,sans-serif"};color:#1e293b;padding:30px;font-size:13px;}@media print{@page{margin:15mm;}}</style>
       </head><body>
-      <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1F6B3A;">
-        <h1 style="font-size:22px;color:#1F6B3A;margin:0;">🌾 ${tl("Agri Ledger", "زرعی حساب کتاب", "زرعي حساب ڪتاب")}</h1>
+      <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #10B981;">
+        <h1 style="font-size:22px;color:#10B981;margin:0;">🌾 ${tl("Agri Ledger", "زرعی حساب کتاب", "زرعي حساب ڪتاب")}</h1>
         <p style="color:#64748b;margin-top:6px;">${tl("Inventory Report", "گودام کی رپورٹ", "گودام جي رپورٽ")} · ${new Date().toLocaleDateString()}</p>
         <p style="color:#64748b;margin-top:4px;">${tl("Total value", "کل قیمت", "ڪل قيمت")}: <b>₨ ${totalValue.toLocaleString()}</b></p>
       </div>
@@ -223,24 +223,24 @@ const Inventory = () => {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Inventory Overview</h1>
-          <p className="text-sm text-slate-500 mt-1">Complete overview of your stock inventory.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Inventory Overview</h1>
+          <p className="text-sm text-muted-foreground mt-1">Complete overview of your stock inventory.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={downloadPDF} disabled={items.length === 0}
-            className="rounded-2xl border-slate-200 bg-white hover:bg-slate-50 h-10 px-4 shadow-sm">
+            className="rounded-lg border-border bg-card hover:bg-secondary h-10 px-4 shadow-sm">
             <FileText className="mr-2 h-4 w-4" />Export Report
           </Button>
           {isManagerOrAdmin && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button size="sm"
-                  className="rounded-2xl h-10 px-4 text-white shadow-lg shadow-emerald-900/20 hover:-translate-y-0.5 transition-all"
-                  style={{ background: `linear-gradient(135deg, ${EMERALD}, #2E8B57)` }}>
+                  className="rounded-lg h-10 px-4 text-white shadow-lg shadow-emerald-900/20 hover:-translate-y-0.5 transition-all"
+                  style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}>
                   <Plus className="mr-2 h-4 w-4" />Add New Item
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[95vw] sm:w-full max-w-lg rounded-2xl">
+              <DialogContent className="w-[95vw] sm:w-full max-w-lg rounded-lg">
                 <DialogHeader>
                   <DialogTitle className="text-xl">Add Inventory Item</DialogTitle>
                   <DialogDescription>Enter the details for the new stock item.</DialogDescription>
@@ -266,7 +266,7 @@ const Inventory = () => {
                 </div>
                 <DialogFooter>
                   <Button className="w-full rounded-xl text-white"
-                    style={{ background: `linear-gradient(135deg, ${EMERALD}, #2E8B57)` }}
+                    style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}
                     onClick={handleSave} disabled={!form.item_name}>Save Item</Button>
                 </DialogFooter>
               </DialogContent>
@@ -277,12 +277,12 @@ const Inventory = () => {
 
       {/* Hero */}
       <div className="relative overflow-hidden rounded-[28px] p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/20"
-        style={{ background: `linear-gradient(120deg, ${EMERALD} 0%, #2E8B57 55%, #4CA972 100%)` }}>
-        <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
+        style={{ background: `linear-gradient(120deg, ${EMERALD} 0%, #059669 55%, #34D399 100%)` }}>
+        <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full bg-card/10 blur-3xl" />
         <div className="absolute -bottom-24 right-1/4 w-72 h-72 rounded-full bg-emerald-200/10 blur-3xl" />
         <div className="relative grid gap-6 sm:grid-cols-[1.6fr,1fr] items-center">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur px-3 py-1 text-xs font-medium">
+            <div className="inline-flex items-center gap-2 rounded-full bg-card/15 backdrop-blur px-3 py-1 text-xs font-medium">
               <Sparkles className="h-3.5 w-3.5" /> Live inventory snapshot
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mt-6">
@@ -296,7 +296,7 @@ const Inventory = () => {
                   <div className={`inline-flex h-9 w-9 items-center justify-center rounded-xl backdrop-blur ${
                     m.tone === "amber" ? "bg-amber-300/20 text-amber-100"
                       : m.tone === "red" ? "bg-rose-300/20 text-rose-100"
-                        : "bg-white/15 text-white"
+                        : "bg-card/15 text-white"
                   }`}>
                     <m.icon className="h-4 w-4" />
                   </div>
@@ -317,12 +317,12 @@ const Inventory = () => {
       {/* Content grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Table */}
-        <Card className="lg:col-span-2 rounded-3xl border-slate-200/70 bg-white/80 backdrop-blur shadow-sm">
+        <Card className="lg:col-span-2 rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Top Inventory Items</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Live stock across your warehouses.</p>
+                <h2 className="text-lg font-bold text-foreground">Top Inventory Items</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Live stock across your warehouses.</p>
               </div>
               <Badge variant="secondary" className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
                 {items.length} items
@@ -356,17 +356,17 @@ const Inventory = () => {
                               <Leaf className="h-4 w-4 text-emerald-600" />
                             </div>
                             <div>
-                              <p className="font-semibold text-slate-900">{item.item_name}</p>
+                              <p className="font-semibold text-foreground">{item.item_name}</p>
                               <p className="text-xs text-slate-400">Alert @ {item.low_stock_threshold}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-slate-500 capitalize">{item.unit}</td>
+                        <td className="px-3 py-3 text-muted-foreground capitalize">{item.unit}</td>
                         <td className="px-3 py-3 text-right font-medium text-slate-800">
                           {item.current_stock} <span className="text-slate-400 text-xs">{item.unit}</span>
                         </td>
                         <td className="px-3 py-3 text-right font-medium text-slate-800">Rs {Number(item.price_per_unit).toLocaleString()}</td>
-                        <td className="px-3 py-3 text-right font-semibold text-slate-900">Rs {value.toLocaleString()}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-foreground">Rs {value.toLocaleString()}</td>
                         <td className="px-3 py-3">
                           <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${st.cls}`}>{st.label}</span>
                         </td>
@@ -411,11 +411,11 @@ const Inventory = () => {
         </Card>
 
         {/* Donut */}
-        <Card className="rounded-3xl border-slate-200/70 bg-white/80 backdrop-blur shadow-sm">
+        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
           <CardContent className="p-5 sm:p-6">
             <div className="mb-4">
-              <h2 className="text-lg font-bold text-slate-900">Stock Summary</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Inventory distribution & health.</p>
+              <h2 className="text-lg font-bold text-foreground">Stock Summary</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Inventory distribution & health.</p>
             </div>
             <div className="relative h-52">
               <ResponsiveContainer width="100%" height="100%">
@@ -426,14 +426,14 @@ const Inventory = () => {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <p className="text-3xl font-bold text-slate-900">{stats.totalItems}</p>
-                <p className="text-xs text-slate-500">Total Items</p>
+                <p className="text-3xl font-bold text-foreground">{stats.totalItems}</p>
+                <p className="text-xs text-muted-foreground">Total Items</p>
               </div>
             </div>
             <div className="mt-2 space-y-2">
               {donutData.map((d) => (
                 <div key={d.name} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-slate-600">
+                  <span className="flex items-center gap-2 text-muted-foreground">
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: d.color }} />
                     {d.name}
                   </span>
@@ -441,13 +441,13 @@ const Inventory = () => {
                 </div>
               ))}
             </div>
-            <div className="mt-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 p-3">
+            <div className="mt-4 rounded-lg bg-emerald-50/60 border border-emerald-100 p-3">
               <div className="flex items-center justify-between text-xs text-emerald-800">
                 <span className="font-medium">Inventory health</span><span>{stats.health}%</span>
               </div>
               <div className="mt-2 h-1.5 rounded-full bg-emerald-100 overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${stats.health}%`, background: `linear-gradient(90deg, ${EMERALD}, #4CA972)` }} />
+                  style={{ width: `${stats.health}%`, background: `linear-gradient(90deg, ${EMERALD}, #34D399)` }} />
               </div>
             </div>
           </CardContent>
@@ -457,11 +457,11 @@ const Inventory = () => {
       {/* Bottom grid */}
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {/* Recent activity */}
-        <Card className="rounded-3xl border-slate-200/70 bg-white/80 backdrop-blur shadow-sm">
+        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <Clock className="h-4 w-4 text-emerald-600" />
-              <h3 className="font-bold text-slate-900">Recent Activity</h3>
+              <h3 className="font-bold text-foreground">Recent Activity</h3>
             </div>
             {recent.length === 0 && <p className="text-xs text-slate-400">No activity yet.</p>}
             <ul className="space-y-3">
@@ -470,7 +470,7 @@ const Inventory = () => {
                   <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
                   <div className="min-w-0">
                     <p className="font-medium text-slate-800 truncate">{i.item_name}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       Stock updated · {i.current_stock} {i.unit}
                     </p>
                   </div>
@@ -481,11 +481,11 @@ const Inventory = () => {
         </Card>
 
         {/* Low stock */}
-        <Card className="rounded-3xl border-slate-200/70 bg-white/80 backdrop-blur shadow-sm">
+        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <h3 className="font-bold text-slate-900">Low Stock Alerts</h3>
+              <h3 className="font-bold text-foreground">Low Stock Alerts</h3>
             </div>
             {lowStockList.length === 0 && <p className="text-xs text-slate-400">All items are healthy.</p>}
             <ul className="space-y-2">
@@ -500,11 +500,11 @@ const Inventory = () => {
         </Card>
 
         {/* Top valuable */}
-        <Card className="rounded-3xl border-slate-200/70 bg-white/80 backdrop-blur shadow-sm">
+        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <ArrowUpRight className="h-4 w-4 text-emerald-600" />
-              <h3 className="font-bold text-slate-900">Top Valuable</h3>
+              <h3 className="font-bold text-foreground">Top Valuable</h3>
             </div>
             {topValuable.length === 0 && <p className="text-xs text-slate-400">Add items to see rankings.</p>}
             <ul className="space-y-3">
@@ -515,7 +515,7 @@ const Inventory = () => {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-slate-800 truncate">{i.item_name}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       Rs {(Number(i.current_stock) * Number(i.price_per_unit)).toLocaleString()}
                     </p>
                   </div>
@@ -526,16 +526,16 @@ const Inventory = () => {
         </Card>
 
         {/* Performance */}
-        <Card className="rounded-3xl border-slate-200/70 bg-white/80 backdrop-blur shadow-sm">
+        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="font-bold text-slate-900">Inventory Performance</h3>
+              <h3 className="font-bold text-foreground">Inventory Performance</h3>
               <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
                 <ArrowDownRight className="h-3 w-3 rotate-180" />+8.4%
               </span>
             </div>
-            <p className="text-2xl font-bold text-slate-900">Rs {stats.totalValue.toLocaleString()}</p>
-            <p className="text-xs text-slate-500 mb-2">Value trend · last 12 weeks</p>
+            <p className="text-2xl font-bold text-foreground">Rs {stats.totalValue.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mb-2">Value trend · last 12 weeks</p>
             <div className="h-24">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trendData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
@@ -556,7 +556,7 @@ const Inventory = () => {
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="w-[95vw] sm:w-full max-w-lg rounded-2xl">
+        <DialogContent className="w-[95vw] sm:w-full max-w-lg rounded-lg">
           <DialogHeader>
             <DialogTitle className="text-xl">Edit Item</DialogTitle>
             <DialogDescription>Update inventory details.</DialogDescription>
@@ -582,7 +582,7 @@ const Inventory = () => {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button className="text-white" style={{ background: `linear-gradient(135deg, ${EMERALD}, #2E8B57)` }}
+            <Button className="text-white" style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}
               onClick={handleUpdate} disabled={!editForm.item_name}>Update Item</Button>
           </DialogFooter>
         </DialogContent>
