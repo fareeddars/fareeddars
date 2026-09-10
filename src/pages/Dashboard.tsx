@@ -12,6 +12,8 @@ import SeasonProgressCard from "@/components/dashboard/SeasonProgressCard";
 import AIInsightsCard, { Insight } from "@/components/dashboard/AIInsightsCard";
 import NotificationsCard, { NotificationItem } from "@/components/dashboard/NotificationsCard";
 import CropPerformanceCard from "@/components/dashboard/CropPerformanceCard";
+import SaleCostsCard from "@/components/dashboard/SaleCostsCard";
+import BuyerOutstandingCard from "@/components/dashboard/BuyerOutstandingCard";
 import {
   AlertTriangle, BarChart3, Boxes, CalendarClock, FileCheck2, Package, PiggyBank,
   ShoppingCart, TrendingUp, Users, Wallet,
@@ -22,7 +24,7 @@ const money = (n: number) => `Rs ${Math.round(n).toLocaleString()}`;
 const Dashboard = () => {
   const { profile } = useAuth();
   const { seasons, selectedSeason, setSelectedSeasonId } = useSeason();
-  const { kpis, overview, outstanding, alerts, season, totals, crops, avgYield } = useDashboardData();
+  const { kpis, overview, outstanding, alerts, season, totals, crops, buyers, avgYield } = useDashboardData();
 
   const firstName = (profile?.full_name || "Farmer").split(" ")[0];
 
@@ -148,6 +150,11 @@ const Dashboard = () => {
       <KeyOverviewCard items={overviewItems} />
 
       <CropPerformanceCard totals={totals} crops={crops} avgYield={avgYield} seasonName={selectedSeason?.name} />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <SaleCostsCard totals={totals} />
+        <BuyerOutstandingCard rows={buyers} />
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <OutstandingCard rows={outstanding} total={kpis.totalOutstanding} />
