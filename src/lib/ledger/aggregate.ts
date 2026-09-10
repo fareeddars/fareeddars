@@ -375,3 +375,38 @@ export function averageYield(entries: LedgerRow[], crop?: string | null) {
   });
   return { value: vals.reduce((a, b) => a + b, 0) / vals.length, samples: usable.length };
 }
+
+// ── buyer / shopkeeper / mill view ──────────────────────────────
+export interface BuyerRow {
+  buyer: string;
+  salesCount: number;
+  grossSales: number;
+  costs: number;
+  netSales: number;
+  paid: number;
+  outstanding: number;
+}
+
+/** Group sale rows by buyer (shopkeeper / mill). Reuses computeTotals — no new formulas. */
+export function groupByBuyer(entries: LedgerRow[]): BuyerRow[] {
+  const sales = entries.filter((e) => e.entry_type === "sale");
+  const map = new Map<string, LedgerRow[]>();
+  sales.forEach((e) => {
+    const key = (e.buyer || "").trim() || "Unspecified buyer";
+    const arr = map.get(key) || [];
+    arr.push(e);
+    map.set(key, arr);
+  });
+  return Array.from(map, ([buyer, rows]) => {
+    const t = computeTotals(rows);
+    return {
+      buyer,
+      salesCount: t.salesCount,
+      grossSales: t.grossSales,
+      costs: t.saleCosts,
+      netSales: t.netSales,
+      paid: t.saleReceived,
+      outstanding: t.saleOutstanding,
+    };
+  }).sort((a, b) => b.outstanding - a.outstanding || b.netSales - a.netSales);
+}
