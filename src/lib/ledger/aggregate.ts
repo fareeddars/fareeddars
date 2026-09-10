@@ -169,6 +169,11 @@ export interface LedgerTotals {
   salesCount: number;
   grossSales: number;
   saleCosts: number;
+  /** Sale-cost breakdown (same rows as saleCosts — never counted as expenses). */
+  transportCosts: number;
+  labourCosts: number;
+  commissionCosts: number;
+  otherSaleCosts: number;
   netSales: number;
   expenses: number;
   payments: number;
