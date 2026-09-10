@@ -169,6 +169,11 @@ export interface LedgerTotals {
   salesCount: number;
   grossSales: number;
   saleCosts: number;
+  /** Sale-cost breakdown (same rows as saleCosts — never counted as expenses). */
+  transportCosts: number;
+  labourCosts: number;
+  commissionCosts: number;
+  otherSaleCosts: number;
   netSales: number;
   expenses: number;
   payments: number;
@@ -193,6 +198,10 @@ export interface LedgerTotals {
 export function computeTotals(entries: LedgerRow[]): LedgerTotals {
   let grossSales = 0,
     saleCosts = 0,
+    transportCosts = 0,
+    labourCosts = 0,
+    commissionCosts = 0,
+    otherSaleCosts = 0,
     expenses = 0,
     payments = 0,
     loans = 0,
@@ -210,6 +219,10 @@ export function computeTotals(entries: LedgerRow[]): LedgerTotals {
       salesCount += 1;
       grossSales += s.grossSale;
       saleCosts += s.costs;
+      transportCosts += s.transport;
+      labourCosts += s.labour;
+      commissionCosts += s.commission;
+      otherSaleCosts += s.other;
       saleReceived += s.paid;
       saleOutstanding += s.remaining;
       area += s.areaAcres;
@@ -230,6 +243,10 @@ export function computeTotals(entries: LedgerRow[]): LedgerTotals {
     salesCount,
     grossSales,
     saleCosts,
+    transportCosts,
+    labourCosts,
+    commissionCosts,
+    otherSaleCosts,
     netSales,
     expenses,
     payments,
@@ -357,4 +374,39 @@ export function averageYield(entries: LedgerRow[], crop?: string | null) {
     return s.yieldPerAcre ?? 0;
   });
   return { value: vals.reduce((a, b) => a + b, 0) / vals.length, samples: usable.length };
+}
+
+// ── buyer / shopkeeper / mill view ──────────────────────────────
+export interface BuyerRow {
+  buyer: string;
+  salesCount: number;
+  grossSales: number;
+  costs: number;
+  netSales: number;
+  paid: number;
+  outstanding: number;
+}
+
+/** Group sale rows by buyer (shopkeeper / mill). Reuses computeTotals — no new formulas. */
+export function groupByBuyer(entries: LedgerRow[]): BuyerRow[] {
+  const sales = entries.filter((e) => e.entry_type === "sale");
+  const map = new Map<string, LedgerRow[]>();
+  sales.forEach((e) => {
+    const key = (e.buyer || "").trim() || "Unspecified buyer";
+    const arr = map.get(key) || [];
+    arr.push(e);
+    map.set(key, arr);
+  });
+  return Array.from(map, ([buyer, rows]) => {
+    const t = computeTotals(rows);
+    return {
+      buyer,
+      salesCount: t.salesCount,
+      grossSales: t.grossSales,
+      costs: t.saleCosts,
+      netSales: t.netSales,
+      paid: t.saleReceived,
+      outstanding: t.saleOutstanding,
+    };
+  }).sort((a, b) => b.outstanding - a.outstanding || b.netSales - a.netSales);
 }

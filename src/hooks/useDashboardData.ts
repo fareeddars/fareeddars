@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { offlineRepo, isOnline } from "@/lib/offline";
 import { useSeason } from "@/contexts/SeasonContext";
-import { computeTotals, groupByCrop, summarizeFarmer, averageYield } from "@/lib/ledger/aggregate";
+import { computeTotals, groupByCrop, groupByBuyer, summarizeFarmer, averageYield } from "@/lib/ledger/aggregate";
 import type { Tables } from "@/integrations/supabase/types";
 
 
@@ -158,6 +158,7 @@ export const useDashboardData = () => {
     // Season-wide totals (single source of truth for every KPI below)
     const seasonTotals = computeTotals(entries as any[]);
     const crops = groupByCrop((entries as any[]).filter((e) => e.entry_type === "sale"));
+    const buyers = groupByBuyer(entries as any[]);
     const avgYield = averageYield(entries as any[]);
 
     return {
@@ -166,6 +167,7 @@ export const useDashboardData = () => {
       inventory,
       totals: seasonTotals,
       crops,
+      buyers,
       avgYield,
       kpis: {
         totalOutstanding,
