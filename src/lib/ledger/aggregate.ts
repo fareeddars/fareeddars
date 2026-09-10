@@ -198,6 +198,10 @@ export interface LedgerTotals {
 export function computeTotals(entries: LedgerRow[]): LedgerTotals {
   let grossSales = 0,
     saleCosts = 0,
+    transportCosts = 0,
+    labourCosts = 0,
+    commissionCosts = 0,
+    otherSaleCosts = 0,
     expenses = 0,
     payments = 0,
     loans = 0,
@@ -215,6 +219,10 @@ export function computeTotals(entries: LedgerRow[]): LedgerTotals {
       salesCount += 1;
       grossSales += s.grossSale;
       saleCosts += s.costs;
+      transportCosts += s.transport;
+      labourCosts += s.labour;
+      commissionCosts += s.commission;
+      otherSaleCosts += s.other;
       saleReceived += s.paid;
       saleOutstanding += s.remaining;
       area += s.areaAcres;
@@ -235,6 +243,10 @@ export function computeTotals(entries: LedgerRow[]): LedgerTotals {
     salesCount,
     grossSales,
     saleCosts,
+    transportCosts,
+    labourCosts,
+    commissionCosts,
+    otherSaleCosts,
     netSales,
     expenses,
     payments,
