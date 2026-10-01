@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
-import { deriveSale, summarizeFarmer } from "@/lib/ledger/aggregate";
+import { computeTotals, deriveSale, groupByBuyer, summarizeFarmer } from "@/lib/ledger/aggregate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ type LedgerEntry = Tables<"ledger_entries">;
 
 const fmt = (n: number) => `₨ ${n.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 const fmtNum = (n: number) => n.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const escapeHtml = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
 
 // Direct translation lookup for print
 const pt = (key: string, lang: Language): string => {
@@ -97,9 +98,10 @@ const Reports = () => {
     }, 0);
     const totalExpenses = totalFarmerExpenses + totalLandlordExpenses; // === sum of every row
 
-    // Sales: net sale = gross sale (net_weight × rate) − sale-level costs.
-    // Centralised in src/lib/ledger/aggregate so every page agrees.
-    const totalSales = sales.reduce((sum, e) => sum + deriveSale(e as any).netSale, 0);
+    // Sale totals and buyer balances come from the same aggregation as Dashboard.
+    const saleTotals = computeTotals(farmerEntries);
+    const buyers = groupByBuyer(farmerEntries);
+    const totalSales = saleTotals.netSales;
     const totalPayments = payments.reduce((sum, e) => sum + Number(e.amount), 0);
     const totalLoans = loans.reduce((sum, e) => sum + Number(e.amount), 0);
 
@@ -121,7 +123,7 @@ const Reports = () => {
       totalFarmerExpenses, totalLandlordExpenses, totalExpenses,
       totalSales, totalPayments, totalLoans,
       initialBalance, netProfit, farmerProfitShare, landlordProfitShare,
-      finalBalance,
+      finalBalance, saleTotals, buyers,
     };
   };
 
@@ -144,7 +146,7 @@ const Reports = () => {
         totalFarmerExpenses, totalLandlordExpenses, totalExpenses,
         totalSales, totalPayments, totalLoans,
         initialBalance, netProfit, farmerProfitShare, landlordProfitShare,
-        finalBalance,
+        finalBalance, saleTotals,
       } = calcSections(farmerId);
       const farmer = getFarmer(farmerId);
       if (!farmer) return;
@@ -158,7 +160,7 @@ const Reports = () => {
       html += `<div class="header-block">
         <h1>${pt("print.title", L)}</h1>
         <div class="header-sub">
-          <span class="season-label">${pt("print.cropSeason", L)}: ${seasonName}</span>
+          <span class="season-label">${pt("print.cropSeason", L)}: ${escapeHtml(seasonName)}</span>
           <span class="stmt-no">${pt("print.statementNo", L)}: ${stmtNo}</span>
         </div>
       </div>`;
@@ -167,7 +169,7 @@ const Reports = () => {
       html += `<div class="info-row">
         <div class="info-col">
           <div class="info-label">${pt("print.farmer", L)}:</div>
-          <div class="info-value">${farmer.name}</div>
+          <div class="info-value">${escapeHtml(farmer.name)}</div>
           ${farmer.phone ? `<div class="info-detail">${pt("common.phone", L)}: ${farmer.phone}</div>` : ""}
           ${farmer.address ? `<div class="info-detail">${pt("print.village", L)}: ${farmer.address}</div>` : ""}
         </div>
@@ -226,33 +228,32 @@ const Reports = () => {
       // === SECTION 2: SALES ===
       html += `<div class="section-title sec-sales">2. ${pt("print.salesSummaryTitle", L)}</div>`;
       if (sales.length > 0) {
-        html += `<table class="bill-table"><thead><tr>
-          <th>${pt("common.date", L)}</th>
-          <th>${pt("print.crop", L)}</th>
-          <th class="num">${pt("print.grossWt", L)}</th>
-          <th class="num">${pt("print.deductionsKg", L)}</th>
-          <th class="num">${pt("print.netWt", L)}</th>
-          <th class="num">${pt("print.ratePerKg", L)}</th>
-          <th class="num">${pt("print.lineRowTotal", L)} (₨)</th>
-        </tr></thead><tbody>`;
         sales.forEach((e) => {
-          const nw = Number(e.net_weight ?? 0);
-          const rt = Number(e.rate ?? 0);
-          const rowTotal = nw * rt; // recomputed defensively; should equal e.amount
-          html += `<tr>
-            <td>${e.entry_date ?? "—"}</td>
-            <td>${e.crop_type || e.description || "—"}</td>
-            <td class="num">${e.gross_weight != null ? fmtNum(e.gross_weight) + " kg" : "—"}</td>
-            <td class="num">${e.deductions != null ? fmtNum(e.deductions) + " kg" : "—"}</td>
-            <td class="num">${e.net_weight != null ? fmtNum(e.net_weight) + " kg" : "—"}</td>
-            <td class="num">₨ ${e.rate != null ? fmtNum(e.rate) + "/kg" : "—"}</td>
-            <td class="num row-total">${fmtNum(rowTotal)}</td>
-          </tr>`;
+          const s = deriveSale(e);
+          const line = (label: string, value: number) => `<div class="summary-row"><span>${pt(label, L)}</span><span>₨ ${fmtNum(value)}</span></div>`;
+          html += `<div class="sale-detail">
+            <div class="sale-heading">${escapeHtml(e.entry_date ?? "—")} · ${escapeHtml(e.crop_type || e.description || "—")}</div>
+            <div class="summary-row"><span>${pt("reports.buyer", L)}</span><span>${escapeHtml(e.buyer?.trim() || pt("reports.unspecifiedBuyer", L))}</span></div>
+            <div class="summary-row"><span>${pt("print.farmer", L)}</span><span>${escapeHtml(farmer.name)}</span></div>
+            ${line("reports.grossSale", s.grossSale)}
+            ${s.transport ? line("reports.transportCost", s.transport) : ""}
+            ${s.labour ? line("reports.labourCost", s.labour) : ""}
+            ${s.commission ? line("reports.commissionCost", s.commission) : ""}
+            ${s.other ? line("reports.otherSaleCosts", s.other) : ""}
+            ${line("reports.totalSaleCosts", s.costs)}
+            ${line("reports.netSale", s.netSale)}
+            ${line("reports.salePaid", s.paid)}
+            ${line("reports.saleOutstanding", s.remaining)}
+          </div>`;
         });
-        html += `</tbody><tfoot><tr>
-          <td colspan="6"><strong>${pt("print.totalSalesLabel", L)}:</strong></td>
-          <td class="num total-highlight">₨ ${fmtNum(totalSales)}</td>
-        </tr></tfoot></table>`;
+        html += `<div class="sale-detail sale-total">
+          <div class="sale-heading">${pt("print.totalSalesLabel", L)}</div>
+          <div class="summary-row"><span>${pt("reports.grossSale", L)}</span><span>₨ ${fmtNum(saleTotals.grossSales)}</span></div>
+          <div class="summary-row"><span>${pt("reports.totalSaleCosts", L)}</span><span>₨ ${fmtNum(saleTotals.saleCosts)}</span></div>
+          <div class="summary-row"><span>${pt("reports.netSale", L)}</span><span>₨ ${fmtNum(saleTotals.netSales)}</span></div>
+          <div class="summary-row"><span>${pt("reports.salePaid", L)}</span><span>₨ ${fmtNum(saleTotals.saleReceived)}</span></div>
+          <div class="summary-row"><span>${pt("reports.saleOutstanding", L)}</span><span>₨ ${fmtNum(saleTotals.saleOutstanding)}</span></div>
+        </div>`;
       } else { html += `<p class="no-data">${pt("print.noSales", L)}</p>`; }
 
       // === SECTION 3: LOANS GIVEN TO FARMER ===
@@ -421,6 +422,9 @@ const Reports = () => {
       .section-title.sec-sales    { background: #ecfdf5; border-right-color: #059669; color: #065f46; }
       .section-title.sec-loans    { background: #eff6ff; border-right-color: #2563eb; color: #1e3a8a; }
       .section-title.sec-payments { background: #fffbeb; border-right-color: #d97706; color: #92400e; }
+      .sale-detail { border: 1px solid #c5cdd6; border-radius: 4px; padding: 8px 12px; margin: 8px 0; break-inside: avoid; }
+      .sale-heading { font-weight: 700; color: #065f46; border-bottom: 1px solid #c5cdd6; padding-bottom: 4px; }
+      .sale-total { background: #ecfdf5; }
 
       /* Top summary cards */
       .summary-cards {
@@ -674,7 +678,7 @@ const Reports = () => {
       {reportReady && reportFarmerIds.length > 0 && (
         <div className="space-y-3 sm:space-y-4">
           {reportFarmerIds.map((farmerId) => {
-            const { totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, finalBalance, netProfit } = calcSections(farmerId);
+            const { totalFarmerExpenses, totalLandlordExpenses, totalExpenses, totalSales, totalPayments, totalLoans, finalBalance, netProfit, saleTotals, buyers } = calcSections(farmerId);
             return (
               <Card key={farmerId}>
                 <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
@@ -685,6 +689,22 @@ const Reports = () => {
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
                   <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+                    {[
+                      ["reports.grossSale", saleTotals.grossSales],
+                      ["reports.transportCost", saleTotals.transportCosts],
+                      ["reports.labourCost", saleTotals.labourCosts],
+                      ["reports.commissionCost", saleTotals.commissionCosts],
+                      ["reports.otherSaleCosts", saleTotals.otherSaleCosts],
+                      ["reports.totalSaleCosts", saleTotals.saleCosts],
+                      ["reports.netSale", saleTotals.netSales],
+                      ["reports.salePaid", saleTotals.saleReceived],
+                      ["reports.saleOutstanding", saleTotals.saleOutstanding],
+                    ].map(([label, value]) => (
+                      <div key={label} className="bg-muted/30 rounded-lg p-2 sm:p-3 min-w-0">
+                        <p className="text-muted-foreground text-[10px] sm:text-xs">{t(String(label))}</p>
+                        <p className="font-mono font-medium text-sm sm:text-base break-words">{fmt(Number(value))}</p>
+                      </div>
+                    ))}
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.totalSales")}</p><p className="font-mono font-medium text-emerald-600 text-sm sm:text-base">{fmt(totalSales)}</p></div>
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.farmerExpenses")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalFarmerExpenses)}</p></div>
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.landlordExpenses")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalLandlordExpenses)}</p></div>
@@ -693,6 +713,18 @@ const Reports = () => {
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.paymentsReceived")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalPayments)}</p></div>
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.netProfitLoss")}</p><p className={`font-mono font-medium text-sm sm:text-base ${netProfit >= 0 ? "text-blue-600" : "text-destructive"}`}>{netProfit >= 0 ? "+" : "−"} {fmt(Math.abs(netProfit))}</p></div>
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.balanceDue")}</p><p className={`font-mono font-bold text-sm sm:text-base ${finalBalance > 0 ? "text-destructive" : "text-primary"}`}>{Math.abs(finalBalance) < 0.5 ? t("reports.settled") : fmt(Math.abs(finalBalance))}</p></div>
+                  </div>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2 text-xs sm:text-sm">
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">{t("reports.farmerOutstanding")}</h3>
+                      <div className="flex justify-between gap-3 border-b border-border py-2"><span className="min-w-0 break-words">{getFarmerName(farmerId)}</span><strong className="tabular-nums shrink-0">{fmt(finalBalance)}</strong></div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">{t("reports.buyerOutstanding")}</h3>
+                      {buyers.length ? buyers.map((buyer) => (
+                        <div key={buyer.buyer} className="flex justify-between gap-3 border-b border-border py-2"><span className="min-w-0 break-words">{buyer.buyer === "Unspecified buyer" ? t("reports.unspecifiedBuyer") : buyer.buyer}</span><strong className="tabular-nums shrink-0">{fmt(buyer.outstanding)}</strong></div>
+                      )) : <p className="text-muted-foreground py-2">{t("print.noSales")}</p>}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
