@@ -22,6 +22,7 @@ export type Database = {
           id: string
           month: string
           name: string
+          organization_id: string
           season_id: string | null
         }
         Insert: {
@@ -31,6 +32,7 @@ export type Database = {
           id?: string
           month: string
           name: string
+          organization_id: string
           season_id?: string | null
         }
         Update: {
@@ -40,9 +42,17 @@ export type Database = {
           id?: string
           month?: string
           name?: string
+          organization_id?: string
           season_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "expense_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "expense_categories_season_id_fkey"
             columns: ["season_id"]
@@ -59,6 +69,7 @@ export type Database = {
           farmer_id: string
           id: string
           opening_balance: number
+          organization_id: string
           season_id: string
           status: Database["public"]["Enums"]["farmer_season_status"]
           updated_at: string
@@ -69,6 +80,7 @@ export type Database = {
           farmer_id: string
           id?: string
           opening_balance?: number
+          organization_id: string
           season_id: string
           status?: Database["public"]["Enums"]["farmer_season_status"]
           updated_at?: string
@@ -79,6 +91,7 @@ export type Database = {
           farmer_id?: string
           id?: string
           opening_balance?: number
+          organization_id?: string
           season_id?: string
           status?: Database["public"]["Enums"]["farmer_season_status"]
           updated_at?: string
@@ -89,6 +102,13 @@ export type Database = {
             columns: ["farmer_id"]
             isOneToOne: false
             referencedRelation: "farmers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "farmer_seasons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -112,6 +132,7 @@ export type Database = {
           landlord: string | null
           name: string
           notes: string | null
+          organization_id: string
           phone: string | null
           photo_url: string | null
           updated_at: string
@@ -127,6 +148,7 @@ export type Database = {
           landlord?: string | null
           name: string
           notes?: string | null
+          organization_id: string
           phone?: string | null
           photo_url?: string | null
           updated_at?: string
@@ -142,11 +164,20 @@ export type Database = {
           landlord?: string | null
           name?: string
           notes?: string | null
+          organization_id?: string
           phone?: string | null
           photo_url?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "farmers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory: {
         Row: {
@@ -156,6 +187,7 @@ export type Database = {
           id: string
           item_name: string
           low_stock_threshold: number
+          organization_id: string
           price_per_unit: number
           unit: string
           updated_at: string
@@ -167,6 +199,7 @@ export type Database = {
           id?: string
           item_name: string
           low_stock_threshold?: number
+          organization_id: string
           price_per_unit?: number
           unit?: string
           updated_at?: string
@@ -178,11 +211,20 @@ export type Database = {
           id?: string
           item_name?: string
           low_stock_threshold?: number
+          organization_id?: string
           price_per_unit?: number
           unit?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inventory_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ledger_entries: {
         Row: {
@@ -209,6 +251,7 @@ export type Database = {
           labour_cost: number
           net_weight: number | null
           notes: string | null
+          organization_id: string
           other_costs: number
           paid_amount: number
           payment_method: string | null
@@ -249,6 +292,7 @@ export type Database = {
           labour_cost?: number
           net_weight?: number | null
           notes?: string | null
+          organization_id: string
           other_costs?: number
           paid_amount?: number
           payment_method?: string | null
@@ -289,6 +333,7 @@ export type Database = {
           labour_cost?: number
           net_weight?: number | null
           notes?: string | null
+          organization_id?: string
           other_costs?: number
           paid_amount?: number
           payment_method?: string | null
@@ -328,6 +373,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ledger_entries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ledger_entries_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
@@ -335,6 +387,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -370,6 +440,7 @@ export type Database = {
           end_date: string | null
           id: string
           name: string
+          organization_id: string
           start_date: string
           status: Database["public"]["Enums"]["season_status"]
           updated_at: string
@@ -380,6 +451,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           name: string
+          organization_id: string
           start_date: string
           status?: Database["public"]["Enums"]["season_status"]
           updated_at?: string
@@ -390,11 +462,20 @@ export type Database = {
           end_date?: string | null
           id?: string
           name?: string
+          organization_id?: string
           start_date?: string
           status?: Database["public"]["Enums"]["season_status"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seasons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -404,6 +485,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          organization_id: string
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           user_id: string
@@ -415,6 +497,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          organization_id: string
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id: string
@@ -426,11 +509,20 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          organization_id?: string
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -439,6 +531,8 @@ export type Database = {
     Functions: {
       can_user_create: { Args: { _user_id: string }; Returns: boolean }
       can_user_delete: { Args: { _user_id: string }; Returns: boolean }
+      can_user_edit: { Args: { _user_id: string }; Returns: boolean }
+      current_org_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

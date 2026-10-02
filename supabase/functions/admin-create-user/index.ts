@@ -54,6 +54,15 @@ Deno.serve(async (req) => {
 
     const { action, ...payload } = await req.json();
 
+    const { data: callerOrg } = await adminClient.rpc("current_org_id", { _user_id: callerUser.id });
+    if (!callerOrg) return jsonResponse({ error: "Organization not found" }, 403);
+
+    // All actions on an existing user must stay inside the caller's organization
+    if (action !== "create" && payload.user_id) {
+      const { data: targetOrg } = await adminClient.rpc("current_org_id", { _user_id: payload.user_id });
+      if (targetOrg !== callerOrg) return jsonResponse({ error: "User not in your organization" }, 403);
+    }
+
     if (action === "create") {
       const { email, password, full_name, role, can_create, can_edit, can_delete } = payload;
       if (!email || !password) {
@@ -70,14 +79,17 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: createError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // Update the role that was auto-created by trigger
-      if (role || can_create !== undefined || can_edit !== undefined || can_delete !== undefined) {
-        await adminClient.from("user_roles").update({
-          role: role || "staff",
-          can_create: can_create ?? false,
-          can_edit: can_edit ?? false,
-          can_delete: can_delete ?? false,
-        }).eq("user_id", newUser.user.id);
+      // Move the new user into the admin's organization (trigger created a private one)
+      const { data: ownRole } = await adminClient.from("user_roles").select("organization_id").eq("user_id", newUser.user.id).single();
+      await adminClient.from("user_roles").update({
+        organization_id: callerOrg,
+        role: role || "staff",
+        can_create: can_create ?? false,
+        can_edit: can_edit ?? false,
+        can_delete: can_delete ?? false,
+      }).eq("user_id", newUser.user.id);
+      if (ownRole?.organization_id && ownRole.organization_id !== callerOrg) {
+        await adminClient.from("organizations").delete().eq("id", ownRole.organization_id);
       }
 
       return new Response(JSON.stringify({ success: true, user_id: newUser.user.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
