@@ -33,12 +33,16 @@ export interface OutstandingRow {
  * the offline repository — no new business logic, only aggregation for display.
  */
 export const useDashboardData = () => {
-  const { selectedSeason, farmerSeasons } = useSeason();
+  const { selectedSeason, farmerSeasons, loading: seasonsLoading } = useSeason();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [inventory, setInventory] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Wait until the selected season is known so the Dashboard uses the same
+    // season filter as Transactions, Reports and P&L (prevents unseasoned
+    // legacy rows from being counted).
+    if (seasonsLoading) return;
     let cancelled = false;
     const load = async () => {
       setLoading(true);
