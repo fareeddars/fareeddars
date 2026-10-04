@@ -11,6 +11,7 @@ import { Printer, FileText, Leaf } from "lucide-react";
 import { translations, type Language } from "@/i18n/translations";
 import type { Tables } from "@/integrations/supabase/types";
 import FarmerAvatar from "@/components/FarmerAvatar";
+import { fromKg, type WeightUnit } from "@/lib/ledger/calc";
 
 type Farmer = Tables<"farmers">;
 type LedgerEntry = Tables<"ledger_entries">;
@@ -231,16 +232,38 @@ const Reports = () => {
         sales.forEach((e) => {
           const s = deriveSale(e);
           const line = (label: string, value: number) => `<div class="summary-row"><span>${pt(label, L)}</span><span>₨ ${fmtNum(value)}</span></div>`;
+          const weightUnit = e.weight_unit || "kg";
+          const rateUnit = e.rate_unit || weightUnit;
+          const rate = e.rate != null ? Number(e.rate) : null;
+          const rateQuantity = s.netWeight > 0 && rateUnit !== weightUnit
+            ? fromKg(s.netWeightKg, rateUnit as WeightUnit) : s.netWeight;
           html += `<div class="sale-detail">
-            <div class="sale-heading">${escapeHtml(e.entry_date ?? "—")} · ${escapeHtml(e.crop_type || e.description || "—")}</div>
-            <div class="summary-row"><span>${pt("reports.buyer", L)}</span><span>${escapeHtml(e.buyer?.trim() || pt("reports.unspecifiedBuyer", L))}</span></div>
-            <div class="summary-row"><span>${pt("print.farmer", L)}</span><span>${escapeHtml(farmer.name)}</span></div>
-            ${line("reports.grossSale", s.grossSale)}
-            ${s.transport ? line("reports.transportCost", s.transport) : ""}
-            ${s.labour ? line("reports.labourCost", s.labour) : ""}
-            ${s.commission ? line("reports.commissionCost", s.commission) : ""}
-            ${s.other ? line("reports.otherSaleCosts", s.other) : ""}
+            <div class="sale-heading">${pt("print.saleDetails", L)} · ${escapeHtml(e.entry_date ?? "—")}</div>
+            <div class="sale-parties">
+              <span>${pt("print.farmer", L)}: <strong>${escapeHtml(farmer.name)}</strong></span>
+              <span>${pt("reports.buyer", L)}: <strong>${escapeHtml(e.buyer?.trim() || pt("reports.unspecifiedBuyer", L))}</strong></span>
+              ${e.field_name ? `<span>${pt("print.field", L)}: <strong>${escapeHtml(e.field_name)}</strong></span>` : ""}
+            </div>
+            <table class="bill-table sale-table"><thead><tr>
+              <th>${pt("print.crop", L)}</th><th class="num">${pt("print.quantity", L)}</th><th>${pt("print.unit", L)}</th>
+              <th class="num">${pt("print.rate", L)}</th><th class="num">${pt("print.totalSaleAmount", L)}</th>
+            </tr></thead><tbody><tr>
+              <td>${escapeHtml(e.crop_type || e.description || "—")}</td>
+              <td class="num">${s.netWeight > 0 ? fmtNum(s.netWeight) : "—"}</td>
+              <td>${s.netWeight > 0 ? escapeHtml(weightUnit) : "—"}</td>
+              <td class="num">${rate != null && Number.isFinite(rate) ? `₨ ${fmtNum(rate)} / ${escapeHtml(rateUnit)}` : "—"}</td>
+              <td class="num row-total">₨ ${fmtNum(s.grossSale)}</td>
+            </tr></tbody></table>
+            ${s.netWeight > 0 && rate != null && Number.isFinite(rate) && rateUnit !== weightUnit
+              ? `<p class="rate-basis">${pt("print.rateBasis", L)}: ${fmtNum(rateQuantity)} ${escapeHtml(rateUnit)} × ₨ ${fmtNum(rate)} / ${escapeHtml(rateUnit)} = ₨ ${fmtNum(s.grossSale)}</p>` : ""}
+            <div class="sale-subheading">${pt("print.costBreakdown", L)}</div>
+            ${line("reports.transportCost", s.transport)}
+            ${line("reports.labourCost", s.labour)}
+            ${line("reports.commissionCost", s.commission)}
+            ${line("reports.otherSaleCosts", s.other)}
             ${line("reports.totalSaleCosts", s.costs)}
+            <div class="sale-subheading">${pt("print.paymentSummary", L)}</div>
+            ${line("reports.grossSale", s.grossSale)}
             ${line("reports.netSale", s.netSale)}
             ${line("reports.salePaid", s.paid)}
             ${line("reports.saleOutstanding", s.remaining)}
@@ -425,6 +448,13 @@ const Reports = () => {
       .sale-detail { border: 1px solid #c5cdd6; border-radius: 4px; padding: 8px 12px; margin: 8px 0; break-inside: avoid; }
       .sale-heading { font-weight: 700; color: #065f46; border-bottom: 1px solid #c5cdd6; padding-bottom: 4px; }
       .sale-total { background: #ecfdf5; }
+      .sale-parties { display: flex; flex-wrap: wrap; gap: 2px 18px; margin: 7px 0; }
+      .sale-parties span { min-width: 0; overflow-wrap: anywhere; }
+      .sale-subheading { margin-top: 10px; padding: 4px 6px; background: #ecfdf5; font-weight: 700; color: #065f46; }
+      .rate-basis { padding: 2px 0 6px; color: #475569; font-size: 11px; }
+      .sale-table { table-layout: fixed; margin: 8px 0 2px; }
+      .sale-table th, .sale-table td { overflow-wrap: anywhere; padding: 5px 6px; }
+      .sale-table th:first-child { width: 25%; }
 
       /* Top summary cards */
       .summary-cards {
@@ -525,11 +555,14 @@ const Reports = () => {
       .summary-row {
         display: flex;
         justify-content: space-between;
+        gap: 12px;
+        overflow-wrap: anywhere;
         font-size: ${isRTL ? '13px' : '11px'};
         padding: 4px 0;
         border-bottom: 1px dotted #dce3ea;
       }
       .summary-row span:last-child { font-family: 'Inter', 'Tahoma', monospace; }
+      .summary-row span:last-child { text-align: ${textAlignOpp}; flex-shrink: 0; }
       .bold-row {
         font-weight: 700;
         font-size: ${isRTL ? '15px' : '13px'};
@@ -591,6 +624,19 @@ const Reports = () => {
         letter-spacing: 0.5px;
       }
 
+      .bill-table { table-layout: fixed; }
+      .bill-table th, .bill-table td { overflow-wrap: anywhere; }
+      .bill-table thead { display: table-header-group; }
+      .bill-table tr, .bottom-box, .summary-cards, .signature-row { break-inside: avoid; }
+      .info-col, .sc, .bottom-box { min-width: 0; overflow-wrap: anywhere; }
+      @media (max-width: 600px) {
+        body { padding: 12px; }
+        .summary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .bottom-grid { grid-template-columns: 1fr; }
+        .bill-table th, .bill-table td { padding: 4px 3px; font-size: 10px; }
+        .sale-detail { padding: 8px; }
+        .sig-line { width: 110px; }
+      }
       @media print { body { padding: 0; } }
       @page { margin: 10mm; size: A4; }
     </style></head><body>${html}<div class="footer-note">— ${pt("print.title", L)} —</div></body></html>`);
