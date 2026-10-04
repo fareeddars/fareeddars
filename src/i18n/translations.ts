@@ -233,6 +233,15 @@ export const translations: TranslationDict = {
   "reports.buyerOutstanding": { en: "Shopkeeper / Mill Outstanding", ur: "خریدار / مل کا بقایا", sd: "خريدار / مل جو بقايو" },
   "reports.buyer": { en: "Buyer / Shopkeeper / Mill", ur: "خریدار / دکاندار / مل", sd: "خريدار / دڪاندار / مل" },
   "reports.unspecifiedBuyer": { en: "Unspecified buyer", ur: "نامعلوم خریدار", sd: "اڻڄاتل خريدار" },
+  "print.saleDetails": { en: "SALE DETAILS", ur: "فروخت کی تفصیل", sd: "وڪري جي تفصيل" },
+  "print.costBreakdown": { en: "COST BREAKDOWN", ur: "اخراجات کی تفصیل", sd: "خرچن جي تفصيل" },
+  "print.paymentSummary": { en: "PAYMENT SUMMARY", ur: "ادائیگی کا خلاصہ", sd: "ادائگي جو خلاصو" },
+  "print.quantity": { en: "Quantity", ur: "مقدار", sd: "مقدار" },
+  "print.unit": { en: "Unit", ur: "اکائی", sd: "ايڪو" },
+  "print.rate": { en: "Rate / Unit", ur: "فی اکائی قیمت", sd: "في ايڪو قيمت" },
+  "print.totalSaleAmount": { en: "Total Sale Amount", ur: "کل فروخت کی رقم", sd: "ڪُل وڪري جي رقم" },
+  "print.rateBasis": { en: "Rate basis", ur: "قیمت کی بنیاد", sd: "قيمت جو بنياد" },
+  "print.field": { en: "Field / Plot", ur: "کھیت / پلاٹ", sd: "ٻني / پلاٽ" },
 
   // Print report labels
   "print.title": { en: "Agricultural Account Statement", ur: "زرعی حساب کتاب", sd: "زرعي حساب ڪتاب" },
