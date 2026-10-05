@@ -46,9 +46,9 @@ const ConfirmDialog = ({
       {details && details.length > 0 && (
         <div className="rounded-md border border-border bg-secondary/50 p-3 text-sm">
           {details.map((d) => (
-            <div key={d.label} className="flex items-start justify-between gap-3 py-0.5">
+            <div key={d.label} className="flex min-w-0 items-start justify-between gap-3 py-0.5">
               <span className="text-xs font-medium text-muted-foreground">{d.label}</span>
-              <span className="text-right font-medium text-foreground">{d.value}</span>
+              <span className="min-w-0 break-words text-right font-medium text-foreground">{d.value}</span>
             </div>
           ))}
         </div>

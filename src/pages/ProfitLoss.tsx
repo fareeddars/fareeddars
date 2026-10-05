@@ -528,13 +528,13 @@ const ProfitLoss = () => {
           title="4. Crop-wise Profit Analysis"
           icon={Leaf}
           action={
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 value={cropSearch}
                 onChange={(e) => setCropSearch(e.target.value)}
                 placeholder="Search crop"
-                className="h-9 w-40 rounded-xl pl-9 text-sm"
+                className="h-9 w-full rounded-xl pl-9 text-sm sm:w-40"
               />
             </div>
           }
@@ -542,7 +542,7 @@ const ProfitLoss = () => {
           {visibleCropRows.length === 0 ? (
             <EmptyState message="No crop data available" />
           ) : (
-            <div className="-mx-2 overflow-x-auto">
+            <div className="-mx-2 max-w-[calc(100vw-3.5rem)] overflow-x-auto overscroll-x-contain sm:max-w-none">
               <table className="w-full min-w-[520px] text-sm">
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
