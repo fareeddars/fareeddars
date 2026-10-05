@@ -180,7 +180,7 @@ const Seasons = () => {
       </div>
 
       {/* --- Premium Season Cards --- */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-3">
         {seasons.map((season, i) => {
           const isSelected = selectedSeason?.id === season.id;
           const isActive = season.status === "active";

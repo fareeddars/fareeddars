@@ -31,10 +31,10 @@ export const PageHero = ({
           </span>
         )}
         <div className="min-w-0">
-          <h1 className="truncate font-serif text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+          <h1 className="break-words font-serif text-lg font-semibold tracking-tight text-foreground sm:text-xl">
             {title}
           </h1>
-          {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
+          {subtitle && <p className="mt-0.5 break-words text-sm text-muted-foreground">{subtitle}</p>}
         </div>
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -106,14 +106,14 @@ export const SectionCard = ({
   className?: string;
   bodyClassName?: string;
 }) => (
-  <section className={cn("rounded-lg border border-border bg-card shadow-sm", className)}>
+  <section className={cn("min-w-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm", className)}>
     {(title || action) && (
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-2">
           {Icon && <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />}
           <div className="min-w-0">
-            {title && <h2 className="truncate font-serif text-sm font-semibold text-foreground sm:text-base">{title}</h2>}
-            {description && <p className="truncate text-xs text-muted-foreground">{description}</p>}
+            {title && <h2 className="break-words font-serif text-sm font-semibold text-foreground sm:text-base">{title}</h2>}
+            {description && <p className="break-words text-xs text-muted-foreground">{description}</p>}
           </div>
         </div>
         {action}
@@ -244,8 +244,8 @@ export function DataTable<T>({
   return (
     <div className={cn("w-full", className)}>
       {/* Desktop / tablet table */}
-      <div className="hidden w-full overflow-hidden rounded-lg border border-border md:block">
-        <table className="w-full table-fixed text-sm">
+      <div className="hidden w-full overflow-x-auto rounded-lg border border-border md:block">
+        <table className="w-full min-w-[640px] table-fixed text-sm">
           <thead className="bg-secondary/60">
             <tr>
               {columns.map((c) => (
@@ -269,7 +269,7 @@ export function DataTable<T>({
                 )}
               >
                 {columns.map((c) => (
-                  <td key={c.key} className={cn("truncate px-3 py-2.5 text-foreground", c.className)}>
+                  <td key={c.key} className={cn("break-words px-3 py-2.5 text-foreground", c.className)}>
                     {c.render(row)}
                   </td>
                 ))}
@@ -295,7 +295,7 @@ export function DataTable<T>({
               .map((c) => (
                 <div key={c.key} className="flex items-start justify-between gap-3 py-1">
                   <span className="text-xs font-medium text-muted-foreground">{c.header}</span>
-                  <span className="min-w-0 text-right text-sm text-foreground">{c.render(row)}</span>
+                  <span className="min-w-0 break-words text-right text-sm text-foreground">{c.render(row)}</span>
                 </div>
               ))}
           </div>

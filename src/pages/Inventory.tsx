@@ -317,8 +317,8 @@ const Inventory = () => {
       {/* Content grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Table */}
-        <Card className="lg:col-span-2 rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
-          <CardContent className="p-5 sm:p-6">
+        <Card className="min-w-0 overflow-hidden rounded-lg border-border/70 bg-card/80 shadow-sm backdrop-blur lg:col-span-2">
+          <CardContent className="min-w-0 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-lg font-bold text-foreground">Top Inventory Items</h2>
@@ -328,8 +328,8 @@ const Inventory = () => {
                 {items.length} items
               </Badge>
             </div>
-            <div className="overflow-x-auto -mx-2">
-              <table className="w-full text-sm">
+            <div className="-mx-2 overflow-x-auto overscroll-x-contain">
+              <table className="w-full min-w-[680px] text-sm">
                 <thead>
                   <tr className="text-left text-[11px] uppercase tracking-wider text-slate-400">
                     <th className="px-3 py-2 font-medium">Item</th>
