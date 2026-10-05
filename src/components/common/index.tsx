@@ -106,7 +106,7 @@ export const SectionCard = ({
   className?: string;
   bodyClassName?: string;
 }) => (
-  <section className={cn("rounded-lg border border-border bg-card shadow-sm", className)}>
+  <section className={cn("min-w-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm", className)}>
     {(title || action) && (
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-2">
