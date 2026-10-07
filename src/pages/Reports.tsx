@@ -231,17 +231,18 @@ const Reports = () => {
       if (sales.length > 0) {
         sales.forEach((e) => {
           const s = deriveSale(e);
-          const line = (label: string, value: number) => `<div class="summary-row"><span>${pt(label, L)}</span><span>₨ ${fmtNum(value)}</span></div>`;
+          const line = (label: string, value: number) => `<div class="sale-amount"><span>${pt(label, L)}</span><strong>₨ ${fmtNum(value)}</strong></div>`;
           const weightUnit = e.weight_unit || "kg";
           const rateUnit = e.rate_unit || weightUnit;
           const rate = e.rate != null ? Number(e.rate) : null;
           const rateQuantity = s.netWeight > 0 && rateUnit !== weightUnit
             ? fromKg(s.netWeightKg, rateUnit as WeightUnit) : s.netWeight;
-          html += `<div class="sale-detail">
+          html += `<article class="sale-detail" data-sale-id="${escapeHtml(e.id)}">
             <div class="sale-heading">${pt("print.saleDetails", L)} · ${escapeHtml(e.entry_date ?? "—")}</div>
             <div class="sale-parties">
               <span>${pt("print.farmer", L)}: <strong>${escapeHtml(farmer.name)}</strong></span>
               <span>${pt("reports.buyer", L)}: <strong>${escapeHtml(e.buyer?.trim() || pt("reports.unspecifiedBuyer", L))}</strong></span>
+              <span>${pt("print.cropSeason", L)}: <strong>${escapeHtml(seasonName)}</strong></span>
               ${e.field_name ? `<span>${pt("print.field", L)}: <strong>${escapeHtml(e.field_name)}</strong></span>` : ""}
             </div>
             <table class="bill-table sale-table"><thead><tr>
@@ -254,20 +255,28 @@ const Reports = () => {
               <td class="num">${rate != null && Number.isFinite(rate) ? `₨ ${fmtNum(rate)} / ${escapeHtml(rateUnit)}` : "—"}</td>
               <td class="num row-total">₨ ${fmtNum(s.grossSale)}</td>
             </tr></tbody></table>
-            ${s.netWeight > 0 && rate != null && Number.isFinite(rate) && rateUnit !== weightUnit
+            ${s.netWeight > 0 && rate != null && Number.isFinite(rate)
               ? `<p class="rate-basis">${pt("print.rateBasis", L)}: ${fmtNum(rateQuantity)} ${escapeHtml(rateUnit)} × ₨ ${fmtNum(rate)} / ${escapeHtml(rateUnit)} = ₨ ${fmtNum(s.grossSale)}</p>` : ""}
-            <div class="sale-subheading">${pt("print.costBreakdown", L)}</div>
-            ${line("reports.transportCost", s.transport)}
-            ${line("reports.labourCost", s.labour)}
-            ${line("reports.commissionCost", s.commission)}
-            ${line("reports.otherSaleCosts", s.other)}
-            ${line("reports.totalSaleCosts", s.costs)}
-            <div class="sale-subheading">${pt("print.paymentSummary", L)}</div>
-            ${line("reports.grossSale", s.grossSale)}
-            ${line("reports.netSale", s.netSale)}
-            ${line("reports.salePaid", s.paid)}
-            ${line("reports.saleOutstanding", s.remaining)}
-          </div>`;
+            <div class="sale-costs">
+              <div class="sale-subheading">${pt("print.costBreakdown", L)}</div>
+              <div class="sale-cost-grid">
+                ${line("reports.transportCost", s.transport)}
+                ${line("reports.labourCost", s.labour)}
+                ${line("reports.commissionCost", s.commission)}
+                ${line("reports.otherSaleCosts", s.other)}
+              </div>
+            </div>
+            <div class="sale-payment">
+              <div class="sale-subheading">${pt("print.paymentSummary", L)}</div>
+              <div class="sale-payment-grid">
+                ${line("reports.grossSale", s.grossSale)}
+                ${line("reports.totalSaleCosts", s.costs)}
+                ${line("reports.netSale", s.netSale)}
+                ${line("reports.salePaid", s.paid)}
+                ${line("reports.saleOutstanding", s.remaining)}
+              </div>
+            </div>
+          </article>`;
         });
         html += `<div class="sale-detail sale-total">
           <div class="sale-heading">${pt("print.totalSalesLabel", L)}</div>
@@ -448,9 +457,16 @@ const Reports = () => {
       .sale-detail { border: 1px solid #c5cdd6; border-radius: 4px; padding: 8px 12px; margin: 8px 0; break-inside: avoid; }
       .sale-heading { font-weight: 700; color: #065f46; border-bottom: 1px solid #c5cdd6; padding-bottom: 4px; }
       .sale-total { background: #ecfdf5; }
-      .sale-parties { display: flex; flex-wrap: wrap; gap: 2px 18px; margin: 7px 0; }
+      .sale-parties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 18px; margin: 7px 0; }
       .sale-parties span { min-width: 0; overflow-wrap: anywhere; }
-      .sale-subheading { margin-top: 10px; padding: 4px 6px; background: #ecfdf5; font-weight: 700; color: #065f46; }
+      .sale-subheading { padding: 3px 0; font-weight: 700; color: #065f46; }
+      .sale-costs, .sale-payment { border-top: 1px solid #c5cdd6; margin-top: 6px; padding-top: 3px; }
+      .sale-cost-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+      .sale-payment-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+      .sale-amount { min-width: 0; overflow-wrap: anywhere; font-size: 11px; }
+      .sale-amount span, .sale-amount strong { display: block; }
+      .sale-amount strong { font-variant-numeric: tabular-nums; }
+      .sale-payment-grid .sale-amount:last-child { border-inline-start: 2px solid #059669; padding-inline-start: 8px; }
       .rate-basis { padding: 2px 0 6px; color: #475569; font-size: 11px; }
       .sale-table { table-layout: fixed; margin: 8px 0 2px; }
       .sale-table th, .sale-table td { overflow-wrap: anywhere; padding: 5px 6px; }
