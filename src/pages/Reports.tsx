@@ -385,6 +385,7 @@ const Reports = () => {
     const finalFont = isRTL ? rtlFont : "'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";
     win.document.write(`<!DOCTYPE html><html ${dirAttr}><head><title>${pt("print.title", L)}</title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: ${finalFont}; font-size: 12px; color: #222; background: white; padding: 10mm; direction: ${isRTL ? 'rtl' : 'ltr'}; line-height: 1.6; }
@@ -645,15 +646,28 @@ const Reports = () => {
       .bill-table thead { display: table-header-group; }
       .bill-table tr, .bottom-box, .summary-cards, .signature-row { break-inside: avoid; }
       .info-col, .sc, .bottom-box { min-width: 0; overflow-wrap: anywhere; }
-      @media (max-width: 600px) {
+      @media screen and (max-width: 600px) {
         body { padding: 12px; }
         .summary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .bottom-grid { grid-template-columns: 1fr; }
         .bill-table th, .bill-table td { padding: 4px 3px; font-size: 10px; }
         .sale-detail { padding: 8px; }
+        .sale-parties { grid-template-columns: 1fr; }
+        .sale-cost-grid, .sale-payment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .sig-line { width: 110px; }
       }
-      @media print { body { padding: 0; } }
+      @media print {
+        body { padding: 0; font-size: 11px; line-height: 1.4; }
+        .sale-detail { page-break-inside: avoid; }
+        .section-title { break-after: avoid; }
+        .header-block { padding: 10px 14px; }
+        .info-row { padding: 8px 12px; }
+        .info-bar { padding: 5px 10px; margin-bottom: 8px; }
+        .summary-cards { margin: 8px 0; }
+        .sc { padding: 6px 8px; }
+        .section-title { margin-top: 10px; padding: 5px 8px; }
+        .bill-table th, .bill-table td { padding: 4px 6px; }
+      }
       @page { margin: 10mm; size: A4; }
     </style></head><body>${html}<div class="footer-note">— ${pt("print.title", L)} —</div></body></html>`);
     win.document.close();
