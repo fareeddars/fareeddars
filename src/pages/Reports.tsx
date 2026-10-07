@@ -231,17 +231,18 @@ const Reports = () => {
       if (sales.length > 0) {
         sales.forEach((e) => {
           const s = deriveSale(e);
-          const line = (label: string, value: number) => `<div class="summary-row"><span>${pt(label, L)}</span><span>₨ ${fmtNum(value)}</span></div>`;
+          const line = (label: string, value: number) => `<div class="sale-amount"><span>${pt(label, L)}</span><strong>₨ ${fmtNum(value)}</strong></div>`;
           const weightUnit = e.weight_unit || "kg";
           const rateUnit = e.rate_unit || weightUnit;
           const rate = e.rate != null ? Number(e.rate) : null;
           const rateQuantity = s.netWeight > 0 && rateUnit !== weightUnit
             ? fromKg(s.netWeightKg, rateUnit as WeightUnit) : s.netWeight;
-          html += `<div class="sale-detail">
+          html += `<article class="sale-detail" data-sale-id="${escapeHtml(e.id)}">
             <div class="sale-heading">${pt("print.saleDetails", L)} · ${escapeHtml(e.entry_date ?? "—")}</div>
             <div class="sale-parties">
               <span>${pt("print.farmer", L)}: <strong>${escapeHtml(farmer.name)}</strong></span>
               <span>${pt("reports.buyer", L)}: <strong>${escapeHtml(e.buyer?.trim() || pt("reports.unspecifiedBuyer", L))}</strong></span>
+              <span>${pt("print.cropSeason", L)}: <strong>${escapeHtml(seasonName)}</strong></span>
               ${e.field_name ? `<span>${pt("print.field", L)}: <strong>${escapeHtml(e.field_name)}</strong></span>` : ""}
             </div>
             <table class="bill-table sale-table"><thead><tr>
@@ -254,20 +255,28 @@ const Reports = () => {
               <td class="num">${rate != null && Number.isFinite(rate) ? `₨ ${fmtNum(rate)} / ${escapeHtml(rateUnit)}` : "—"}</td>
               <td class="num row-total">₨ ${fmtNum(s.grossSale)}</td>
             </tr></tbody></table>
-            ${s.netWeight > 0 && rate != null && Number.isFinite(rate) && rateUnit !== weightUnit
+            ${s.netWeight > 0 && rate != null && Number.isFinite(rate)
               ? `<p class="rate-basis">${pt("print.rateBasis", L)}: ${fmtNum(rateQuantity)} ${escapeHtml(rateUnit)} × ₨ ${fmtNum(rate)} / ${escapeHtml(rateUnit)} = ₨ ${fmtNum(s.grossSale)}</p>` : ""}
-            <div class="sale-subheading">${pt("print.costBreakdown", L)}</div>
-            ${line("reports.transportCost", s.transport)}
-            ${line("reports.labourCost", s.labour)}
-            ${line("reports.commissionCost", s.commission)}
-            ${line("reports.otherSaleCosts", s.other)}
-            ${line("reports.totalSaleCosts", s.costs)}
-            <div class="sale-subheading">${pt("print.paymentSummary", L)}</div>
-            ${line("reports.grossSale", s.grossSale)}
-            ${line("reports.netSale", s.netSale)}
-            ${line("reports.salePaid", s.paid)}
-            ${line("reports.saleOutstanding", s.remaining)}
-          </div>`;
+            <div class="sale-costs">
+              <div class="sale-subheading">${pt("print.costBreakdown", L)}</div>
+              <div class="sale-cost-grid">
+                ${line("reports.transportCost", s.transport)}
+                ${line("reports.labourCost", s.labour)}
+                ${line("reports.commissionCost", s.commission)}
+                ${line("reports.otherSaleCosts", s.other)}
+              </div>
+            </div>
+            <div class="sale-payment">
+              <div class="sale-subheading">${pt("print.paymentSummary", L)}</div>
+              <div class="sale-payment-grid">
+                ${line("reports.grossSale", s.grossSale)}
+                ${line("reports.totalSaleCosts", s.costs)}
+                ${line("reports.netSale", s.netSale)}
+                ${line("reports.salePaid", s.paid)}
+                ${line("reports.saleOutstanding", s.remaining)}
+              </div>
+            </div>
+          </article>`;
         });
         html += `<div class="sale-detail sale-total">
           <div class="sale-heading">${pt("print.totalSalesLabel", L)}</div>
@@ -376,6 +385,7 @@ const Reports = () => {
     const finalFont = isRTL ? rtlFont : "'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";
     win.document.write(`<!DOCTYPE html><html ${dirAttr}><head><title>${pt("print.title", L)}</title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: ${finalFont}; font-size: 12px; color: #222; background: white; padding: 10mm; direction: ${isRTL ? 'rtl' : 'ltr'}; line-height: 1.6; }
@@ -448,9 +458,16 @@ const Reports = () => {
       .sale-detail { border: 1px solid #c5cdd6; border-radius: 4px; padding: 8px 12px; margin: 8px 0; break-inside: avoid; }
       .sale-heading { font-weight: 700; color: #065f46; border-bottom: 1px solid #c5cdd6; padding-bottom: 4px; }
       .sale-total { background: #ecfdf5; }
-      .sale-parties { display: flex; flex-wrap: wrap; gap: 2px 18px; margin: 7px 0; }
+      .sale-parties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 18px; margin: 7px 0; }
       .sale-parties span { min-width: 0; overflow-wrap: anywhere; }
-      .sale-subheading { margin-top: 10px; padding: 4px 6px; background: #ecfdf5; font-weight: 700; color: #065f46; }
+      .sale-subheading { padding: 3px 0; font-weight: 700; color: #065f46; }
+      .sale-costs, .sale-payment { border-top: 1px solid #c5cdd6; margin-top: 6px; padding-top: 3px; }
+      .sale-cost-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+      .sale-payment-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+      .sale-amount { min-width: 0; overflow-wrap: anywhere; font-size: 11px; }
+      .sale-amount span, .sale-amount strong { display: block; }
+      .sale-amount strong { font-variant-numeric: tabular-nums; }
+      .sale-payment-grid .sale-amount:last-child { border-inline-start: 2px solid #059669; padding-inline-start: 8px; }
       .rate-basis { padding: 2px 0 6px; color: #475569; font-size: 11px; }
       .sale-table { table-layout: fixed; margin: 8px 0 2px; }
       .sale-table th, .sale-table td { overflow-wrap: anywhere; padding: 5px 6px; }
@@ -629,15 +646,28 @@ const Reports = () => {
       .bill-table thead { display: table-header-group; }
       .bill-table tr, .bottom-box, .summary-cards, .signature-row { break-inside: avoid; }
       .info-col, .sc, .bottom-box { min-width: 0; overflow-wrap: anywhere; }
-      @media (max-width: 600px) {
+      @media screen and (max-width: 600px) {
         body { padding: 12px; }
         .summary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .bottom-grid { grid-template-columns: 1fr; }
         .bill-table th, .bill-table td { padding: 4px 3px; font-size: 10px; }
         .sale-detail { padding: 8px; }
+        .sale-parties { grid-template-columns: 1fr; }
+        .sale-cost-grid, .sale-payment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .sig-line { width: 110px; }
       }
-      @media print { body { padding: 0; } }
+      @media print {
+        body { padding: 0; font-size: 11px; line-height: 1.4; }
+        .sale-detail { page-break-inside: avoid; }
+        .section-title { break-after: avoid; }
+        .header-block { padding: 10px 14px; }
+        .info-row { padding: 8px 12px; }
+        .info-bar { padding: 5px 10px; margin-bottom: 8px; }
+        .summary-cards { margin: 8px 0; }
+        .sc { padding: 6px 8px; }
+        .section-title { margin-top: 10px; padding: 5px 8px; }
+        .bill-table th, .bill-table td { padding: 4px 6px; }
+      }
       @page { margin: 10mm; size: A4; }
     </style></head><body>${html}<div class="footer-note">— ${pt("print.title", L)} —</div></body></html>`);
     win.document.close();
