@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import FarmerAvatar from "@/components/FarmerAvatar";
 import { deriveSale, money as fmtMoney, qty as fmtQty } from "@/lib/ledger/aggregate";
-import { computeSale, averageYieldPerAcre, WEIGHT_UNITS, AREA_UNITS, num, money, qty, type WeightUnit, type AreaUnit } from "@/lib/ledger/calc";
+import { computeSale, averageYieldPerAcre, WEIGHT_UNITS, AREA_UNITS, num, money, qty, toKg, formatMaundCompound, type WeightUnit, type AreaUnit } from "@/lib/ledger/calc";
 
 const EXPENSE_CATEGORIES = [
   { key: "Seed", label: "expense.seed" },
@@ -48,7 +48,13 @@ const SaleMeta = ({ e }: { e: any }) => {
   if (e.buyer) bits.push(`Buyer: ${String(e.buyer)}`);
   if (e.crop_type) bits.push(String(e.crop_type));
   if (e.field_name) bits.push(String(e.field_name));
-  if (s.netWeight > 0) bits.push(`${fmtQty(s.netWeight)} ${e.weight_unit || "kg"}`);
+  if (s.netWeight > 0) {
+    if (e.weight_unit === "maund") {
+      bits.push(`${formatMaundCompound(s.netWeightKg)} (${fmtQty(s.netWeight)} Mnds)`);
+    } else {
+      bits.push(`${fmtQty(s.netWeight)} ${e.weight_unit || "kg"}`);
+    }
+  }
   bits.push(`Gross ${fmtMoney(s.grossSale)}`);
   if (s.transport > 0) bits.push(`Transport ${fmtMoney(s.transport)}`);
   if (s.labour > 0) bits.push(`Labour ${fmtMoney(s.labour)}`);
@@ -63,7 +69,7 @@ const SaleMeta = ({ e }: { e: any }) => {
 
 const Ledger = () => {
   const { user, canCreate, canEdit, canDelete } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { selectedSeason, farmerSeasons, isSeasonClosed } = useSeason();
   const { toast } = useToast();
   const [entries, setEntries] = useState<(Tables<"ledger_entries"> & { farmers?: { name: string } | null })[]>([]);
@@ -84,6 +90,7 @@ const Ledger = () => {
   const [costAllocation, setCostAllocation] = useState<CostAllocation>("farmer");
   const [grossWeight, setGrossWeight] = useState("");
   const [deductionsVal, setDeductionsVal] = useState("");
+  const [deductionUnit, setDeductionUnit] = useState<WeightUnit>("kg");
   const [saleRate, setSaleRate] = useState("");
   const [weightUnit, setWeightUnit] = useState<WeightUnit>("kg");
   const [rateUnit, setRateUnit] = useState<WeightUnit>("kg");
@@ -179,6 +186,7 @@ const Ledger = () => {
   const sale = computeSale({
     grossWeight: num(grossWeight),
     deductions: num(deductionsVal),
+    deductionUnit,
     weightUnit,
     rate: num(saleRate),
     rateUnit,
@@ -200,7 +208,7 @@ const Ledger = () => {
   const resetForm = () => {
     setFarmerId(""); setEntryDate(new Date()); setDescription("");
     setCategory(""); setInventoryItemId(""); setPrice(""); setQuantity(""); setExpenseAmount(""); setCostAllocation("farmer");
-    setGrossWeight(""); setDeductionsVal(""); setSaleRate(""); setWeightUnit("kg"); setRateUnit("kg");
+    setGrossWeight(""); setDeductionsVal(""); setDeductionUnit("kg"); setSaleRate(""); setWeightUnit("kg"); setRateUnit("kg");
     setBuyer(""); setFieldName(""); setTransportCost(""); setLabourCost(""); setCommissionCost(""); setOtherCosts("");
     setTotalArea(""); setAreaUnit("acre"); setTotalYield(""); setYieldUnit("maund"); setPaidAmount(""); setSaleNotes("");
     setPaymentMethod("cash"); setCashAmount(""); setCropType(""); setCropWeight(""); setCropRate("");
@@ -225,8 +233,17 @@ const Ledger = () => {
       setGrossWeight(e.gross_weight != null ? String(e.gross_weight) : "");
       setDeductionsVal(e.deductions != null ? String(e.deductions) : "");
       setSaleRate(e.rate != null ? String(e.rate) : "");
-      setWeightUnit((e.weight_unit as WeightUnit) || "kg");
+      const wUnit = (e.weight_unit as WeightUnit) || "kg";
+      setWeightUnit(wUnit);
       setRateUnit((e.rate_unit as WeightUnit) || "kg");
+      let dUnit: WeightUnit = "kg";
+      if (wUnit === "maund" && e.deductions && e.gross_weight && e.net_weight) {
+        const directDiff = Number(e.gross_weight) - Number(e.deductions);
+        if (Math.abs(directDiff - Number(e.net_weight)) < 0.001) {
+          dUnit = "maund";
+        }
+      }
+      setDeductionUnit(dUnit);
       setBuyer(e.buyer || "");
       setFieldName(e.field_name || "");
       setCropType(e.crop_type || "");
@@ -252,6 +269,22 @@ const Ledger = () => {
 
   const handleDelete = async (id: string) => {
     try {
+      const entryToDelete = entries.find((e: any) => e.id === id);
+      if (
+        entryToDelete &&
+        entryToDelete.entry_type === "expense" &&
+        entryToDelete.inventory_item_id &&
+        Number(entryToDelete.quantity) > 0
+      ) {
+        const item = inventory.find((i: any) => i.id === entryToDelete.inventory_item_id);
+        const restoredStock = Number(item?.current_stock ?? 0) + Number(entryToDelete.quantity);
+        setInventory((prev) =>
+          prev.map((i: any) =>
+            i.id === entryToDelete.inventory_item_id ? { ...i, current_stock: restoredStock } : i
+          )
+        );
+        await offlineRepo.update("inventory", entryToDelete.inventory_item_id, { current_stock: restoredStock });
+      }
       await offlineRepo.remove("ledger_entries", id);
       toast({ title: isOnline() ? "Entry deleted" : "Deleted offline — will sync" });
       fetchData();
@@ -277,9 +310,15 @@ const Ledger = () => {
       const nw = netWeight();
       const rt = Number(saleRate) || 0;
       if (gw <= 0) { toast({ title: "Gross weight required", variant: "destructive" }); return; }
-      if (nw <= 0) { toast({ title: "Net weight must be > 0 (Gross − Deductions)", variant: "destructive" }); return; }
-      if (rt <= 0) { toast({ title: "Rate per kg required", variant: "destructive" }); return; }
       if (dw < 0) { toast({ title: "Deductions cannot be negative", variant: "destructive" }); return; }
+      const gwKg = toKg(gw, weightUnit);
+      const dwKg = toKg(dw, deductionUnit);
+      if (dwKg >= gwKg && gwKg > 0) {
+        toast({ title: t("ledger.deductionsExceed") || "Deductions cannot exceed gross weight", variant: "destructive" });
+        return;
+      }
+      if (nw <= 0) { toast({ title: "Net weight must be > 0 (Gross − Deductions)", variant: "destructive" }); return; }
+      if (rt <= 0) { toast({ title: `Rate per ${rateUnit === "maund" ? "Maund" : rateUnit} required`, variant: "destructive" }); return; }
       amount = saleTotal();
     } else if (activeTab === "payment") {
       amount = paymentMethod === "cash" ? (Number(cashAmount) || 0) : cropTotal();
@@ -288,6 +327,74 @@ const Ledger = () => {
     } else if (activeTab === "loan") {
       amount = Number(loanAmount) || 0;
       if (amount <= 0) { toast({ title: "Loan amount must be > 0", variant: "destructive" }); return; }
+    }
+
+    // === INVENTORY STOCK CHECK & ATOMIC MOVEMENT CALCULATION ===
+    const stockUpdates: Array<{ id: string; newStock: number }> = [];
+    if (activeTab === "expense") {
+      const qtyNum = Number(quantity) || 0;
+      const targetItemId = inventoryItemId && inventoryItemId !== "none" ? inventoryItemId : null;
+
+      if (editingId) {
+        const existingEntry = entries.find((e: any) => e.id === editingId);
+        const oldItemId = existingEntry?.inventory_item_id || null;
+        const oldQty = Number(existingEntry?.quantity) || 0;
+
+        if (oldItemId === targetItemId && targetItemId) {
+          // Same item: delta is newQty - oldQty
+          const delta = qtyNum - oldQty;
+          const item = inventory.find((i: any) => i.id === targetItemId);
+          if (item) {
+            if (delta > 0 && Number(item.current_stock) < delta) {
+              toast({
+                title: "Insufficient stock",
+                description: `Cannot add ${delta} ${item.unit}. Only ${item.current_stock} ${item.unit} available in stock.`,
+                variant: "destructive",
+              });
+              return;
+            }
+            stockUpdates.push({ id: targetItemId, newStock: Number(item.current_stock) - delta });
+          }
+        } else {
+          // Item changed or unlinked:
+          if (oldItemId && oldQty > 0) {
+            const oldItem = inventory.find((i: any) => i.id === oldItemId);
+            if (oldItem) {
+              stockUpdates.push({ id: oldItemId, newStock: Number(oldItem.current_stock) + oldQty });
+            }
+          }
+          if (targetItemId && qtyNum > 0) {
+            const newItem = inventory.find((i: any) => i.id === targetItemId);
+            if (newItem) {
+              if (Number(newItem.current_stock) < qtyNum) {
+                toast({
+                  title: "Insufficient stock",
+                  description: `Cannot issue ${qtyNum} ${newItem.unit}. Only ${newItem.current_stock} ${newItem.unit} available in stock.`,
+                  variant: "destructive",
+                });
+                return;
+              }
+              stockUpdates.push({ id: targetItemId, newStock: Number(newItem.current_stock) - qtyNum });
+            }
+          }
+        }
+      } else {
+        // New expense entry:
+        if (targetItemId && qtyNum > 0) {
+          const item = inventory.find((i: any) => i.id === targetItemId);
+          if (item) {
+            if (Number(item.current_stock) < qtyNum) {
+              toast({
+                title: "Insufficient stock",
+                description: `Cannot issue ${qtyNum} ${item.unit}. Only ${item.current_stock} ${item.unit} available in stock.`,
+                variant: "destructive",
+              });
+              return;
+            }
+            stockUpdates.push({ id: targetItemId, newStock: Number(item.current_stock) - qtyNum });
+          }
+        }
+      }
     }
 
     // === DUPLICATE CHECK (block) ===
@@ -372,23 +479,20 @@ const Ledger = () => {
         };
         (entryData as any).id = tempId;
         setEntries((prev) => [optimisticEntry, ...prev]);
+      }
 
-        // Optimistic inventory deduction
-        if (activeTab === "expense" && inventoryItemId && inventoryItemId !== "none" && quantity) {
-          const item = inventory.find((i) => i.id === inventoryItemId);
-          if (item) {
-            setInventory((prev) => prev.map((i: any) =>
-              i.id === inventoryItemId ? { ...i, current_stock: i.current_stock - Number(quantity) } : i
-            ));
-          }
-        }
+      // Optimistic inventory update
+      if (stockUpdates.length > 0) {
+        setInventory((prev) =>
+          prev.map((i: any) => {
+            const up = stockUpdates.find((u) => u.id === i.id);
+            return up ? { ...i, current_stock: up.newStock } : i;
+          })
+        );
       }
 
       // Reset/close UI immediately so it feels instant
       const wasEditing = !!editingId;
-      const inventoryItemForBg = inventoryItemId;
-      const quantityForBg = quantity;
-      const activeTabForBg = activeTab;
 
       if (wasEditing) {
         setOpen(false);
@@ -411,11 +515,8 @@ const Ledger = () => {
           } else {
             await offlineRepo.insert("ledger_entries", entryData);
           }
-          if (!wasEditing && activeTabForBg === "expense" && inventoryItemForBg && inventoryItemForBg !== "none" && quantityForBg) {
-            const item = inventory.find((i) => i.id === inventoryItemForBg);
-            if (item) {
-              await offlineRepo.update("inventory", inventoryItemForBg, { current_stock: item.current_stock - Number(quantityForBg) });
-            }
+          for (const up of stockUpdates) {
+            await offlineRepo.update("inventory", up.id, { current_stock: up.newStock });
           }
           // Quietly refresh in background to reconcile any server-side changes
           fetchData();
@@ -675,19 +776,107 @@ const Ledger = () => {
                         <div className="rounded-lg sm:rounded-xl border border-border bg-muted/30 p-2 sm:p-4 space-y-2 sm:space-y-3">
                           <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">⚖️ Weight & Rate</p>
                           <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.grossWeight")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" /></div>
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.deductions")}</Label><Input className="h-8 sm:h-11 bg-background text-red-600 font-medium text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">
+                                {language === "ur"
+                                  ? `کل وزن (${weightUnit === "maund" ? "من" : weightUnit === "ton" ? "ٹن" : "کلو"})`
+                                  : language === "sd"
+                                  ? `ڪُل وزن (${weightUnit === "maund" ? "مڻ" : weightUnit === "ton" ? "ٽن" : "ڪلو"})`
+                                  : `Gross (${weightUnit === "maund" ? "Mnds" : weightUnit === "ton" ? "Ton" : "Kg"})`}
+                              </Label>
+                              <Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} placeholder="0" />
+                            </div>
+
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <div className="flex items-center justify-between gap-1">
+                                <Label className="text-[9px] sm:text-sm font-semibold truncate">
+                                  {deductionUnit === "maund"
+                                    ? (t("ledger.deductionsMaund") || "Deduction (Mnds)")
+                                    : (t("ledger.deductionsKg") || "Deduction (Kg)")}
+                                </Label>
+                                <div className="inline-flex items-center rounded border border-border bg-background p-0.5 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeductionUnit("kg")}
+                                    className={cn(
+                                      "px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] rounded font-semibold transition-colors",
+                                      deductionUnit === "kg"
+                                        ? "bg-emerald-600 text-white shadow-xs"
+                                        : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                    title="Deductions in Kg"
+                                  >
+                                    Kg
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeductionUnit("maund")}
+                                    className={cn(
+                                      "px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] rounded font-semibold transition-colors",
+                                      deductionUnit === "maund"
+                                        ? "bg-emerald-600 text-white shadow-xs"
+                                        : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                    title="Deductions in Maunds"
+                                  >
+                                    Mnd
+                                  </button>
+                                </div>
+                              </div>
+                              <Input className="h-8 sm:h-11 bg-background text-red-600 font-medium text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={deductionsVal} onChange={(e) => setDeductionsVal(e.target.value)} placeholder="0" />
+                            </div>
+
                             <div className="space-y-0.5 sm:space-y-1.5">
                               <Label className="text-[9px] sm:text-sm font-semibold">Unit</Label>
-                              <Select value={weightUnit} onValueChange={(v) => setWeightUnit(v as WeightUnit)}>
+                              <Select
+                                value={weightUnit}
+                                onValueChange={(v) => {
+                                  const u = v as WeightUnit;
+                                  setWeightUnit(u);
+                                  setDeductionUnit("kg");
+                                }}
+                              >
                                 <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
-                                <SelectContent>{WEIGHT_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}</SelectContent>
+                                <SelectContent>
+                                  <SelectItem value="kg">Kg</SelectItem>
+                                  <SelectItem value="maund">Maund (Mnds)</SelectItem>
+                                  <SelectItem value="ton">Ton</SelectItem>
+                                </SelectContent>
                               </Select>
                             </div>
                           </div>
-                          <div className="rounded-md sm:rounded-lg bg-background border border-border p-1.5 sm:p-3 text-[9px] sm:text-sm flex justify-between items-center">
-                            <span className="font-semibold text-muted-foreground">{t("ledger.netWeight")} <span className="text-[7px] sm:text-[10px] uppercase tracking-wider text-emerald-600">Auto Calculated</span></span>
-                            <span className="font-mono font-bold">{qty(sale.netWeight)} {weightUnit}</span>
+                          <div className="rounded-md sm:rounded-lg bg-background border border-border p-2 sm:p-3 text-[10px] sm:text-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-muted-foreground">{t("ledger.netWeight")}</span>
+                              <span className="text-[7px] sm:text-[9px] uppercase tracking-wider text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-500/10 px-1 py-0.5 rounded">
+                                Auto Calculated
+                              </span>
+                            </div>
+                            <div className="text-left sm:text-right flex flex-col sm:items-end">
+                              {weightUnit === "maund" ? (
+                                <>
+                                  <span className="font-mono font-bold text-xs sm:text-base text-emerald-700 dark:text-emerald-400">
+                                    {formatMaundCompound(sale.netWeightKg, { lang: language as any })}
+                                  </span>
+                                  {num(grossWeight) > 0 && (
+                                    <span className="text-[8px] sm:text-xs font-normal text-muted-foreground">
+                                      ({qty(sale.netWeight)} Mann · {qty(sale.netWeightKg)} kg)
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <span className="font-mono font-bold text-xs sm:text-base text-emerald-700 dark:text-emerald-400">
+                                    {qty(sale.netWeight)} {weightUnit}
+                                  </span>
+                                  {num(grossWeight) > 0 && weightUnit !== "kg" && (
+                                    <span className="text-[8px] sm:text-xs font-normal text-muted-foreground">
+                                      ({qty(sale.netWeightKg)} kg)
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </div>
                           </div>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
                             <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Rate (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
@@ -695,12 +884,19 @@ const Ledger = () => {
                               <Label className="text-[9px] sm:text-sm font-semibold">Rate per</Label>
                               <Select value={rateUnit} onValueChange={(v) => setRateUnit(v as WeightUnit)}>
                                 <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
-                                <SelectContent>{WEIGHT_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>Per {u.label}</SelectItem>)}</SelectContent>
+                                <SelectContent>{WEIGHT_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>Per {u.label === "Maund" ? "Maund (Mann)" : u.label}</SelectItem>)}</SelectContent>
                               </Select>
                             </div>
                           </div>
-                          <div className="rounded-md sm:rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-1.5 sm:p-3 text-[9px] sm:text-sm font-semibold flex justify-between items-center">
-                            <span className="text-emerald-700 dark:text-emerald-400">Gross Sale <span className="text-[7px] sm:text-[10px] uppercase tracking-wider">Auto</span></span>
+                          <div className="rounded-md sm:rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-2 sm:p-3 text-[10px] sm:text-sm font-semibold flex justify-between items-center">
+                            <div>
+                              <span className="text-emerald-700 dark:text-emerald-400 block">Gross Sale <span className="text-[7px] sm:text-[9px] uppercase tracking-wider">Auto</span></span>
+                              {num(saleRate) > 0 && num(grossWeight) > 0 && weightUnit === "maund" && (
+                                <span className="text-[8px] sm:text-[11px] text-muted-foreground font-normal block">
+                                  {formatMaundCompound(sale.netWeightKg, { lang: language as any })} ({qty(sale.netWeight)} Mann) × ₨ {qty(num(saleRate))} / {rateUnit === "maund" ? "Mann" : rateUnit}
+                                </span>
+                              )}
+                            </div>
                             <span className="text-xs sm:text-lg font-mono text-emerald-600 dark:text-emerald-400">{money(sale.grossSale)}</span>
                           </div>
                         </div>

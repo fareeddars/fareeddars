@@ -25,6 +25,7 @@ export interface OutstandingRow {
   name: string;
   photoUrl: string | null;
   amount: number;
+  isPayable: boolean;
   days: number;
 }
 
@@ -111,8 +112,7 @@ export const useDashboardData = () => {
     const profitYesterday = tYesterday.netProfit;
 
 
-    // Outstanding per farmer — derived from the shared aggregator so
-    // Dashboard, Reports and Farmer pages never disagree.
+    // Farmer balances (both receivables and payables) — derived from the shared aggregator
     const outstanding: OutstandingRow[] = farmerSeasons
       .map((fs: any) => {
         const s = summarizeFarmer(entries as any[], fs.farmer_id, Number(fs.opening_balance || 0));
@@ -128,14 +128,16 @@ export const useDashboardData = () => {
           name: fs.farmers?.name ?? "—",
           photoUrl: fs.farmers?.photo_url ?? null,
           amount: s.balanceDue,
+          isPayable: s.balanceDue < 0,
           days,
         };
       })
-      .filter((r) => r.amount > 0)
-      .sort((a, b) => b.amount - a.amount);
+      .filter((r) => Math.abs(r.amount) > 0.01)
+      .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
 
-    const totalOutstanding = outstanding.reduce((s, r) => s + r.amount, 0);
-
+    const farmerReceivables = outstanding.filter((r) => r.amount > 0).reduce((s, r) => s + r.amount, 0);
+    const farmerPayables = outstanding.filter((r) => r.amount < 0).reduce((s, r) => s + Math.abs(r.amount), 0);
+    const netFarmerPosition = farmerReceivables - farmerPayables;
 
     const alerts = inventory
       .map((i) => {
@@ -161,7 +163,7 @@ export const useDashboardData = () => {
 
     // Season-wide totals (single source of truth for every KPI below)
     const seasonTotals = computeTotals(entries as any[]);
-    const crops = groupByCrop((entries as any[]).filter((e) => e.entry_type === "sale"));
+    const crops = groupByCrop(entries as any[]);
     const buyers = groupByBuyer(entries as any[]);
     const avgYield = averageYield(entries as any[]);
 
@@ -174,7 +176,11 @@ export const useDashboardData = () => {
       buyers,
       avgYield,
       kpis: {
-        totalOutstanding,
+        buyerOutstanding: seasonTotals.saleOutstanding,
+        farmerPayables,
+        farmerReceivables,
+        netFarmerPosition,
+        totalOutstanding: seasonTotals.saleOutstanding, // Clear buyer outstanding
         collectionToday,
         collectionTodayTrend: pct(collectionToday, collectionYesterday),
         profitToday,

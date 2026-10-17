@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
-import { computeTotals } from "@/lib/ledger/aggregate";
+import { computeTotals, groupByCrop, groupByMonth } from "@/lib/ledger/aggregate";
 import { motion } from "framer-motion";
 import {
   ArrowDownRight,
@@ -179,10 +179,9 @@ const ProfitLoss = () => {
     return m;
   }, [farmers]);
 
-  // ---- client-side filtering (does not change stored data) ----
   const entries = useMemo(() => {
     return rawEntries.filter((e) => {
-      if (applied.crop !== "all" && (e.crop_type || "—") !== applied.crop) return false;
+      if (applied.crop !== "all" && (e.crop_type || "—").trim().toLowerCase() !== applied.crop.trim().toLowerCase()) return false;
       if (applied.farmer !== "all" && e.farmer_id !== applied.farmer) return false;
       if (applied.category !== "all" && (e.category || "—") !== applied.category) return false;
       if (applied.village !== "all") {
@@ -214,21 +213,14 @@ const ProfitLoss = () => {
     console.log("[ProfitLoss] sales:", income, "expenses:", expenses, "netProfit:", income - expenses);
   }, [entries, language]);
 
-  const profit = data.income - data.expenses;
-  const profitMargin = data.income > 0 ? ((profit / data.income) * 100).toFixed(2) : 0;
-  const expenseRatio = data.income > 0 ? ((data.expenses / data.income) * 100).toFixed(2) : 0;
+  const totals = useMemo(() => computeTotals(entries as any[]), [entries]);
+  const profit = totals.netProfit;
+  const profitMargin = totals.profitMargin.toFixed(2);
+  const expenseRatio = totals.grossSales > 0 ? ((totals.totalExpenses / totals.grossSales) * 100).toFixed(2) : 0;
   const profitStatus = profit >= 0 ? "positive" : "negative";
 
-  const payments = useMemo(
-    () => entries.filter((e) => e.entry_type === "payment").reduce((s, e) => s + Number(e.amount || 0), 0),
-    [entries]
-  );
-  const loans = useMemo(
-    () => entries.filter((e) => e.entry_type === "loan").reduce((s, e) => s + Number(e.amount || 0), 0),
-    [entries]
-  );
-  const cashBalance = data.income + payments - data.expenses - loans;
-  const outstanding = Math.max(loans - payments, 0);
+  const cashBalance = totals.cashBalance;
+  const buyerOutstanding = totals.saleOutstanding;
 
   // ---- expense breakdown ----
   const expenseBreakdown = useMemo(() => {
@@ -241,24 +233,29 @@ const ProfitLoss = () => {
     );
   }, [entries]);
 
-  // ---- crop-wise analysis ----
+  // ---- crop-wise analysis (centralised & reconciled with sale-costs) ----
   const cropRows = useMemo(() => {
-    const map = new Map<string, { income: number; expense: number }>();
-    entries.forEach((e) => {
-      const crop = e.crop_type || "Uncategorized";
-      const cur = map.get(crop) || { income: 0, expense: 0 };
-      const amt = Number(e.amount || 0);
-      if (e.entry_type === "sale") cur.income += amt;
-      else if (e.entry_type === "expense") cur.expense += amt;
-      map.set(crop, cur);
-    });
-    return Array.from(map, ([crop, v]) => {
-      const p = v.income - v.expense;
-      const roi = v.expense > 0 ? (p / v.expense) * 100 : v.income > 0 ? 100 : 0;
+    const rawCrops = groupByCrop(entries as any[]);
+    return rawCrops.map((c) => {
+      const income = c.grossSales;
+      const expense = c.expenses + c.costs;
+      const p = c.profit;
+      const roi = expense > 0 ? (p / expense) * 100 : income > 0 ? 100 : 0;
       const status: "Excellent" | "Good" | "Average" | "Poor" =
         roi >= 50 ? "Excellent" : roi >= 25 ? "Good" : roi >= 0 ? "Average" : "Poor";
-      return { crop, ...v, profit: p, roi, status };
-    }).sort((a, b) => b.profit - a.profit);
+      return {
+        crop: c.crop,
+        income,
+        expense,
+        profit: p,
+        roi,
+        status,
+        netSales: c.netSales,
+        saleCosts: c.costs,
+        received: c.received,
+        outstanding: c.outstanding,
+      };
+    });
   }, [entries]);
 
   const visibleCropRows = useMemo(
@@ -266,53 +263,61 @@ const ProfitLoss = () => {
     [cropRows, cropSearch]
   );
 
-  // ---- revenue sources ----
+  // ---- revenue sources (case-insensitive normalized) ----
   const revenueSources = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<string, { name: string; value: number }>();
     entries
       .filter((e) => e.entry_type === "sale")
       .forEach((e) => {
-        const key = `${e.crop_type || "Other"}`;
-        map.set(key, (map.get(key) || 0) + Number(e.amount || 0));
+        const raw = (e.crop_type || "Other").trim();
+        const key = raw.toLowerCase() || "other";
+        const val = Number(e.amount || 0);
+        const existing = map.get(key);
+        if (existing) {
+          existing.value += val;
+          if (raw && (existing.name === "Other" || (raw[0] === raw[0].toUpperCase() && existing.name[0] !== existing.name[0].toUpperCase()))) {
+            existing.name = raw;
+          }
+        } else {
+          map.set(key, { name: raw || "Other", value: val });
+        }
       });
-    return Array.from(map, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 6);
+    return Array.from(map.values()).sort((a, b) => b.value - a.value).slice(0, 6);
   }, [entries]);
 
-  // ---- monthly + seasonal ----
+  // ---- monthly + seasonal (centralised & reconciled) ----
   const monthly = useMemo(() => {
-    const map = new Map<string, { income: number; expense: number }>();
-    entries.forEach((e) => {
-      const d = e.entry_date || e.created_at;
-      if (!d) return;
-      const key = d.slice(0, 7);
-      const cur = map.get(key) || { income: 0, expense: 0 };
-      const amt = Number(e.amount || 0);
-      if (e.entry_type === "sale") cur.income += amt;
-      else if (e.entry_type === "expense") cur.expense += amt;
-      map.set(key, cur);
-    });
-    return Array.from(map, ([month, v]) => ({ month, ...v, profit: v.income - v.expense })).sort((a, b) =>
-      a.month.localeCompare(b.month)
-    );
+    const rawMonths = groupByMonth(entries as any[]);
+    return rawMonths.map((m) => ({
+      month: m.month,
+      income: m.income,
+      expense: m.totalExpenses,
+      profit: m.profit,
+      saleCosts: m.saleCosts,
+      received: m.received,
+      outstanding: m.outstanding,
+    }));
   }, [entries]);
 
   const seasonal = useMemo(() => {
-    const acc = { Kharif: { income: 0, expense: 0 }, Rabi: { income: 0, expense: 0 } };
-    entries.forEach((e) => {
+    const kharifEntries = entries.filter((e) => {
       const d = e.entry_date || e.created_at;
-      if (!d) return;
+      if (!d) return false;
       const m = Number(d.slice(5, 7));
-      const bucket = m >= 4 && m <= 9 ? acc.Kharif : acc.Rabi;
-      const amt = Number(e.amount || 0);
-      if (e.entry_type === "sale") bucket.income += amt;
-      else if (e.entry_type === "expense") bucket.expense += amt;
+      return m >= 4 && m <= 9;
     });
-    return (["Kharif", "Rabi"] as const).map((k) => ({
-      season: k,
-      income: acc[k].income,
-      expense: acc[k].expense,
-      profit: acc[k].income - acc[k].expense,
-    }));
+    const rabiEntries = entries.filter((e) => {
+      const d = e.entry_date || e.created_at;
+      if (!d) return false;
+      const m = Number(d.slice(5, 7));
+      return m < 4 || m > 9;
+    });
+    const kTotals = computeTotals(kharifEntries as any[]);
+    const rTotals = computeTotals(rabiEntries as any[]);
+    return [
+      { season: "Kharif", income: kTotals.grossSales, expense: kTotals.totalExpenses, profit: kTotals.netProfit },
+      { season: "Rabi", income: rTotals.grossSales, expense: rTotals.totalExpenses, profit: rTotals.netProfit },
+    ];
   }, [entries]);
 
   const bestMonth = useMemo(() => monthly.slice().sort((a, b) => b.profit - a.profit)[0], [monthly]);
@@ -337,13 +342,23 @@ const ProfitLoss = () => {
     if (topExpense) out.push(`${topExpense.name} is your biggest expense at ${money(topExpense.value)}.`);
     if (Number(expenseRatio) > 70) out.push("Expenses are above 70% of income — look for cost savings.");
     if (worstCrop && worstCrop.profit < 0) out.push(`${worstCrop.crop} is running at a loss. Review its input costs.`);
-    if (outstanding > 0) out.push(`${money(outstanding)} is still outstanding from farmers.`);
+    if (buyerOutstanding > 0) out.push(`${money(buyerOutstanding)} is still outstanding receivable from buyers.`);
     if (profit > 0) out.push(`Your farm is profitable with a ${profitMargin}% margin. Keep it up!`);
     return out.slice(0, 5);
-  }, [bestCrop, topExpense, expenseRatio, worstCrop, outstanding, profit, profitMargin]);
+  }, [bestCrop, topExpense, expenseRatio, worstCrop, buyerOutstanding, profit, profitMargin]);
 
   // ---- filter option lists ----
-  const cropOptions = useMemo(() => Array.from(new Set(rawEntries.map((e) => e.crop_type || "—"))), [rawEntries]);
+  const cropOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    rawEntries.forEach((e) => {
+      const raw = (e.crop_type || "—").trim();
+      const key = raw.toLowerCase();
+      if (!map.has(key) || (raw[0] === raw[0].toUpperCase() && map.get(key)![0] !== map.get(key)![0].toUpperCase())) {
+        map.set(key, raw);
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b));
+  }, [rawEntries]);
   const categoryOptions = useMemo(() => Array.from(new Set(rawEntries.map((e) => e.category || "—"))), [rawEntries]);
   const villageOptions = useMemo(() => Array.from(new Set(farmers.map((f) => f.address || "—"))), [farmers]);
 
@@ -446,12 +461,47 @@ const ProfitLoss = () => {
       <motion.div variants={fadeUp} className="space-y-3">
         <h2 className="text-base sm:text-lg font-semibold text-foreground">1. Financial Summary</h2>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
-          <StatCard label={labels.incomeLabel} value={data.income} prefix="Rs " icon={ArrowUpRight} tone="emerald" />
-          <StatCard label={labels.expenseLabel} value={data.expenses} prefix="Rs " icon={ArrowDownRight} tone="red" />
-          <StatCard label={labels.profitLabel} value={profit} prefix="Rs " icon={DollarSign} tone={profit >= 0 ? "blue" : "orange"} />
+          <StatCard label={labels.incomeLabel} value={data.income} prefix="Rs " icon={ArrowUpRight} tone="emerald" hint="Gross Sales" />
+          <StatCard label={labels.expenseLabel} value={data.expenses} prefix="Rs " icon={ArrowDownRight} tone="red" hint="Expenses + Sale Costs" />
+          <StatCard label={labels.profitLabel} value={profit} prefix="Rs " icon={DollarSign} tone={profit >= 0 ? "blue" : "orange"} hint="Net Sales − Expenses" />
           <StatCard label={labels.marginLabel} value={Number(profitMargin)} suffix="%" decimals={2} icon={Target} tone="violet" />
-          <StatCard label="Cash Balance" value={cashBalance} prefix="Rs " icon={Wallet} tone="orange" hint="Available Cash" />
-          <StatCard label="Outstanding Payments" value={outstanding} prefix="Rs " icon={TrendingDown} tone="cyan" hint="Pending Receivables" />
+          <StatCard label="Cash in Hand" value={cashBalance} prefix="Rs " icon={Wallet} tone="orange" hint="Actual Inflows − Outflows" />
+          <StatCard label="Buyer Receivables" value={buyerOutstanding} prefix="Rs " icon={TrendingDown} tone="cyan" hint="Pending from Buyers" />
+        </div>
+
+        {/* Detailed Cash & Receivables Reconciliation */}
+        <div className="rounded-xl border border-border/70 bg-card/60 p-3 sm:p-4 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">₨</span>
+              <h3 className="text-xs sm:text-sm font-semibold text-foreground">Cash Flow &amp; Receivables Status</h3>
+            </div>
+            <span className="text-xs font-medium text-muted-foreground">
+              Season: {selectedSeason?.name ?? "All Time"}
+            </span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5 text-xs">
+            <div className="rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 p-2.5 border border-emerald-200/50 dark:border-emerald-800/40">
+              <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 block">Sales Cash Collected</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-emerald-900 dark:text-emerald-200">{money(totals.saleReceived)}</span>
+            </div>
+            <div className="rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 p-2.5 border border-emerald-200/50 dark:border-emerald-800/40">
+              <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 block">Farmer Cash Payments</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-emerald-900 dark:text-emerald-200">{money(totals.farmerPaymentsCash)}</span>
+            </div>
+            <div className="rounded-lg bg-rose-50/60 dark:bg-rose-950/20 p-2.5 border border-rose-200/50 dark:border-rose-800/40">
+              <span className="text-[11px] font-medium text-rose-800 dark:text-rose-300 block">Cash Outflows (Exp + Costs)</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-rose-900 dark:text-rose-200">{money(totals.expenses + totals.saleCosts + totals.loans)}</span>
+            </div>
+            <div className="rounded-lg bg-amber-50/60 dark:bg-amber-950/20 p-2.5 border border-amber-200/50 dark:border-amber-800/40">
+              <span className="text-[11px] font-medium text-amber-800 dark:text-amber-300 block">Operating Cash in Hand</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-amber-900 dark:text-amber-200">{money(totals.cashBalance)}</span>
+            </div>
+            <div className="col-span-2 sm:col-span-4 lg:col-span-1 rounded-lg bg-blue-50/60 dark:bg-blue-950/20 p-2.5 border border-blue-200/50 dark:border-blue-800/40">
+              <span className="text-[11px] font-medium text-blue-800 dark:text-blue-300 block">Buyer Receivables</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-blue-900 dark:text-blue-200">{money(totals.saleOutstanding)}</span>
+            </div>
+          </div>
         </div>
       </motion.div>
 

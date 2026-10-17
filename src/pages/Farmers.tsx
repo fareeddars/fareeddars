@@ -201,8 +201,19 @@ const Farmers = () => {
            (f.landlord && f.landlord.toLowerCase().includes(term));
   });
 
-  const totalPortfolioBalance = useMemo(() => {
-    return farmers.reduce((sum, f) => sum + balanceOf(f.id), 0);
+  const { totalFarmerReceivables, totalFarmerPayables, totalPortfolioBalance } = useMemo(() => {
+    let rec = 0;
+    let pay = 0;
+    farmers.forEach((f) => {
+      const b = balanceOf(f.id);
+      if (b > 0) rec += b;
+      else if (b < 0) pay += Math.abs(b);
+    });
+    return {
+      totalFarmerReceivables: rec,
+      totalFarmerPayables: pay,
+      totalPortfolioBalance: rec - pay,
+    };
   }, [farmers, entries, farmerSeasons]);
 
   const renderFarmerFormFields = (formData: typeof form, setFormData: (v: typeof form) => void) => (
@@ -352,15 +363,29 @@ const Farmers = () => {
           
           {/* Quick Stats & Action Area */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full xl:w-auto">
-            <div className="flex w-full sm:w-auto gap-2 sm:gap-4">
-              <div className="flex-1 bg-black/20 backdrop-blur-md rounded-xl sm:rounded-lg px-3 sm:px-5 py-2 sm:py-3 border border-white/10 flex flex-col justify-center min-w-0 sm:min-w-[140px]">
+            <div className="flex w-full sm:w-auto gap-2 sm:gap-4 flex-wrap">
+              <div className="flex-1 bg-black/20 backdrop-blur-md rounded-xl sm:rounded-lg px-3 sm:px-5 py-2 sm:py-3 border border-white/10 flex flex-col justify-center min-w-0 sm:min-w-[120px]">
                 <p className="text-[9px] sm:text-xs text-blue-200/70 font-semibold uppercase tracking-widest mb-0.5 sm:mb-1">Total Farmers</p>
                 <p className="text-lg sm:text-3xl font-bold font-mono">{farmers.length}</p>
               </div>
-              <div className="flex-1 bg-emerald-500/10 backdrop-blur-md rounded-xl sm:rounded-lg px-3 sm:px-5 py-2 sm:py-3 border border-emerald-400/20 flex flex-col justify-center min-w-0 sm:min-w-[160px]">
-                <p className="text-[9px] sm:text-xs text-emerald-200/80 font-semibold uppercase tracking-widest mb-0.5 sm:mb-1">Total Outstanding</p>
-                <p className="text-base sm:text-2xl font-bold font-mono text-emerald-300 truncate">₨ {totalPortfolioBalance.toLocaleString()}</p>
-              </div>
+              {totalFarmerPayables > 0 && (
+                <div className="flex-1 bg-emerald-500/15 backdrop-blur-md rounded-xl sm:rounded-lg px-3 sm:px-5 py-2 sm:py-3 border border-emerald-400/30 flex flex-col justify-center min-w-0 sm:min-w-[150px]">
+                  <p className="text-[9px] sm:text-xs text-emerald-200/90 font-semibold uppercase tracking-widest mb-0.5 sm:mb-1">Farmer Payables</p>
+                  <p className="text-base sm:text-2xl font-bold font-mono text-emerald-300 truncate">₨ {Math.round(totalFarmerPayables).toLocaleString()}</p>
+                </div>
+              )}
+              {totalFarmerReceivables > 0 && (
+                <div className="flex-1 bg-rose-500/15 backdrop-blur-md rounded-xl sm:rounded-lg px-3 sm:px-5 py-2 sm:py-3 border border-rose-400/30 flex flex-col justify-center min-w-0 sm:min-w-[150px]">
+                  <p className="text-[9px] sm:text-xs text-rose-200/90 font-semibold uppercase tracking-widest mb-0.5 sm:mb-1">Farmer Receivables</p>
+                  <p className="text-base sm:text-2xl font-bold font-mono text-rose-300 truncate">₨ {Math.round(totalFarmerReceivables).toLocaleString()}</p>
+                </div>
+              )}
+              {totalFarmerPayables === 0 && totalFarmerReceivables === 0 && (
+                <div className="flex-1 bg-emerald-500/10 backdrop-blur-md rounded-xl sm:rounded-lg px-3 sm:px-5 py-2 sm:py-3 border border-emerald-400/20 flex flex-col justify-center min-w-0 sm:min-w-[150px]">
+                  <p className="text-[9px] sm:text-xs text-emerald-200/80 font-semibold uppercase tracking-widest mb-0.5 sm:mb-1">Accounts Status</p>
+                  <p className="text-base sm:text-xl font-bold font-mono text-emerald-300 truncate">All Settled</p>
+                </div>
+              )}
             </div>
             
             {isManagerOrAdmin && (
@@ -481,8 +506,13 @@ const Farmers = () => {
               </div>
               
               <div className="pt-2 sm:pt-3 border-t border-border/40 flex items-center justify-between">
-                <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-muted-foreground">{t("farmers.balance")}</span>
-                <span className={`font-bold font-mono text-sm sm:text-lg tracking-tight ${balanceOf(farmer.id) > 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                <div>
+                  <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-muted-foreground block">{t("farmers.balance")}</span>
+                  <span className={`text-[10px] font-semibold uppercase tracking-wider ${balanceOf(farmer.id) < 0 ? "text-emerald-600 dark:text-emerald-400" : balanceOf(farmer.id) > 0 ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"}`}>
+                    {balanceOf(farmer.id) < 0 ? "Payable" : balanceOf(farmer.id) > 0 ? "Due" : "Settled"}
+                  </span>
+                </div>
+                <span className={`font-bold font-mono text-sm sm:text-lg tracking-tight ${balanceOf(farmer.id) > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                   ₨ {Math.round(balanceOf(farmer.id)).toLocaleString()}
                 </span>
               </div>
@@ -539,8 +569,12 @@ const Farmers = () => {
                 {/* Financial Highlight */}
                 <div className="rounded-lg bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 p-5 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><BadgeDollarSign className="h-4 w-4"/> {t("farmers.balance")}</p>
-                    <p className="text-3xl font-bold font-mono text-emerald-700 dark:text-emerald-300">₨ {Math.round(balanceOf(selectedFarmer.id)).toLocaleString()}</p>
+                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <BadgeDollarSign className="h-4 w-4"/> {t("farmers.balance")} · {balanceOf(selectedFarmer.id) < 0 ? "Farm owes farmer" : balanceOf(selectedFarmer.id) > 0 ? "Farmer owes farm" : "Settled"}
+                    </p>
+                    <p className={`text-3xl font-bold font-mono ${balanceOf(selectedFarmer.id) < 0 ? "text-emerald-700 dark:text-emerald-300" : balanceOf(selectedFarmer.id) > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>
+                      ₨ {Math.round(balanceOf(selectedFarmer.id)).toLocaleString()}
+                    </p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
                     <Wallet className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />

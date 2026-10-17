@@ -16,7 +16,7 @@ import SaleCostsCard from "@/components/dashboard/SaleCostsCard";
 import BuyerOutstandingCard from "@/components/dashboard/BuyerOutstandingCard";
 import {
   AlertTriangle, BarChart3, Boxes, CalendarClock, FileCheck2, Package, PiggyBank,
-  ShoppingCart, TrendingUp, Users, Wallet,
+  ShoppingCart, Store, TrendingUp, Users, Wallet,
 } from "lucide-react";
 
 const money = (n: number) => `Rs ${Math.round(n).toLocaleString()}`;
@@ -56,12 +56,20 @@ const Dashboard = () => {
         tone: "sky",
       });
     }
-    if (kpis.totalOutstanding > 0) {
+    if (kpis.buyerOutstanding > 0) {
       list.push({
-        title: "Outstanding balance pending",
-        description: `${money(kpis.totalOutstanding)} is still receivable from farmers.`,
-        icon: PiggyBank,
+        title: "Buyer dues pending",
+        description: `${money(kpis.buyerOutstanding)} is still receivable from buyers/mills.`,
+        icon: Store,
         tone: "amber",
+      });
+    }
+    if (kpis.farmerPayables > 0) {
+      list.push({
+        title: "Farmer balance payable",
+        description: `${money(kpis.farmerPayables)} is payable to farmers (credit/profit share).`,
+        icon: PiggyBank,
+        tone: "emerald",
       });
     }
     if (overview.collectionTrend !== 0) {
@@ -73,7 +81,7 @@ const Dashboard = () => {
       });
     }
     return list.slice(0, 4);
-  }, [overview, alerts.length, kpis.totalOutstanding]);
+  }, [overview, alerts.length, kpis.buyerOutstanding, kpis.farmerPayables]);
 
   const notifications = useMemo<NotificationItem[]>(() => {
     const list: NotificationItem[] = [];
@@ -81,11 +89,11 @@ const Dashboard = () => {
     overdue.forEach((o) =>
       list.push({
         id: `due-${o.farmerId}`,
-        title: "Payment Due",
-        description: `${o.name} has ${money(o.amount)} pending for ${o.days} days.`,
+        title: o.isPayable ? "Farmer Credit Balance" : "Payment Due",
+        description: `${o.name} has ${money(Math.abs(o.amount))} ${o.isPayable ? "credit/payable" : "pending"} for ${o.days} days.`,
         time: `${o.days}d`,
         icon: Wallet,
-        status: "danger",
+        status: o.isPayable ? "info" : "danger",
       })
     );
     alerts.slice(0, 2).forEach((a) =>
@@ -111,7 +119,7 @@ const Dashboard = () => {
     if (outstanding.length > 0) {
       list.push({
         id: "accounts-pending",
-        title: "Farmer Accounts Pending",
+        title: "Farmer Accounts Open",
         description: `${outstanding.length} farmer account${outstanding.length > 1 ? "s have" : " has"} an open balance.`,
         time: "Now",
         icon: Users,
@@ -139,10 +147,15 @@ const Dashboard = () => {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardStatCard label="Total Outstanding" value={money(kpis.totalOutstanding)} hint="Receivable from farmers" icon={PiggyBank} />
+        <DashboardStatCard label="Buyer Outstanding" value={money(kpis.buyerOutstanding)} hint="Receivable from buyers / mills" icon={Store} />
+        <DashboardStatCard
+          label={kpis.farmerPayables > 0 ? "Farmer Payables" : "Farmer Receivables"}
+          value={kpis.farmerPayables > 0 ? money(kpis.farmerPayables) : money(kpis.farmerReceivables)}
+          hint={kpis.farmerPayables > 0 ? "Owed to farmers" : "Receivable from farmers"}
+          icon={Users}
+        />
         <DashboardStatCard label="Today's Collection" value={money(kpis.collectionToday)} hint="vs yesterday" trend={kpis.collectionTodayTrend} icon={Wallet} />
         <DashboardStatCard label="Today's Profit" value={money(kpis.profitToday)} hint="vs yesterday" trend={kpis.profitTodayTrend} icon={TrendingUp} />
-        <DashboardStatCard label="Total Farmers" value={String(kpis.totalFarmers)} hint="Active this season" icon={Users} />
       </div>
 
       <QuickActions />
@@ -157,7 +170,12 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <OutstandingCard rows={outstanding} total={kpis.totalOutstanding} />
+        <OutstandingCard
+          rows={outstanding}
+          buyerOutstanding={kpis.buyerOutstanding}
+          farmerPayables={kpis.farmerPayables}
+          farmerReceivables={kpis.farmerReceivables}
+        />
         <InventoryAlertsCard alerts={alerts as any} />
         <SeasonProgressCard
           seasonName={selectedSeason?.name}

@@ -1,0 +1,8 @@
+{
+  "name": "Agri Ledger",
+  "description": "Manage farm finances, track transactions, crop performance, inventory, and generate agricultural ledger reports.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

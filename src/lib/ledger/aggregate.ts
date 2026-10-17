@@ -3,7 +3,7 @@
 // Farmer, Reports). Every page must derive its numbers from here so
 // the same filter always produces the same totals.
 // ────────────────────────────────────────────────────────────────
-import { AreaUnit, WeightUnit, toAcres, toKg, fromKg } from "./calc";
+import { AreaUnit, WeightUnit, toAcres, toKg, fromKg, decomposeMaundKg, formatMaundCompound, type MaundBreakdown } from "./calc";
 
 export interface LedgerRow {
   id?: string;
@@ -63,6 +63,8 @@ export interface SaleDerived {
   netWeightUnit: WeightUnit;
   netWeightKg: number;
   netWeightDisplay: number; // in DISPLAY_WEIGHT_UNIT
+  netWeightCompound: string;
+  netWeightBreakdown: MaundBreakdown;
   grossSale: number;
   costs: number;
   transport: number;
@@ -91,6 +93,10 @@ export function deriveSale(e: LedgerRow): SaleDerived {
   const stored = n(e.net_weight);
   const netWeight = stored > 0 ? stored : Math.max(gross - ded, 0);
   const netWeightKg = toKg(netWeight, weightUnit);
+  const netWeightBreakdown = decomposeMaundKg(netWeightKg);
+  const netWeightCompound = weightUnit === "maund"
+    ? formatMaundCompound(netWeightKg)
+    : `${qty(netWeight)} ${weightUnit}`;
 
   const grossSale = n(e.amount);
   const transport = n(e.transport_cost);
@@ -115,6 +121,8 @@ export function deriveSale(e: LedgerRow): SaleDerived {
     netWeightUnit: weightUnit,
     netWeightKg,
     netWeightDisplay: fromKg(netWeightKg, DISPLAY_WEIGHT_UNIT),
+    netWeightCompound,
+    netWeightBreakdown,
     grossSale,
     costs,
     transport,
@@ -176,12 +184,22 @@ export interface LedgerTotals {
   otherSaleCosts: number;
   netSales: number;
   expenses: number;
+  /** Operating expenses + sale-level costs */
+  totalExpenses: number;
   payments: number;
+  farmerPaymentsCash: number;
+  farmerPaymentsCrop: number;
   loans: number;
   /** Money actually received against sales (buyer side). */
   saleReceived: number;
   /** Still receivable from buyers on recorded sales. */
   saleOutstanding: number;
+  /** Actual cash received (saleReceived + cash payments from farmers). */
+  cashReceived: number;
+  /** Actual cash outflows (operating expenses + sale costs + loans). */
+  cashDisbursed: number;
+  /** Operating cash balance (cashReceived - cashDisbursed). */
+  cashBalance: number;
   netProfit: number;
   profitMargin: number;
   totalAreaAcres: number;
@@ -204,6 +222,8 @@ export function computeTotals(entries: LedgerRow[]): LedgerTotals {
     otherSaleCosts = 0,
     expenses = 0,
     payments = 0,
+    farmerPaymentsCash = 0,
+    farmerPaymentsCrop = 0,
     loans = 0,
     saleReceived = 0,
     saleOutstanding = 0,
@@ -228,15 +248,29 @@ export function computeTotals(entries: LedgerRow[]): LedgerTotals {
       area += s.areaAcres;
       yieldSum += s.yieldDisplay;
       qtySold += s.netWeightDisplay;
-    } else if (e.entry_type === "expense") expenses += amt;
-    else if (e.entry_type === "payment") payments += amt;
-    else if (e.entry_type === "loan") loans += amt;
+    } else if (e.entry_type === "expense") {
+      expenses += amt;
+    } else if (e.entry_type === "payment") {
+      payments += amt;
+      if (e.payment_method === "crop_return") {
+        farmerPaymentsCrop += amt;
+      } else {
+        farmerPaymentsCash += amt;
+      }
+    } else if (e.entry_type === "loan") {
+      loans += amt;
+    }
   });
 
   const netSales = grossSales - saleCosts;
   // Sale costs are stored on the sale row and are NOT separate expense
   // entries, so counting both here does not double-count.
+  const totalExpenses = expenses + saleCosts;
   const netProfit = netSales - expenses;
+
+  const cashReceived = saleReceived + farmerPaymentsCash;
+  const cashDisbursed = expenses + saleCosts + loans;
+  const cashBalance = cashReceived - cashDisbursed;
 
   return {
     count: entries.length,
@@ -249,10 +283,16 @@ export function computeTotals(entries: LedgerRow[]): LedgerTotals {
     otherSaleCosts,
     netSales,
     expenses,
+    totalExpenses,
     payments,
+    farmerPaymentsCash,
+    farmerPaymentsCrop,
     loans,
     saleReceived,
     saleOutstanding,
+    cashReceived,
+    cashDisbursed,
+    cashBalance,
     netProfit,
     profitMargin: grossSales > 0 ? (netProfit / grossSales) * 100 : 0,
     totalAreaAcres: area,
@@ -283,14 +323,21 @@ export interface CropRow {
 }
 
 export function groupByCrop(entries: LedgerRow[]): CropRow[] {
-  const map = new Map<string, LedgerRow[]>();
+  const map = new Map<string, { crop: string; rows: LedgerRow[] }>();
   entries.forEach((e) => {
-    const key = (e.crop_type || "Uncategorized").trim() || "Uncategorized";
-    const arr = map.get(key) || [];
-    arr.push(e);
-    map.set(key, arr);
+    const raw = (e.crop_type || "").trim();
+    const key = raw.toLowerCase() || "uncategorized";
+    const existing = map.get(key);
+    if (existing) {
+      existing.rows.push(e);
+      if (raw && (existing.crop === "Uncategorized" || (raw[0] === raw[0].toUpperCase() && existing.crop[0] !== existing.crop[0].toUpperCase()))) {
+        existing.crop = raw;
+      }
+    } else {
+      map.set(key, { crop: raw || "Uncategorized", rows: [e] });
+    }
   });
-  return Array.from(map, ([crop, rows]) => {
+  return Array.from(map.values(), ({ crop, rows }) => {
     const t = computeTotals(rows);
     return {
       crop,
@@ -306,6 +353,45 @@ export function groupByCrop(entries: LedgerRow[]): CropRow[] {
       outstanding: t.saleOutstanding,
     };
   }).sort((a, b) => b.profit - a.profit);
+}
+
+export interface MonthRow {
+  month: string;
+  income: number;
+  netSales: number;
+  saleCosts: number;
+  expenses: number;
+  totalExpenses: number;
+  profit: number;
+  received: number;
+  outstanding: number;
+}
+
+export function groupByMonth(entries: LedgerRow[]): MonthRow[] {
+  const map = new Map<string, LedgerRow[]>();
+  entries.forEach((e) => {
+    const d = dateOf(e);
+    if (!d) return;
+    const key = d.slice(0, 7);
+    if (!key || key.length < 7) return;
+    const arr = map.get(key) || [];
+    arr.push(e);
+    map.set(key, arr);
+  });
+  return Array.from(map, ([month, rows]) => {
+    const t = computeTotals(rows);
+    return {
+      month,
+      income: t.grossSales,
+      netSales: t.netSales,
+      saleCosts: t.saleCosts,
+      expenses: t.expenses,
+      totalExpenses: t.expenses + t.saleCosts,
+      profit: t.netProfit,
+      received: t.saleReceived,
+      outstanding: t.saleOutstanding,
+    };
+  }).sort((a, b) => a.month.localeCompare(b.month));
 }
 
 export interface FarmerSummary extends LedgerTotals {
@@ -390,14 +476,21 @@ export interface BuyerRow {
 /** Group sale rows by buyer (shopkeeper / mill). Reuses computeTotals — no new formulas. */
 export function groupByBuyer(entries: LedgerRow[]): BuyerRow[] {
   const sales = entries.filter((e) => e.entry_type === "sale");
-  const map = new Map<string, LedgerRow[]>();
+  const map = new Map<string, { buyer: string; rows: LedgerRow[] }>();
   sales.forEach((e) => {
-    const key = (e.buyer || "").trim() || "Unspecified buyer";
-    const arr = map.get(key) || [];
-    arr.push(e);
-    map.set(key, arr);
+    const raw = (e.buyer || "").trim();
+    const key = raw.toLowerCase() || "unspecified buyer";
+    const existing = map.get(key);
+    if (existing) {
+      existing.rows.push(e);
+      if (raw && (existing.buyer === "Unspecified buyer" || (raw[0] === raw[0].toUpperCase() && existing.buyer[0] !== existing.buyer[0].toUpperCase()))) {
+        existing.buyer = raw;
+      }
+    } else {
+      map.set(key, { buyer: raw || "Unspecified buyer", rows: [e] });
+    }
   });
-  return Array.from(map, ([buyer, rows]) => {
+  return Array.from(map.values(), ({ buyer, rows }) => {
     const t = computeTotals(rows);
     return {
       buyer,

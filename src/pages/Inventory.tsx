@@ -161,11 +161,19 @@ const Inventory = () => {
 
   const handleUpdate = async () => {
     if (!editingItem) return;
+    const name = editForm.item_name.trim();
+    if (!name) { toast({ title: "Item name required", variant: "destructive" }); return; }
+    const stock = Number(editForm.current_stock);
+    const price = Number(editForm.price_per_unit);
+    const threshold = Number(editForm.low_stock_threshold);
+    if (Number.isNaN(stock) || stock < 0) { toast({ title: "Stock must be 0 or more", variant: "destructive" }); return; }
+    if (Number.isNaN(price) || price < 0) { toast({ title: "Price must be 0 or more", variant: "destructive" }); return; }
+    if (Number.isNaN(threshold) || threshold < 0) { toast({ title: "Low-stock alert must be 0 or more", variant: "destructive" }); return; }
     try {
       await offlineRepo.update("inventory", editingItem.id, {
-        item_name: editForm.item_name, current_stock: Number(editForm.current_stock),
-        unit: editForm.unit, price_per_unit: Number(editForm.price_per_unit),
-        low_stock_threshold: Number(editForm.low_stock_threshold),
+        item_name: name, current_stock: stock,
+        unit: editForm.unit.trim() || "bags", price_per_unit: price,
+        low_stock_threshold: threshold,
       });
       toast({ title: isOnline() ? "Item updated" : "Updated offline — will sync" });
       setEditOpen(false); setEditingItem(null); fetchItems();
