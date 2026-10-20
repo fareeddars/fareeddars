@@ -77,20 +77,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [profile, userRole]);
 
   const signOut = useCallback(async () => {
+    try {
+      localStorage.removeItem("agri_demo_user");
+    } catch {}
     currentUserIdRef.current = null;
     setProfile(null);
     setUserRole(null);
     setSession(null);
     setUser(null);
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {}
   }, []);
 
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
+    // Clear any leftover demo flag so real user account login is used
+    try {
+      localStorage.removeItem("agri_demo_user");
+    } catch {}
+
     const initializeAuth = async () => {
       try {
+
         // Detect recovery from URL OR from a flag we persist across the PKCE
         // code-exchange redirect (Supabase strips ?code=... after using it).
         const urlParams = new URLSearchParams(window.location.search);
@@ -108,7 +119,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try { sessionStorage.setItem('pw_recovery_active', '1'); } catch {}
         }
 
-        const { data: { session: restoredSession } } = await supabase.auth.getSession();
+        // Safe timeout so getSession never hangs indefinitely
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
+          setTimeout(() => resolve({ data: { session: null } }), 1800)
+        );
+
+        const { data: { session: restoredSession } } = await Promise.race([sessionPromise, timeoutPromise]);
         if (restoredSession?.user) {
           setSession(restoredSession);
           setUser(restoredSession.user);

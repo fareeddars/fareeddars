@@ -54,30 +54,61 @@ export const SeasonProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const refreshSeasons = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("seasons")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) {
-      setSeasons(data as unknown as Season[]);
-      // Auto-select active season if none selected
-      if (!selectedSeasonId) {
-        const active = data.find((s: any) => s.status === "active");
-        if (active) setSelectedSeasonId(active.id);
-        else if (data.length > 0) setSelectedSeasonId(data[0].id);
+    try {
+      const { data, error } = await supabase
+        .from("seasons")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!error && data && data.length > 0) {
+        setSeasons(data as unknown as Season[]);
+        if (!selectedSeasonId) {
+          const active = data.find((s: any) => s.status === "active");
+          if (active) setSelectedSeasonId(active.id);
+          else if (data.length > 0) setSelectedSeasonId(data[0].id);
+        }
+        setLoading(false);
+        return;
       }
-    }
+    } catch {}
+
+    // Fallback to offline store
+    try {
+      const { offlineRepo } = await import("@/lib/offline");
+      const localSeasons = await offlineRepo.listLocal("seasons");
+      if (localSeasons && localSeasons.length > 0) {
+        setSeasons(localSeasons as unknown as Season[]);
+        if (!selectedSeasonId) {
+          const active = localSeasons.find((s: any) => s.status === "active");
+          if (active) setSelectedSeasonId(active.id);
+          else setSelectedSeasonId(localSeasons[0].id);
+        }
+      }
+    } catch {}
     setLoading(false);
   }, [user, selectedSeasonId]);
 
   const refreshFarmerSeasons = useCallback(async () => {
     if (!user || !selectedSeasonId) return;
-    const { data } = await supabase
-      .from("farmer_seasons")
-      .select("*, farmers(name, phone, address, photo_url)")
-      .eq("season_id", selectedSeasonId)
-      .order("created_at", { ascending: false });
-    if (data) setFarmerSeasons(data as unknown as FarmerSeason[]);
+    try {
+      const { data, error } = await supabase
+        .from("farmer_seasons")
+        .select("*, farmers(name, phone, address, photo_url)")
+        .eq("season_id", selectedSeasonId)
+        .order("created_at", { ascending: false });
+      if (!error && data && data.length > 0) {
+        setFarmerSeasons(data as unknown as FarmerSeason[]);
+        return;
+      }
+    } catch {}
+
+    // Fallback to offline store
+    try {
+      const { offlineRepo } = await import("@/lib/offline");
+      const localFS = await offlineRepo.listLocal("farmer_seasons", (fs) => fs.season_id === selectedSeasonId);
+      if (localFS && localFS.length > 0) {
+        setFarmerSeasons(localFS as unknown as FarmerSeason[]);
+      }
+    } catch {}
   }, [user, selectedSeasonId]);
 
   useEffect(() => {

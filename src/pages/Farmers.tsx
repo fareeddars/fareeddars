@@ -89,14 +89,18 @@ const Farmers = () => {
     (async () => {
       try {
         if (isOnline()) {
-          let q = supabase.from("ledger_entries").select("*");
-          if (selectedSeason) q = q.eq("season_id", selectedSeason.id);
-          const { data } = await q;
-          if (!cancelled) setEntries((data as any[]) ?? []);
-        } else {
-          const local = await offlineRepo.listLocal("ledger_entries", (e: any) => !selectedSeason || e.season_id === selectedSeason.id);
-          if (!cancelled) setEntries(local as any[]);
+          try {
+            let q = supabase.from("ledger_entries").select("*");
+            if (selectedSeason) q = q.eq("season_id", selectedSeason.id);
+            const { data, error } = await q;
+            if (!error && data && data.length > 0) {
+              if (!cancelled) setEntries(data as any[]);
+              return;
+            }
+          } catch {}
         }
+        const local = await offlineRepo.listLocal("ledger_entries", (e: any) => !selectedSeason || e.season_id === selectedSeason.id);
+        if (!cancelled) setEntries(local as any[]);
       } catch { /* keep last known entries */ }
     })();
     return () => { cancelled = true; };
@@ -110,12 +114,14 @@ const Farmers = () => {
 
   const fetchFarmers = async () => {
     if (isOnline()) {
-      const { data } = await supabase.from("farmers").select("*").order("created_at", { ascending: false });
-      if (data) {
-        setFarmers(data as unknown as Farmer[]);
-        await offlineRepo.hydrate("farmers", data);
-        return;
-      }
+      try {
+        const { data, error } = await supabase.from("farmers").select("*").order("created_at", { ascending: false });
+        if (!error && data && data.length > 0) {
+          setFarmers(data as unknown as Farmer[]);
+          await offlineRepo.hydrate("farmers", data);
+          return;
+        }
+      } catch {}
     }
     const local = await offlineRepo.listLocal("farmers");
     local.sort((a: any, b: any) => (b.created_at || "").localeCompare(a.created_at || ""));

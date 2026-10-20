@@ -82,11 +82,32 @@ export interface SaleDerived {
   revenuePerAcre: number | null;
   costPerAcre: number | null;
   profitPerAcre: number | null;
+  buyerPayable: number;
+  buyerRemaining: number;
+}
+
+/** Check if a ledger entry is a payment received from a buyer */
+export function isBuyerPayment(e: LedgerRow): boolean {
+  if (e.entry_type !== "payment") return false;
+  if (e.category === "buyer_payment" || e.category === "buyer_receipt") return true;
+  if (typeof e.notes === "string" && (e.notes.includes("[buyer_receipt]") || e.notes.includes("[sale:"))) return true;
+  return false;
+}
+
+/** Extract linked sale ID from notes or sale_id column if present */
+export function getLinkedSaleId(e: LedgerRow): string | null {
+  if (e.sale_id) return String(e.sale_id);
+  if (!e.notes) return null;
+  const match = e.notes.match(/\[sale:([^\]]+)\]/);
+  if (match) return match[1];
+  const match2 = e.notes.match(/Linked Sale:\s*([^\s,]+)/);
+  if (match2) return match2[1];
+  return null;
 }
 
 /** Derive every sale metric from a stored row. Backward compatible:
  *  old rows without the new columns simply yield 0 / null. */
-export function deriveSale(e: LedgerRow): SaleDerived {
+export function deriveSale(e: LedgerRow, extraPaid = 0): SaleDerived {
   const weightUnit = ((e.weight_unit as WeightUnit) || "kg") as WeightUnit;
   const gross = n(e.gross_weight);
   const ded = n(e.deductions);
@@ -98,18 +119,29 @@ export function deriveSale(e: LedgerRow): SaleDerived {
     ? formatMaundCompound(netWeightKg)
     : `${qty(netWeight)} ${weightUnit}`;
 
-  const grossSale = n(e.amount);
+  const rate = n(e.rate);
+  const rateUnit = ((e.rate_unit as WeightUnit) || weightUnit) as WeightUnit;
+  const netWeightInRateUnit = fromKg(netWeightKg, rateUnit);
+  const calculatedGross = rate > 0 && netWeightInRateUnit > 0 ? Math.round(netWeightInRateUnit * rate * 100) / 100 : 0;
+  const storedAmount = n(e.amount);
+  // Authoritative gross sale: use rate * quantity when both rate and weight exist; fallback to stored amount
+  const grossSale = calculatedGross > 0 ? calculatedGross : storedAmount;
+
   const transport = n(e.transport_cost);
   const labour = n(e.labour_cost);
   const commission = n(e.commission_cost);
   const other = n(e.other_costs);
   const costs = transport + labour + commission + other;
   const netSale = grossSale - costs;
+  const buyerPayable = Math.max(grossSale - commission, 0);
 
-  const paid = n(e.paid_amount);
+  const initialPaid = n(e.paid_amount);
+  const paid = initialPaid + extraPaid;
+  const buyerRemaining = Math.max(buyerPayable - paid, 0);
   const remaining = Math.max(netSale - paid, 0);
+  const targetThreshold = buyerPayable > 0 ? buyerPayable : netSale;
   const paymentStatus: SaleDerived["paymentStatus"] =
-    paid <= 0 ? "unpaid" : paid >= netSale - 0.01 ? "paid" : "partial";
+    paid <= 0 ? "unpaid" : paid >= targetThreshold - 0.01 ? "paid" : "partial";
 
   const areaAcres = n(e.total_area) > 0 ? toAcres(n(e.total_area), (e.area_unit as AreaUnit) || "acre") : 0;
   const yieldKg = n(e.total_yield) > 0 ? toKg(n(e.total_yield), (e.yield_unit as WeightUnit) || "kg") : 0;
@@ -130,6 +162,8 @@ export function deriveSale(e: LedgerRow): SaleDerived {
     commission,
     other,
     netSale,
+    buyerPayable,
+    buyerRemaining,
     paid,
     remaining,
     paymentStatus,
@@ -232,10 +266,26 @@ export function computeTotals(entries: LedgerRow[]): LedgerTotals {
     qtySold = 0,
     salesCount = 0;
 
+  // Pre-calculate buyer receipts allocated to specific sales or general
+  const buyerReceiptsBySale = new Map<string, number>();
+  let unlinkedBuyerReceipts = 0;
+  entries.forEach((e) => {
+    if (isBuyerPayment(e)) {
+      const amt = n(e.amount);
+      const saleId = getLinkedSaleId(e);
+      if (saleId) {
+        buyerReceiptsBySale.set(saleId, (buyerReceiptsBySale.get(saleId) || 0) + amt);
+      } else {
+        unlinkedBuyerReceipts += amt;
+      }
+    }
+  });
+
   entries.forEach((e) => {
     const amt = n(e.amount);
     if (e.entry_type === "sale") {
-      const s = deriveSale(e);
+      const extraReceipts = e.id ? (buyerReceiptsBySale.get(e.id) || 0) : 0;
+      const s = deriveSale(e, extraReceipts);
       salesCount += 1;
       grossSales += s.grossSale;
       saleCosts += s.costs;
@@ -251,16 +301,23 @@ export function computeTotals(entries: LedgerRow[]): LedgerTotals {
     } else if (e.entry_type === "expense") {
       expenses += amt;
     } else if (e.entry_type === "payment") {
-      payments += amt;
-      if (e.payment_method === "crop_return") {
-        farmerPaymentsCrop += amt;
-      } else {
-        farmerPaymentsCash += amt;
+      if (!isBuyerPayment(e)) {
+        payments += amt;
+        if (e.payment_method === "crop_return") {
+          farmerPaymentsCrop += amt;
+        } else {
+          farmerPaymentsCash += amt;
+        }
       }
     } else if (e.entry_type === "loan") {
       loans += amt;
     }
   });
+
+  if (unlinkedBuyerReceipts > 0) {
+    saleReceived += unlinkedBuyerReceipts;
+    saleOutstanding = Math.max(saleOutstanding - unlinkedBuyerReceipts, 0);
+  }
 
   const netSales = grossSales - saleCosts;
   // Sale costs are stored on the sale row and are NOT separate expense
@@ -473,11 +530,27 @@ export interface BuyerRow {
   outstanding: number;
 }
 
-/** Group sale rows by buyer (shopkeeper / mill). Reuses computeTotals — no new formulas. */
+/** Group sale rows and buyer payments by buyer (shopkeeper / mill). Reuses computeTotals — no new formulas. */
 export function groupByBuyer(entries: LedgerRow[]): BuyerRow[] {
   const sales = entries.filter((e) => e.entry_type === "sale");
+  const buyerReceipts = entries.filter(isBuyerPayment);
   const map = new Map<string, { buyer: string; rows: LedgerRow[] }>();
   sales.forEach((e) => {
+    const raw = (e.buyer || "").trim();
+    const key = raw.toLowerCase() || "unspecified buyer";
+    const existing = map.get(key);
+    if (existing) {
+      existing.rows.push(e);
+      if (raw && (existing.buyer === "Unspecified buyer" || (raw[0] === raw[0].toUpperCase() && existing.buyer[0] !== existing.buyer[0].toUpperCase()))) {
+        existing.buyer = raw;
+      }
+    } else {
+      map.set(key, { buyer: raw || "Unspecified buyer", rows: [e] });
+    }
+  });
+
+  // Group buyer receipts under corresponding buyer
+  buyerReceipts.forEach((e) => {
     const raw = (e.buyer || "").trim();
     const key = raw.toLowerCase() || "unspecified buyer";
     const existing = map.get(key);

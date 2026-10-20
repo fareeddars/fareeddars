@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { offlineRepo, isOnline } from "@/lib/offline";
 import { useSeason } from "@/contexts/SeasonContext";
-import { computeTotals, groupByCrop, groupByBuyer, summarizeFarmer, averageYield } from "@/lib/ledger/aggregate";
+import { computeTotals, groupByCrop, groupByBuyer, summarizeFarmer, averageYield, isBuyerPayment } from "@/lib/ledger/aggregate";
 import type { Tables } from "@/integrations/supabase/types";
 
 
@@ -48,22 +48,35 @@ export const useDashboardData = () => {
     const load = async () => {
       setLoading(true);
       try {
+        let loadedEntries: Entry[] = [];
+        let loadedInv: Item[] = [];
+
         if (isOnline()) {
-          let q = supabase.from("ledger_entries").select("*");
-          if (selectedSeason) q = q.eq("season_id", selectedSeason.id);
-          const [entriesRes, invRes] = await Promise.all([q, supabase.from("inventory").select("*")]);
-          if (cancelled) return;
-          setEntries((entriesRes.data as Entry[]) ?? []);
-          setInventory((invRes.data as Item[]) ?? []);
-        } else {
+          try {
+            let q = supabase.from("ledger_entries").select("*");
+            if (selectedSeason) q = q.eq("season_id", selectedSeason.id);
+            const [entriesRes, invRes] = await Promise.all([q, supabase.from("inventory").select("*")]);
+            if (!entriesRes.error && entriesRes.data && entriesRes.data.length > 0) {
+              loadedEntries = entriesRes.data as Entry[];
+            }
+            if (!invRes.error && invRes.data && invRes.data.length > 0) {
+              loadedInv = invRes.data as Item[];
+            }
+          } catch {}
+        }
+
+        if (loadedEntries.length === 0 || loadedInv.length === 0) {
           const [localEntries, localInv] = await Promise.all([
             offlineRepo.listLocal("ledger_entries", (e: any) => !selectedSeason || e.season_id === selectedSeason.id),
             offlineRepo.listLocal("inventory"),
           ]);
-          if (cancelled) return;
-          setEntries(localEntries as Entry[]);
-          setInventory(localInv as Item[]);
+          if (loadedEntries.length === 0) loadedEntries = localEntries as Entry[];
+          if (loadedInv.length === 0) loadedInv = localInv as Item[];
         }
+
+        if (cancelled) return;
+        setEntries(loadedEntries);
+        setInventory(loadedInv);
       } catch (err) {
         console.error("Dashboard data error:", err);
       } finally {
@@ -118,7 +131,7 @@ export const useDashboardData = () => {
         const s = summarizeFarmer(entries as any[], fs.farmer_id, Number(fs.opening_balance || 0));
         const farmerEntries = entries.filter((e) => e.farmer_id === fs.farmer_id);
         const lastPayment = farmerEntries
-          .filter((e) => e.entry_type === "payment")
+          .filter((e) => e.entry_type === "payment" && !isBuyerPayment(e as any))
           .map((e) => new Date(dateOf(e)).getTime())
           .sort((a, b) => b - a)[0];
         const since = lastPayment ?? new Date(fs.created_at).getTime();

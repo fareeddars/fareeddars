@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeason } from "@/contexts/SeasonContext";
-import { computeTotals, deriveSale, groupByBuyer, summarizeFarmer } from "@/lib/ledger/aggregate";
+import { computeTotals, deriveSale, groupByBuyer, summarizeFarmer, isBuyerPayment, getLinkedSaleId } from "@/lib/ledger/aggregate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -80,7 +80,7 @@ const Reports = () => {
     const farmerEntries = getFarmerEntries(farmerId);
     const expenses = farmerEntries.filter((e) => e.entry_type === "expense");
     const sales = farmerEntries.filter((e) => e.entry_type === "sale");
-    const payments = farmerEntries.filter((e) => e.entry_type === "payment");
+    const payments = farmerEntries.filter((e) => e.entry_type === "payment" && !isBuyerPayment(e as any));
     const loans = farmerEntries.filter((e) => e.entry_type === "loan");
 
     // === Per-row expense split ===
@@ -99,6 +99,27 @@ const Reports = () => {
     }, 0);
     const totalExpenses = totalFarmerExpenses + totalLandlordExpenses; // === sum of every row
 
+    // Pre-calculate buyer receipts allocated to specific sales or general
+    const buyerReceiptsBySale = new Map<string, number>();
+    let unlinkedBuyerReceipts = 0;
+    farmerEntries.forEach((e) => {
+      if (isBuyerPayment(e as any)) {
+        const amt = Number(e.amount) || 0;
+        const saleId = getLinkedSaleId(e as any);
+        if (saleId) {
+          buyerReceiptsBySale.set(saleId, (buyerReceiptsBySale.get(saleId) || 0) + amt);
+        } else {
+          unlinkedBuyerReceipts += amt;
+        }
+      }
+    });
+
+    // If there is only one sale for this farmer and unlinked buyer receipts exist, attribute them to that sale
+    if (sales.length === 1 && unlinkedBuyerReceipts > 0 && sales[0].id) {
+      const current = buyerReceiptsBySale.get(sales[0].id) || 0;
+      buyerReceiptsBySale.set(sales[0].id, current + unlinkedBuyerReceipts);
+    }
+
     // Sale totals and buyer balances come from the same aggregation as Dashboard.
     const saleTotals = computeTotals(farmerEntries);
     const buyers = groupByBuyer(farmerEntries);
@@ -111,7 +132,7 @@ const Reports = () => {
     const initialBalance = fs ? Number(fs.opening_balance) : Number(farmer?.initial_balance ?? 0);
 
     // === Single source of truth: same summary the Dashboard & Farmers use ===
-    const summary = summarizeFarmer(entries as any[], farmerId, initialBalance);
+    const summary = summarizeFarmer(farmerEntries as any[], farmerId, initialBalance);
     const netProfit = summary.netProfit;             // net sales − expenses
     const farmerProfitShare = summary.farmerProfitShare; // 50/50, profit only
     const landlordProfitShare = netProfit - farmerProfitShare;
@@ -124,7 +145,7 @@ const Reports = () => {
       totalFarmerExpenses, totalLandlordExpenses, totalExpenses,
       totalSales, totalPayments, totalLoans,
       initialBalance, netProfit, farmerProfitShare, landlordProfitShare,
-      finalBalance, saleTotals, buyers,
+      finalBalance, saleTotals, buyers, buyerReceiptsBySale,
     };
   };
 
@@ -147,7 +168,7 @@ const Reports = () => {
         totalFarmerExpenses, totalLandlordExpenses, totalExpenses,
         totalSales, totalPayments, totalLoans,
         initialBalance, netProfit, farmerProfitShare, landlordProfitShare,
-        finalBalance, saleTotals,
+        finalBalance, saleTotals, buyerReceiptsBySale,
       } = calcSections(farmerId);
       const farmer = getFarmer(farmerId);
       if (!farmer) return;
@@ -230,7 +251,8 @@ const Reports = () => {
       html += `<div class="section-title sec-sales">2. ${pt("print.salesSummaryTitle", L)}</div>`;
       if (sales.length > 0) {
         sales.forEach((e) => {
-          const s = deriveSale(e);
+          const extraReceipts = e.id ? (buyerReceiptsBySale?.get(e.id) || 0) : 0;
+          const s = deriveSale(e, extraReceipts);
           const line = (label: string, value: number) => `<div class="sale-amount"><span>${pt(label, L)}</span><strong>₨ ${fmtNum(value)}</strong></div>`;
           const weightUnit = e.weight_unit || "kg";
           const rateUnit = e.rate_unit || weightUnit;
@@ -273,7 +295,7 @@ const Reports = () => {
                 ${line("reports.totalSaleCosts", s.costs)}
                 ${line("reports.netSale", s.netSale)}
                 ${line("reports.salePaid", s.paid)}
-                ${line("reports.saleOutstanding", s.remaining)}
+                ${line("reports.saleOutstanding", s.buyerRemaining)}
               </div>
             </div>
           </article>`;

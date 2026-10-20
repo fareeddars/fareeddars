@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff, ArrowRight, Mail, Lock, User, Leaf } from "lucide-react";
 import agriLogo from "@/assets/agri-logo.png";
 
-
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -74,7 +73,6 @@ const Auth = () => {
         </div>
 
         <div className="rounded-lg border border-border bg-card/80 p-5 shadow-xl backdrop-blur sm:p-6">
-
 
             <div className="mb-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">

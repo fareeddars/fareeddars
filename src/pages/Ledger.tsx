@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { offlineRepo, isOnline } from "@/lib/offline";
@@ -24,7 +24,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import FarmerAvatar from "@/components/FarmerAvatar";
-import { deriveSale, money as fmtMoney, qty as fmtQty } from "@/lib/ledger/aggregate";
+import { deriveSale, isBuyerPayment, getLinkedSaleId, money as fmtMoney, qty as fmtQty } from "@/lib/ledger/aggregate";
 import { computeSale, averageYieldPerAcre, WEIGHT_UNITS, AREA_UNITS, num, money, qty, toKg, formatMaundCompound, type WeightUnit, type AreaUnit } from "@/lib/ledger/calc";
 
 const EXPENSE_CATEGORIES = [
@@ -42,8 +42,8 @@ const EXPENSE_CATEGORIES = [
 type CostAllocation = "farmer" | "shared" | "landlord";
 
 /** Compact sale details derived from the shared aggregator (single source of truth). */
-const SaleMeta = ({ e }: { e: any }) => {
-  const s = deriveSale(e);
+const SaleMeta = ({ e, linkedReceipts = 0 }: { e: any; linkedReceipts?: number }) => {
+  const s = deriveSale(e, linkedReceipts);
   const bits: string[] = [];
   if (e.buyer) bits.push(`Buyer: ${String(e.buyer)}`);
   if (e.crop_type) bits.push(String(e.crop_type));
@@ -56,13 +56,13 @@ const SaleMeta = ({ e }: { e: any }) => {
     }
   }
   bits.push(`Gross ${fmtMoney(s.grossSale)}`);
+  if (s.commission > 0) bits.push(`Commission -${fmtMoney(s.commission)}`);
+  const buyerPayable = s.grossSale - s.commission;
+  bits.push(`Buyer Payable ${fmtMoney(buyerPayable)}`);
+  bits.push(`Paid ${fmtMoney(s.paid)} · Due ${fmtMoney(Math.max(buyerPayable - s.paid, 0))}`);
   if (s.transport > 0) bits.push(`Transport ${fmtMoney(s.transport)}`);
   if (s.labour > 0) bits.push(`Labour ${fmtMoney(s.labour)}`);
-  if (s.commission > 0) bits.push(`Commission ${fmtMoney(s.commission)}`);
   if (s.other > 0) bits.push(`Other ${fmtMoney(s.other)}`);
-  if (s.costs > 0) bits.push(`Total Costs ${fmtMoney(s.costs)}`);
-  bits.push(`Net ${fmtMoney(s.netSale)}`);
-  bits.push(`Paid ${fmtMoney(s.paid)} · Due ${fmtMoney(s.remaining)}`);
   if (s.yieldPerAcre != null) bits.push(`${fmtQty(s.yieldPerAcre)} Maund/Acre`);
   return <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground/80">{bits.join(" • ")}</p>;
 };
@@ -113,6 +113,14 @@ const Ledger = () => {
   const [cropRate, setCropRate] = useState("");
   const [loanAmount, setLoanAmount] = useState("");
 
+  // Payment Purpose / Direction: Farmer Payment (disbursed) vs Buyer Payment Received (collected)
+  const [paymentPurpose, setPaymentPurpose] = useState<"farmer_payment" | "buyer_receipt">("farmer_payment");
+  const [selectedReceiptBuyer, setSelectedReceiptBuyer] = useState("");
+  const [selectedReceiptSaleId, setSelectedReceiptSaleId] = useState("");
+  const [receiptAmount, setReceiptAmount] = useState("");
+  const [receiptPaymentMethod, setReceiptPaymentMethod] = useState("cash");
+  const [receiptNotes, setReceiptNotes] = useState("");
+
   // Filters
   const [searchText, setSearchText] = useState("");
   const [filterFarmer, setFilterFarmer] = useState("all");
@@ -126,25 +134,29 @@ const Ledger = () => {
 
   const fetchData = async () => {
     if (isOnline()) {
-      let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name, photo_url)").order("created_at", { ascending: false });
-      if (selectedSeason) {
-        entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+      try {
+        let entriesQuery = supabase.from("ledger_entries").select("*, farmers(name, photo_url)").order("created_at", { ascending: false });
+        if (selectedSeason) {
+          entriesQuery = entriesQuery.eq("season_id", selectedSeason.id);
+        }
+        const [entriesRes, inventoryRes] = await Promise.all([
+          entriesQuery,
+          supabase.from("inventory").select("*"),
+        ]);
+        if (!entriesRes.error && entriesRes.data && entriesRes.data.length > 0) {
+          setEntries(entriesRes.data);
+          await offlineRepo.hydrate("ledger_entries", entriesRes.data.map(({ farmers, ...rest }: any) => rest));
+          if (inventoryRes.data) {
+            setInventory(inventoryRes.data);
+            await offlineRepo.hydrate("inventory", inventoryRes.data);
+          }
+          return;
+        }
+      } catch (err) {
+        console.warn("[Ledger] remote fetch failed, falling back to offline data:", err);
       }
-      const [entriesRes, inventoryRes] = await Promise.all([
-        entriesQuery,
-        supabase.from("inventory").select("*"),
-      ]);
-      if (entriesRes.data) {
-        setEntries(entriesRes.data);
-        await offlineRepo.hydrate("ledger_entries", entriesRes.data.map(({ farmers, ...rest }: any) => rest));
-      }
-      if (inventoryRes.data) {
-        setInventory(inventoryRes.data);
-        await offlineRepo.hydrate("inventory", inventoryRes.data);
-      }
-      return;
     }
-    // Offline: read from local cache, manually join farmer name
+    // Offline / fallback: read from local cache, manually join farmer name
     const [localEntries, localInv, localFarmers] = await Promise.all([
       offlineRepo.listLocal("ledger_entries", (e) => !selectedSeason || e.season_id === selectedSeason.id),
       offlineRepo.listLocal("inventory"),
@@ -205,12 +217,70 @@ const Ledger = () => {
   const saleTotal = () => sale.grossSale;
   const cropTotal = () => (Number(cropWeight) || 0) * (Number(cropRate) || 0);
 
+  // Map of buyer receipts per sale ID
+  const buyerReceiptsBySale = useMemo(() => {
+    const map = new Map<string, number>();
+    entries.forEach((e: any) => {
+      if (isBuyerPayment(e)) {
+        const sid = getLinkedSaleId(e);
+        if (sid) {
+          map.set(sid, (map.get(sid) || 0) + Number(e.amount || 0));
+        }
+      }
+    });
+    return map;
+  }, [entries]);
+
+  // Distinct buyers list from recorded sales
+  const distinctBuyers = useMemo(() => {
+    const set = new Set<string>();
+    entries.forEach((e: any) => {
+      if (e.entry_type === "sale" && e.buyer && e.buyer.trim()) {
+        set.add(e.buyer.trim());
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [entries]);
+
+  // Outstanding sales for the selected buyer
+  const buyerSales = useMemo(() => {
+    if (!selectedReceiptBuyer) return [];
+    return entries
+      .filter((e: any) =>
+        e.entry_type === "sale" &&
+        (e.buyer || "").trim().toLowerCase() === selectedReceiptBuyer.trim().toLowerCase()
+      )
+      .map((s: any) => {
+        const netBuyerPayable = Math.max(Number(s.amount || 0) - Number(s.commission_cost || 0), 0);
+        const allReceipts = buyerReceiptsBySale.get(s.id) || 0;
+        // If editing this specific receipt, subtract its current amount so it can be re-allocated
+        const currentEditingAmt = (editingId && selectedReceiptSaleId === s.id)
+          ? Number(entries.find((x: any) => x.id === editingId)?.amount || 0)
+          : 0;
+        const effectiveReceipts = allReceipts - currentEditingAmt;
+        const totalPaid = Number(s.paid_amount || 0) + effectiveReceipts;
+        const outstanding = Math.max(netBuyerPayable - totalPaid, 0);
+        return {
+          ...s,
+          netBuyerPayable,
+          totalPaid,
+          outstanding,
+        };
+      });
+  }, [entries, selectedReceiptBuyer, buyerReceiptsBySale, editingId, selectedReceiptSaleId]);
+
+  // Selected sale record and current outstanding
+  const selectedReceiptSale = useMemo(() => {
+    return buyerSales.find((s) => s.id === selectedReceiptSaleId) || null;
+  }, [buyerSales, selectedReceiptSaleId]);
+
   const resetForm = () => {
     setFarmerId(""); setEntryDate(new Date()); setDescription("");
     setCategory(""); setInventoryItemId(""); setPrice(""); setQuantity(""); setExpenseAmount(""); setCostAllocation("farmer");
     setGrossWeight(""); setDeductionsVal(""); setDeductionUnit("kg"); setSaleRate(""); setWeightUnit("kg"); setRateUnit("kg");
     setBuyer(""); setFieldName(""); setTransportCost(""); setLabourCost(""); setCommissionCost(""); setOtherCosts("");
     setTotalArea(""); setAreaUnit("acre"); setTotalYield(""); setYieldUnit("maund"); setPaidAmount(""); setSaleNotes("");
+    setPaymentPurpose("farmer_payment"); setSelectedReceiptBuyer(""); setSelectedReceiptSaleId(""); setReceiptAmount(""); setReceiptPaymentMethod("cash"); setReceiptNotes("");
     setPaymentMethod("cash"); setCashAmount(""); setCropType(""); setCropWeight(""); setCropRate("");
     setLoanAmount(""); setActiveTab("expense");
     setEditingId(null);
@@ -247,10 +317,24 @@ const Ledger = () => {
       setBuyer(e.buyer || "");
       setFieldName(e.field_name || "");
       setCropType(e.crop_type || "");
-      setTransportCost(e.transport_cost ? String(e.transport_cost) : "");
-      setLabourCost(e.labour_cost ? String(e.labour_cost) : "");
       setCommissionCost(e.commission_cost ? String(e.commission_cost) : "");
-      setOtherCosts(e.other_costs ? String(e.other_costs) : "");
+
+      // Find any linked separate crop expenses saved with this sale
+      const linked = entries.filter((x: any) =>
+        x.entry_type === "expense" &&
+        (x.notes?.includes(`Linked Sale: ${e.id}`) || x.notes?.includes(`[sale:${e.id}]`))
+      );
+      const tExp = linked.find((x: any) => x.category?.toLowerCase() === "tractor" || x.description?.toLowerCase().includes("transport") || x.description?.toLowerCase().includes("kiraya"));
+      const lExp = linked.find((x: any) => x.category?.toLowerCase() === "labour" || x.description?.toLowerCase().includes("labour") || x.description?.toLowerCase().includes("loading"));
+      const oExp = linked.find((x: any) => x !== tExp && x !== lExp);
+
+      setTransportCost(tExp ? String(tExp.amount) : (e.transport_cost ? String(e.transport_cost) : ""));
+      setLabourCost(lExp ? String(lExp.amount) : (e.labour_cost ? String(e.labour_cost) : ""));
+      setOtherCosts(oExp ? String(oExp.amount) : (e.other_costs ? String(e.other_costs) : ""));
+      if (tExp || lExp || oExp) {
+        const firstExp = tExp || lExp || oExp;
+        setCostAllocation(firstExp.payment_method === "landlord_only" ? "landlord" : firstExp.is_shared ? "shared" : "farmer");
+      }
       setTotalArea(e.total_area != null ? String(e.total_area) : "");
       setAreaUnit((e.area_unit as AreaUnit) || "acre");
       setTotalYield(e.total_yield != null ? String(e.total_yield) : "");
@@ -258,9 +342,25 @@ const Ledger = () => {
       setPaidAmount(e.paid_amount ? String(e.paid_amount) : "");
       setSaleNotes(e.notes || "");
     } else if (e.entry_type === "payment") {
-      setPaymentMethod(e.payment_method || "cash");
-      if ((e.payment_method || "cash") === "cash") setCashAmount(String(e.amount ?? ""));
-      else { setCropType(e.crop_type || ""); setCropWeight(e.crop_weight != null ? String(e.crop_weight) : ""); setCropRate(e.rate != null ? String(e.rate) : ""); }
+      if (isBuyerPayment(e)) {
+        setPaymentPurpose("buyer_receipt");
+        setSelectedReceiptBuyer(e.buyer || "");
+        const sid = getLinkedSaleId(e);
+        setSelectedReceiptSaleId(sid || "");
+        setReceiptAmount(e.amount ? String(e.amount) : "");
+        setReceiptPaymentMethod(e.payment_method || "cash");
+        const cleanNotes = (e.notes || "")
+          .replace(/\[buyer_receipt\]/g, "")
+          .replace(/\[sale:[^\]]+\]/g, "")
+          .replace(/Linked Sale:\s*[^\s,]+/g, "")
+          .trim();
+        setReceiptNotes(cleanNotes);
+      } else {
+        setPaymentPurpose("farmer_payment");
+        setPaymentMethod(e.payment_method || "cash");
+        if ((e.payment_method || "cash") === "cash") setCashAmount(String(e.amount ?? ""));
+        else { setCropType(e.crop_type || ""); setCropWeight(e.crop_weight != null ? String(e.crop_weight) : ""); setCropRate(e.rate != null ? String(e.rate) : ""); }
+      }
     } else if (e.entry_type === "loan") {
       setLoanAmount(String(e.amount ?? ""));
     }
@@ -285,6 +385,19 @@ const Ledger = () => {
         );
         await offlineRepo.update("inventory", entryToDelete.inventory_item_id, { current_stock: restoredStock });
       }
+
+      // If deleting a sale, cascade delete any linked separate crop expenses
+      if (entryToDelete && entryToDelete.entry_type === "sale") {
+        const linkedExpenses = entries.filter((e: any) =>
+          e.entry_type === "expense" &&
+          (e.notes?.includes(`Linked Sale: ${id}`) || e.notes?.includes(`[sale:${id}]`))
+        );
+        for (const exp of linkedExpenses) {
+          await offlineRepo.remove("ledger_entries", exp.id);
+        }
+        setEntries((prev) => prev.filter((e: any) => !linkedExpenses.some((l) => l.id === e.id)));
+      }
+
       await offlineRepo.remove("ledger_entries", id);
       toast({ title: isOnline() ? "Entry deleted" : "Deleted offline — will sync" });
       fetchData();
@@ -294,8 +407,28 @@ const Ledger = () => {
   };
 
   const handleSave = async () => {
-    if (!user || !farmerId || !selectedSeason) return;
+    if (!user || !selectedSeason) return;
     if (saving) return;
+
+    let effectiveFarmerId = farmerId;
+    if (activeTab === "payment" && paymentPurpose === "buyer_receipt") {
+      if (!selectedReceiptBuyer) {
+        toast({ title: "Buyer required", description: "Please select a buyer", variant: "destructive" });
+        return;
+      }
+      if (!selectedReceiptSaleId) {
+        toast({ title: "Sale required", description: "Please select an outstanding sale for this buyer", variant: "destructive" });
+        return;
+      }
+      const targetSale = entries.find((e: any) => e.id === selectedReceiptSaleId);
+      if (!targetSale) {
+        toast({ title: "Sale not found", variant: "destructive" });
+        return;
+      }
+      effectiveFarmerId = targetSale.farmer_id;
+    } else {
+      if (!farmerId) return;
+    }
 
     // === VALIDATION ===
     const dateStr = format(entryDate, "yyyy-MM-dd");
@@ -321,9 +454,23 @@ const Ledger = () => {
       if (rt <= 0) { toast({ title: `Rate per ${rateUnit === "maund" ? "Maund" : rateUnit} required`, variant: "destructive" }); return; }
       amount = saleTotal();
     } else if (activeTab === "payment") {
-      amount = paymentMethod === "cash" ? (Number(cashAmount) || 0) : cropTotal();
-      if (paymentMethod === "crop_return" && !cropType.trim()) { toast({ title: "Crop name required", variant: "destructive" }); return; }
-      if (amount <= 0) { toast({ title: "Payment amount must be > 0", variant: "destructive" }); return; }
+      if (paymentPurpose === "buyer_receipt") {
+        amount = Number(receiptAmount) || 0;
+        if (amount <= 0) { toast({ title: "Receipt amount must be > 0", variant: "destructive" }); return; }
+        const targetSaleOutstanding = selectedReceiptSale?.outstanding ?? 0;
+        if (amount > targetSaleOutstanding + 0.01) {
+          toast({
+            title: "Amount exceeds outstanding",
+            description: `Amount cannot exceed the current outstanding balance of ₨ ${targetSaleOutstanding.toLocaleString()}`,
+            variant: "destructive",
+          });
+          return;
+        }
+      } else {
+        amount = paymentMethod === "cash" ? (Number(cashAmount) || 0) : cropTotal();
+        if (paymentMethod === "crop_return" && !cropType.trim()) { toast({ title: "Crop name required", variant: "destructive" }); return; }
+        if (amount <= 0) { toast({ title: "Payment amount must be > 0", variant: "destructive" }); return; }
+      }
     } else if (activeTab === "loan") {
       amount = Number(loanAmount) || 0;
       if (amount <= 0) { toast({ title: "Loan amount must be > 0", variant: "destructive" }); return; }
@@ -400,10 +547,11 @@ const Ledger = () => {
     // === DUPLICATE CHECK (block) ===
     const isDuplicate = entries.some((e: any) =>
       e.id !== editingId &&
-      e.farmer_id === farmerId &&
+      e.farmer_id === effectiveFarmerId &&
       e.entry_type === activeTab &&
       e.entry_date === dateStr &&
-      Math.abs(Number(e.amount) - amount) < 0.01
+      Math.abs(Number(e.amount) - amount) < 0.01 &&
+      (activeTab !== "payment" || (isBuyerPayment(e) === (paymentPurpose === "buyer_receipt") && (!isBuyerPayment(e) || getLinkedSaleId(e) === selectedReceiptSaleId)))
     );
     if (isDuplicate) {
       toast({
@@ -417,9 +565,9 @@ const Ledger = () => {
     setSaving(true);
     try {
       // Find the farmer_season record
-      const fs = farmerSeasons.find(fs => fs.farmer_id === farmerId && fs.season_id === selectedSeason.id);
+      const fs = farmerSeasons.find(fs => fs.farmer_id === effectiveFarmerId && fs.season_id === selectedSeason.id);
       let entryData: Record<string, unknown> = {
-        farmer_id: farmerId, entry_type: activeTab, description, created_by: user.id,
+        farmer_id: effectiveFarmerId, entry_type: activeTab, description, created_by: user.id,
         entry_date: dateStr,
         season_id: selectedSeason.id,
         farmer_season_id: fs?.id || null,
@@ -436,49 +584,183 @@ const Ledger = () => {
           shared_amount: isShared ? amount / 2 : null,
           payment_method: costAllocation === "landlord" ? "landlord_only" : null,
         };
-      } else if (activeTab === "sale") {
+      }
+
+      // Linked separate crop expenses when activeTab === "sale"
+      const linkedExpenseInserts: any[] = [];
+      const linkedExpenseUpdates: Array<{ id: string; patch: any }> = [];
+      const linkedExpenseDeletes: string[] = [];
+
+      if (activeTab === "sale") {
+        const commCost = num(commissionCost);
+        const netBuyerPayable = Math.max(sale.grossSale - commCost, 0);
+        const buyerPaid = num(paidAmount);
+        const buyerPaymentStatus =
+          buyerPaid <= 0 ? "unpaid" : buyerPaid >= netBuyerPayable - 0.01 ? "paid" : "partial";
+
+        const targetSaleId =
+          editingId ||
+          ((typeof crypto !== "undefined" && "randomUUID" in crypto)
+            ? crypto.randomUUID()
+            : `sale-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
+
+        if (!editingId) {
+          (entryData as any).id = targetSaleId;
+        }
+
         entryData = {
-          ...entryData, amount,
-          gross_weight: num(grossWeight), deductions: num(deductionsVal), net_weight: sale.netWeight,
-          rate: num(saleRate), weight_unit: weightUnit, rate_unit: rateUnit,
-          buyer: buyer.trim() || null, field_name: fieldName.trim() || null,
+          ...entryData,
+          amount, // grossSale
+          gross_weight: num(grossWeight),
+          deductions: num(deductionsVal),
+          net_weight: sale.netWeight,
+          rate: num(saleRate),
+          weight_unit: weightUnit,
+          rate_unit: rateUnit,
+          buyer: buyer.trim() || null,
+          field_name: fieldName.trim() || null,
           crop_type: cropType.trim() || description.trim() || null,
-          transport_cost: num(transportCost), labour_cost: num(labourCost),
-          commission_cost: num(commissionCost), other_costs: num(otherCosts),
-          total_area: num(totalArea) || null, area_unit: areaUnit,
-          total_yield: num(totalYield) || null, yield_unit: yieldUnit,
-          paid_amount: num(paidAmount), payment_status: sale.paymentStatus,
+          transport_cost: 0,
+          labour_cost: 0,
+          commission_cost: commCost,
+          other_costs: 0,
+          total_area: num(totalArea) || null,
+          area_unit: areaUnit,
+          total_yield: num(totalYield) || null,
+          yield_unit: yieldUnit,
+          paid_amount: buyerPaid,
+          payment_status: buyerPaymentStatus,
           notes: saleNotes.trim() || null,
         };
+
+        // Separate crop expenses entered during Post Sale
+        const tCost = num(transportCost);
+        const lCost = num(labourCost);
+        const oCost = num(otherCosts);
+        const cropLabel = cropType.trim() || description.trim() || "Crop";
+        const buyerLabel = buyer.trim() ? ` (${buyer.trim()})` : "";
+        const isSharedExp = costAllocation === "shared";
+        const isLandlordOnly = costAllocation === "landlord";
+
+        const existingLinked = editingId
+          ? entries.filter(
+              (x: any) =>
+                x.entry_type === "expense" &&
+                (x.notes?.includes(`Linked Sale: ${editingId}`) || x.notes?.includes(`[sale:${editingId}]`))
+            )
+          : [];
+
+        const existingT = existingLinked.find(
+          (x: any) =>
+            x.category?.toLowerCase() === "tractor" ||
+            x.description?.toLowerCase().includes("transport") ||
+            x.description?.toLowerCase().includes("kiraya")
+        );
+        const existingL = existingLinked.find(
+          (x: any) =>
+            x.category?.toLowerCase() === "labour" ||
+            x.description?.toLowerCase().includes("labour") ||
+            x.description?.toLowerCase().includes("loading")
+        );
+        const existingO = existingLinked.find(
+          (x: any) => x !== existingT && x !== existingL
+        );
+
+        const syncExp = (val: number, existing: any, cat: string, desc: string) => {
+          if (val > 0) {
+            const expFields = {
+              farmer_id: farmerId,
+              season_id: selectedSeason.id,
+              farmer_season_id: fs?.id || null,
+              entry_type: "expense",
+              entry_date: dateStr,
+              amount: val,
+              category: cat,
+              description: desc,
+              notes: `Linked Sale: ${targetSaleId}`,
+              crop_type: cropType.trim() || description.trim() || null,
+              is_shared: isSharedExp,
+              shared_amount: isSharedExp ? val / 2 : null,
+              payment_method: isLandlordOnly ? "landlord_only" : null,
+              created_by: user.id,
+            };
+            if (existing) {
+              linkedExpenseUpdates.push({ id: existing.id, patch: expFields });
+            } else {
+              const newId =
+                typeof crypto !== "undefined" && "randomUUID" in crypto
+                  ? crypto.randomUUID()
+                  : `exp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+              linkedExpenseInserts.push({ ...expFields, id: newId });
+            }
+          } else if (existing) {
+            linkedExpenseDeletes.push(existing.id);
+          }
+        };
+
+        syncExp(tCost, existingT, "Tractor", `Transport / Kiraya for ${cropLabel} sale${buyerLabel}`);
+        syncExp(lCost, existingL, "Labour", `Labour / Loading for ${cropLabel} sale${buyerLabel}`);
+        syncExp(oCost, existingO, "Others", `Crop sale expenses for ${cropLabel} sale${buyerLabel}`);
       } else if (activeTab === "payment") {
-        entryData = { ...entryData, amount, payment_method: paymentMethod, crop_type: paymentMethod === "crop_return" ? cropType : null, crop_weight: paymentMethod === "crop_return" && cropWeight ? Number(cropWeight) : null, rate: paymentMethod === "crop_return" && cropRate ? Number(cropRate) : null };
+        if (paymentPurpose === "buyer_receipt") {
+          const targetSale = entries.find((e: any) => e.id === selectedReceiptSaleId);
+          entryData = {
+            ...entryData,
+            amount,
+            farmer_id: targetSale?.farmer_id || effectiveFarmerId,
+            category: "buyer_payment",
+            buyer: targetSale?.buyer || selectedReceiptBuyer,
+            crop_type: targetSale?.crop_type || null,
+            payment_method: receiptPaymentMethod,
+            notes: `[buyer_receipt] [sale:${targetSale?.id || selectedReceiptSaleId}] ${receiptNotes.trim()}`.trim(),
+            description: receiptNotes.trim() || `Buyer payment received - ${targetSale?.buyer || selectedReceiptBuyer}`,
+          };
+        } else {
+          entryData = { ...entryData, amount, payment_method: paymentMethod, crop_type: paymentMethod === "crop_return" ? cropType : null, crop_weight: paymentMethod === "crop_return" && cropWeight ? Number(cropWeight) : null, rate: paymentMethod === "crop_return" && cropRate ? Number(cropRate) : null };
+        }
       } else if (activeTab === "loan") {
         entryData = { ...entryData, amount, entry_type: "loan" };
       }
 
       // ===== Optimistic UI: update list instantly =====
-      const farmerRow = (farmerSeasons.find((x: any) => x.farmer_id === farmerId) as any)?.farmers;
+      const farmerRow = (farmerSeasons.find((x: any) => x.farmer_id === effectiveFarmerId) as any)?.farmers;
       const farmerName = farmerRow?.name || "";
       const farmerPhoto = farmerRow?.photo_url || null;
       const nowIso = new Date().toISOString();
 
       if (editingId) {
-        setEntries((prev) => prev.map((e: any) =>
-          e.id === editingId ? { ...e, ...entryData, updated_at: nowIso } : e
-        ));
+        setEntries((prev) => {
+          let updated = prev.map((e: any) =>
+            e.id === editingId ? { ...e, ...entryData, updated_at: nowIso } : e
+          );
+          for (const u of linkedExpenseUpdates) {
+            updated = updated.map((e: any) => (e.id === u.id ? { ...e, ...u.patch, updated_at: nowIso } : e));
+          }
+          if (linkedExpenseDeletes.length > 0) {
+            updated = updated.filter((e: any) => !linkedExpenseDeletes.includes(e.id));
+          }
+          for (const ins of linkedExpenseInserts) {
+            updated = [
+              { ...ins, created_at: nowIso, updated_at: nowIso, farmers: { name: farmerName, photo_url: farmerPhoto } },
+              ...updated,
+            ];
+          }
+          return updated;
+        });
       } else {
-        const tempId = (typeof crypto !== "undefined" && "randomUUID" in crypto)
-          ? crypto.randomUUID()
-          : `tmp-${Date.now()}`;
         const optimisticEntry: any = {
           ...entryData,
-          id: tempId,
           created_at: nowIso,
           updated_at: nowIso,
           farmers: { name: farmerName, photo_url: farmerPhoto },
         };
-        (entryData as any).id = tempId;
-        setEntries((prev) => [optimisticEntry, ...prev]);
+        const optimisticExpenses = linkedExpenseInserts.map((ins) => ({
+          ...ins,
+          created_at: nowIso,
+          updated_at: nowIso,
+          farmers: { name: farmerName, photo_url: farmerPhoto },
+        }));
+        setEntries((prev) => [optimisticEntry, ...optimisticExpenses, ...prev]);
       }
 
       // Optimistic inventory update
@@ -515,6 +797,15 @@ const Ledger = () => {
           } else {
             await offlineRepo.insert("ledger_entries", entryData);
           }
+          for (const ins of linkedExpenseInserts) {
+            await offlineRepo.insert("ledger_entries", ins);
+          }
+          for (const u of linkedExpenseUpdates) {
+            await offlineRepo.update("ledger_entries", u.id, u.patch);
+          }
+          for (const delId of linkedExpenseDeletes) {
+            await offlineRepo.remove("ledger_entries", delId);
+          }
           for (const up of stockUpdates) {
             await offlineRepo.update("inventory", up.id, { current_stock: up.newStock });
           }
@@ -530,7 +821,14 @@ const Ledger = () => {
     }
   };
 
-  const typeBadge = (type: string) => {
+  const typeBadge = (type: string, isBuyerRec = false) => {
+    if (isBuyerRec) {
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
+          Buyer Receipt
+        </span>
+      );
+    }
     const config: Record<string, { bg: string; text: string; label: string }> = {
       expense: { bg: "bg-red-500/10 dark:bg-red-500/20 border-red-500/20", text: "text-red-700 dark:text-red-400", label: t("ledger.expense") },
       sale: { bg: "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20", text: "text-emerald-700 dark:text-emerald-400", label: t("ledger.sale") },
@@ -557,7 +855,17 @@ const Ledger = () => {
   // Filtered entries
   const filteredEntries = entries.filter((e) => {
     if (filterFarmer !== "all" && e.farmer_id !== filterFarmer) return false;
-    if (filterType !== "all" && e.entry_type !== filterType) return false;
+    if (filterType !== "all") {
+      if (filterType === "buyer_payment") {
+        if (!isBuyerPayment(e)) return false;
+      } else if (filterType === "farmer_payment") {
+        if (e.entry_type !== "payment" || isBuyerPayment(e)) return false;
+      } else if (filterType === "payment") {
+        if (e.entry_type !== "payment") return false;
+      } else if (e.entry_type !== filterType) {
+        return false;
+      }
+    }
     if (filterCategory !== "all" && ((e as any).category || "").toLowerCase() !== filterCategory.toLowerCase()) return false;
     const d = e.entry_date ? new Date(e.entry_date + "T00:00:00") : new Date(e.created_at);
     if (filterFromDate && d < new Date(filterFromDate.setHours(0, 0, 0, 0))) return false;
@@ -568,7 +876,7 @@ const Ledger = () => {
     }
     if (searchText.trim()) {
       const q = searchText.trim().toLowerCase();
-      const hay = [e.farmers?.name, e.description, (e as any).category, e.entry_type].filter(Boolean).join(" ").toLowerCase();
+      const hay = [e.farmers?.name, e.description, (e as any).category, (e as any).buyer, e.entry_type].filter(Boolean).join(" ").toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -668,10 +976,19 @@ const Ledger = () => {
                         <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
                           <div className="space-y-0.5 sm:space-y-1.5">
                             <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.farmer")} *</Label>
-                            <Select value={farmerId} onValueChange={setFarmerId}>
+                            <Select
+                              value={activeTab === "payment" && paymentPurpose === "buyer_receipt" ? (selectedReceiptSale?.farmer_id || farmerId) : farmerId}
+                              onValueChange={setFarmerId}
+                              disabled={activeTab === "payment" && paymentPurpose === "buyer_receipt"}
+                            >
                               <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue placeholder={t("ledger.selectFarmer")} /></SelectTrigger>
                               <SelectContent>{seasonFarmers.map((fs) => <SelectItem key={fs.farmer_id} value={fs.farmer_id}>{fs.farmers?.name || "—"}</SelectItem>)}</SelectContent>
                             </Select>
+                            {activeTab === "payment" && paymentPurpose === "buyer_receipt" && selectedReceiptSale && (
+                              <span className="text-[8px] sm:text-[10px] text-muted-foreground block truncate">
+                                Farmer from selected sale: {seasonFarmers.find(f => f.farmer_id === selectedReceiptSale.farmer_id)?.farmers?.name || "Farmer"}
+                              </span>
+                            )}
                           </div>
                           <div className="space-y-0.5 sm:space-y-1.5">
                             <Label className="text-[9px] sm:text-sm font-semibold">{t("common.date")}</Label>
@@ -901,18 +1218,131 @@ const Ledger = () => {
                           </div>
                         </div>
 
-                        {/* --- Costs --- */}
-                        <div className="rounded-lg sm:rounded-xl border border-red-500/20 bg-red-50/40 dark:bg-red-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
-                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400">💸 Sale Costs</p>
-                          <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Transport (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={transportCost} onChange={(e) => setTransportCost(e.target.value)} placeholder="0" /></div>
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Labour (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={labourCost} onChange={(e) => setLabourCost(e.target.value)} placeholder="0" /></div>
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Commission (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={commissionCost} onChange={(e) => setCommissionCost(e.target.value)} placeholder="0" /></div>
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Other (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={otherCosts} onChange={(e) => setOtherCosts(e.target.value)} placeholder="0" /></div>
+                        {/* --- Buyer Commission --- */}
+                        <div className="rounded-lg sm:rounded-xl border border-amber-500/30 bg-amber-50/40 dark:bg-amber-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                              <span>🤝 Buyer Commission</span>
+                              <span className="text-[8px] sm:text-[10px] font-normal normal-case text-muted-foreground">(Deducted from Buyer's Bill)</span>
+                            </p>
                           </div>
-                          <div className="rounded-md sm:rounded-lg bg-background border border-red-500/20 p-1.5 sm:p-3 text-[9px] sm:text-sm font-semibold flex justify-between items-center">
-                            <span className="text-red-700 dark:text-red-400">Total Costs <span className="text-[7px] sm:text-[10px] uppercase tracking-wider">Auto</span></span>
-                            <span className="font-mono text-red-600">{money(sale.totalCosts)}</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-3 items-center">
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">Commission (₨)</Label>
+                              <Input
+                                className="h-8 sm:h-11 bg-background font-mono text-red-600 font-bold text-[10px] sm:text-sm"
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                step="0.01"
+                                value={commissionCost}
+                                onChange={(e) => setCommissionCost(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                            <div className="rounded-md sm:rounded-lg bg-background border border-amber-500/20 p-2 sm:p-3 text-[10px] sm:text-sm flex flex-col justify-center">
+                              <span className="text-muted-foreground font-semibold text-[9px] sm:text-xs">Net Buyer Payable</span>
+                              <span className="font-mono font-bold text-xs sm:text-base text-amber-700 dark:text-amber-400">
+                                {money(Math.max(sale.grossSale - num(commissionCost), 0))}
+                              </span>
+                              <span className="text-[8px] sm:text-[10px] text-muted-foreground">
+                                Gross {money(sale.grossSale)} − Comm {money(num(commissionCost))}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* --- Separate Crop Expenses (Farmer / Landlord) --- */}
+                        <div className="rounded-lg sm:rounded-xl border border-orange-500/30 bg-orange-50/40 dark:bg-orange-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-orange-700 dark:text-orange-400 flex items-center gap-1.5">
+                              <span>🚜 Separate Crop Expenses</span>
+                              <span className="text-[8px] sm:text-[10px] font-normal normal-case text-muted-foreground">(Farmer / Landlord Account)</span>
+                            </p>
+                          </div>
+                          <p className="text-[8px] sm:text-[11px] text-muted-foreground">
+                            These expenses belong to farmer/landlord crop accounting and do NOT reduce the buyer's payable amount.
+                          </p>
+                          <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">Transport / Kiraya (₨)</Label>
+                              <Input
+                                className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm font-mono"
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                step="0.01"
+                                value={transportCost}
+                                onChange={(e) => setTransportCost(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">Labour / Loading (₨)</Label>
+                              <Input
+                                className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm font-mono"
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                step="0.01"
+                                value={labourCost}
+                                onChange={(e) => setLabourCost(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">Other Crop Costs (₨)</Label>
+                              <Input
+                                className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm font-mono"
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                step="0.01"
+                                value={otherCosts}
+                                onChange={(e) => setOtherCosts(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1 border-t border-orange-200 dark:border-orange-900/50">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Label className="text-[9px] sm:text-xs font-semibold text-muted-foreground">Allocation:</Label>
+                              <div className="inline-flex items-center rounded-lg border border-border bg-background p-0.5 text-[9px] sm:text-xs">
+                                <button
+                                  type="button"
+                                  onClick={() => setCostAllocation("farmer")}
+                                  className={cn(
+                                    "px-2 py-0.5 rounded font-medium transition-colors",
+                                    costAllocation === "farmer" ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  {t("ledger.farmerOnly")}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCostAllocation("shared")}
+                                  className={cn(
+                                    "px-2 py-0.5 rounded font-medium transition-colors",
+                                    costAllocation === "shared" ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  50/50 Shared
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCostAllocation("landlord")}
+                                  className={cn(
+                                    "px-2 py-0.5 rounded font-medium transition-colors",
+                                    costAllocation === "landlord" ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  {t("ledger.landlordOnly")}
+                                </button>
+                              </div>
+                            </div>
+                            <div className="text-[10px] sm:text-sm font-semibold text-orange-700 dark:text-orange-400">
+                              Total Crop Expenses: <span className="font-mono">{money(num(transportCost) + num(labourCost) + num(otherCosts))}</span>
+                            </div>
                           </div>
                         </div>
 
@@ -950,48 +1380,286 @@ const Ledger = () => {
 
                         {/* --- Payment --- */}
                         <div className="rounded-lg sm:rounded-xl border border-blue-500/20 bg-blue-50/40 dark:bg-blue-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
-                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">💰 Payment</p>
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">💰 Buyer Payment</p>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Paid Amount (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">Paid by Buyer (₨)</Label>
+                              <Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} placeholder="0" />
+                            </div>
                             <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Notes</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={saleNotes} onChange={(e) => setSaleNotes(e.target.value)} placeholder="Optional" /></div>
                           </div>
-                          <div className="grid grid-cols-3 gap-1.5 sm:gap-3 text-[8px] sm:text-xs">
-                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Net Sale</span><span className="font-mono font-bold text-emerald-600">{money(sale.netSale)}</span></div>
-                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Remaining</span><span className="font-mono font-bold text-red-600">{money(sale.remaining)}</span></div>
-                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Status</span><span className={cn("font-bold uppercase", sale.paymentStatus === "paid" ? "text-emerald-600" : sale.paymentStatus === "partial" ? "text-amber-600" : "text-red-600")}>{sale.paymentStatus}</span></div>
-                          </div>
+                          {(() => {
+                            const netBuyerPayable = Math.max(sale.grossSale - num(commissionCost), 0);
+                            const paidNum = num(paidAmount);
+                            const buyerRemaining = Math.max(netBuyerPayable - paidNum, 0);
+                            const buyerStatus = paidNum <= 0 ? "unpaid" : paidNum >= netBuyerPayable - 0.01 ? "paid" : "partial";
+                            return (
+                              <div className="grid grid-cols-3 gap-1.5 sm:gap-3 text-[8px] sm:text-xs">
+                                <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col">
+                                  <span className="text-muted-foreground font-semibold">Net Buyer Payable</span>
+                                  <span className="font-mono font-bold text-emerald-600">{money(netBuyerPayable)}</span>
+                                </div>
+                                <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col">
+                                  <span className="text-muted-foreground font-semibold">Due from Buyer</span>
+                                  <span className="font-mono font-bold text-red-600">{money(buyerRemaining)}</span>
+                                </div>
+                                <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col">
+                                  <span className="text-muted-foreground font-semibold">Status</span>
+                                  <span className={cn("font-bold uppercase", buyerStatus === "paid" ? "text-emerald-600" : buyerStatus === "partial" ? "text-amber-600" : "text-red-600")}>
+                                    {buyerStatus}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/30 p-2 sm:p-4 text-[10px] sm:text-sm font-semibold flex justify-between items-center">
-                          <span className="text-emerald-700 dark:text-emerald-400">{t("ledger.totalAmount")}</span>
+                          <div>
+                            <span className="text-emerald-700 dark:text-emerald-400 block">{t("ledger.totalAmount")} (Gross)</span>
+                            {num(commissionCost) > 0 && (
+                              <span className="text-[8px] sm:text-[11px] text-muted-foreground font-normal">
+                                Net Buyer Payable: {money(Math.max(sale.grossSale - num(commissionCost), 0))} (after {money(num(commissionCost))} Commission)
+                              </span>
+                            )}
+                          </div>
                           <span className="text-sm sm:text-xl font-mono text-emerald-600 dark:text-emerald-400">{money(sale.grossSale)}</span>
                         </div>
                       </TabsContent>
 
                       {/* PAYMENT TAB */}
-                      <TabsContent value="payment" className="space-y-1.5 sm:space-y-4">
-                        <div className="hidden sm:block space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
-                        <div className="space-y-0.5 sm:space-y-1.5">
-                          <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.paymentMethod")}</Label>
-                          <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                            <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="cash">{t("ledger.cashPayment")}</SelectItem>
-                              <SelectItem value="crop_return">{t("ledger.cropReturn")}</SelectItem>
-                            </SelectContent>
-                          </Select>
+                      <TabsContent value="payment" className="space-y-2 sm:space-y-4">
+                        {/* Purpose / Direction selector */}
+                        <div className="space-y-1 sm:space-y-1.5">
+                          <Label className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            Payment Purpose
+                          </Label>
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setPaymentPurpose("farmer_payment")}
+                              className={cn(
+                                "p-2 sm:p-3 rounded-lg border text-left flex items-center gap-2 transition-all",
+                                paymentPurpose === "farmer_payment"
+                                  ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold ring-1 ring-amber-500"
+                                  : "border-border bg-background text-muted-foreground hover:bg-muted/50"
+                              )}
+                            >
+                              <span className="text-base sm:text-lg">👨‍🌾</span>
+                              <div className="min-w-0">
+                                <div className="text-[10px] sm:text-xs font-semibold">Farmer Payment</div>
+                                <div className="text-[7px] sm:text-[9px] text-muted-foreground font-normal truncate">Pay / disburse to farmer</div>
+                              </div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPaymentPurpose("buyer_receipt")}
+                              className={cn(
+                                "p-2 sm:p-3 rounded-lg border text-left flex items-center gap-2 transition-all",
+                                paymentPurpose === "buyer_receipt"
+                                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold ring-1 ring-emerald-500"
+                                  : "border-border bg-background text-muted-foreground hover:bg-muted/50"
+                              )}
+                            >
+                              <span className="text-base sm:text-lg">🏪</span>
+                              <div className="min-w-0">
+                                <div className="text-[10px] sm:text-xs font-semibold">Buyer Payment Received</div>
+                                <div className="text-[7px] sm:text-[9px] text-muted-foreground font-normal truncate">Collect receipt from buyer</div>
+                              </div>
+                            </button>
+                          </div>
                         </div>
-                        {paymentMethod === "cash" ? (
-                          <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-amber-600 font-bold text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0" /></div>
-                        ) : (
+
+                        {paymentPurpose === "farmer_payment" ? (
                           <>
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.cropType")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="e.g. Wheat, Rice" /></div>
-                            <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
-                              <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.cropWeight")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={cropWeight} onChange={(e) => setCropWeight(e.target.value)} placeholder="0" /></div>
-                              <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={cropRate} onChange={(e) => setCropRate(e.target.value)} placeholder="0" /></div>
+                            <div className="hidden sm:block space-y-1.5"><Label className="text-sm font-semibold">{t("common.description")}</Label><Input className="h-11 bg-background" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.paymentMethod")}</Label>
+                              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="cash">{t("ledger.cashPayment")}</SelectItem>
+                                  <SelectItem value="crop_return">{t("ledger.cropReturn")}</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
-                            <div className="rounded sm:rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 p-1.5 sm:p-4 text-[9px] sm:text-sm font-semibold flex justify-between items-center"><span className="text-amber-700 dark:text-amber-400">{t("common.total")}:</span> <span className="text-xs sm:text-xl font-mono text-amber-600 dark:text-amber-400">₨ {cropTotal().toLocaleString()}</span></div>
+                            {paymentMethod === "cash" ? (
+                              <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("common.amount")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-amber-600 font-bold text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} placeholder="0" /></div>
+                            ) : (
+                              <>
+                                <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.cropType")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="e.g. Wheat, Rice" /></div>
+                                <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
+                                  <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.cropWeight")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={cropWeight} onChange={(e) => setCropWeight(e.target.value)} placeholder="0" /></div>
+                                  <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.ratePerKg")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={cropRate} onChange={(e) => setCropRate(e.target.value)} placeholder="0" /></div>
+                                </div>
+                                <div className="rounded sm:rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 p-1.5 sm:p-4 text-[9px] sm:text-sm font-semibold flex justify-between items-center"><span className="text-amber-700 dark:text-amber-400">{t("common.total")}:</span> <span className="text-xs sm:text-xl font-mono text-amber-600 dark:text-amber-400">₨ {cropTotal().toLocaleString()}</span></div>
+                              </>
+                            )}
                           </>
+                        ) : (
+                          /* BUYER PAYMENT RECEIVED WORKFLOW */
+                          <div className="space-y-2 sm:space-y-3.5">
+                            {/* Buyer Selector */}
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">Buyer / Customer *</Label>
+                              <Select
+                                value={selectedReceiptBuyer}
+                                onValueChange={(b) => {
+                                  setSelectedReceiptBuyer(b);
+                                  setSelectedReceiptSaleId("");
+                                  setReceiptAmount("");
+                                }}
+                              >
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm">
+                                  <SelectValue placeholder="Select Buyer" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {distinctBuyers.length === 0 ? (
+                                    <SelectItem value="__none" disabled>No buyers with recorded sales</SelectItem>
+                                  ) : (
+                                    distinctBuyers.map((b) => (
+                                      <SelectItem key={b} value={b}>{b}</SelectItem>
+                                    ))
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Outstanding Sale Selector */}
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-[9px] sm:text-sm font-semibold">Related Outstanding Sale *</Label>
+                                {buyerSales.length > 0 && (
+                                  <span className="text-[8px] sm:text-[10px] text-muted-foreground">
+                                    {buyerSales.filter(s => s.outstanding > 0.01).length} pending sales
+                                  </span>
+                                )}
+                              </div>
+                              <Select
+                                value={selectedReceiptSaleId}
+                                onValueChange={(id) => {
+                                  setSelectedReceiptSaleId(id);
+                                  const s = buyerSales.find((x) => x.id === id);
+                                  if (s) {
+                                    setReceiptAmount(String(s.outstanding));
+                                    setFarmerId(s.farmer_id);
+                                  }
+                                }}
+                                disabled={!selectedReceiptBuyer}
+                              >
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm">
+                                  <SelectValue placeholder={!selectedReceiptBuyer ? "Select buyer first" : "Choose outstanding sale"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {buyerSales.length === 0 ? (
+                                    <SelectItem value="__none" disabled>No recorded sales for this buyer</SelectItem>
+                                  ) : (
+                                    buyerSales.map((s) => {
+                                      const label = `${s.crop_type || "Crop"} (${s.entry_date || "Date"}) — Payable ₨${s.netBuyerPayable.toLocaleString()} · Due ₨${s.outstanding.toLocaleString()}`;
+                                      return (
+                                        <SelectItem key={s.id} value={s.id} disabled={s.outstanding <= 0.01 && s.id !== selectedReceiptSaleId}>
+                                          {label} {s.outstanding <= 0.01 ? "(Settled)" : ""}
+                                        </SelectItem>
+                                      );
+                                    })
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Selected Sale Detail Card */}
+                            {selectedReceiptSale && (
+                              <div className="rounded-lg sm:rounded-xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 p-2 sm:p-3.5 space-y-1.5">
+                                <div className="flex items-center justify-between text-[9px] sm:text-xs">
+                                  <span className="font-bold text-emerald-800 dark:text-emerald-300">
+                                    Sale #{selectedReceiptSale.id.slice(0, 8)} • {selectedReceiptSale.crop_type || "Crop"}
+                                  </span>
+                                  <span className="text-[8px] sm:text-[10px] text-muted-foreground">
+                                    {selectedReceiptSale.entry_date}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[8px] sm:text-xs">
+                                  <div className="bg-background/80 rounded p-1.5 border border-border/50">
+                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">Gross Sale</span>
+                                    <span className="font-mono font-bold">{money(selectedReceiptSale.amount)}</span>
+                                  </div>
+                                  <div className="bg-background/80 rounded p-1.5 border border-border/50">
+                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">Commission</span>
+                                    <span className="font-mono font-bold text-amber-600">−{money(num(selectedReceiptSale.commission_cost))}</span>
+                                  </div>
+                                  <div className="bg-background/80 rounded p-1.5 border border-border/50">
+                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">Buyer Payable</span>
+                                    <span className="font-mono font-bold text-emerald-600">{money(selectedReceiptSale.netBuyerPayable)}</span>
+                                  </div>
+                                  <div className="bg-background/80 rounded p-1.5 border border-border/50">
+                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">Outstanding Due</span>
+                                    <span className="font-mono font-bold text-red-600">{money(selectedReceiptSale.outstanding)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Amount & Quick Full-Pay */}
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-[9px] sm:text-sm font-semibold">Amount Received (₨) *</Label>
+                                {selectedReceiptSale && selectedReceiptSale.outstanding > 0 && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 text-[8px] sm:text-xs text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-50/50 hover:bg-emerald-100"
+                                    onClick={() => setReceiptAmount(String(selectedReceiptSale.outstanding))}
+                                  >
+                                    Pay Full (₨ {selectedReceiptSale.outstanding.toLocaleString()})
+                                  </Button>
+                                )}
+                              </div>
+                              <Input
+                                className="h-8 sm:h-11 bg-background font-mono text-emerald-600 font-bold text-[10px] sm:text-sm"
+                                type="number"
+                                inputMode="decimal"
+                                min="0.01"
+                                max={selectedReceiptSale ? selectedReceiptSale.outstanding : undefined}
+                                step="0.01"
+                                value={receiptAmount}
+                                onChange={(e) => setReceiptAmount(e.target.value)}
+                                placeholder="0"
+                              />
+                              {selectedReceiptSale && num(receiptAmount) > selectedReceiptSale.outstanding + 0.01 && (
+                                <p className="text-[8px] sm:text-[11px] text-red-600 font-medium">
+                                  ⚠️ Amount cannot exceed the outstanding balance of ₨ {selectedReceiptSale.outstanding.toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Payment Method */}
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">Payment Method</Label>
+                              <Select value={receiptPaymentMethod} onValueChange={setReceiptPaymentMethod}>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="cash">Cash</SelectItem>
+                                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                                  <SelectItem value="cheque">Cheque</SelectItem>
+                                  <SelectItem value="online">Online / Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Reference / Notes */}
+                            <div className="space-y-0.5 sm:space-y-1.5">
+                              <Label className="text-[9px] sm:text-sm font-semibold">Reference / Notes</Label>
+                              <Input
+                                className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"
+                                value={receiptNotes}
+                                onChange={(e) => setReceiptNotes(e.target.value)}
+                                placeholder="e.g. Cheque #, bank receipt, batch reference (optional)"
+                              />
+                            </div>
+                          </div>
                         )}
                       </TabsContent>
 
@@ -1004,7 +1672,16 @@ const Ledger = () => {
                     </Tabs>
                   </div>
                   <DialogFooter className="p-2 sm:p-6 bg-muted/30 border-t mt-auto">
-                    <Button size="sm" onClick={handleSave} disabled={!farmerId || saving} className="w-full h-9 sm:h-12 text-xs sm:text-base font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg transition-all duration-300 rounded-md sm:rounded-xl">
+                    <Button
+                      size="sm"
+                      onClick={handleSave}
+                      disabled={
+                        (activeTab === "payment" && paymentPurpose === "buyer_receipt"
+                          ? (!selectedReceiptSaleId || !receiptAmount || num(receiptAmount) <= 0 || (selectedReceiptSale && num(receiptAmount) > selectedReceiptSale.outstanding + 0.01))
+                          : !farmerId) || saving
+                      }
+                      className="w-full h-9 sm:h-12 text-xs sm:text-base font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg transition-all duration-300 rounded-md sm:rounded-xl"
+                    >
                       {saving ? (<><Loader2 className="animate-spin h-3.5 w-3.5 sm:h-5 sm:w-5 mr-1 sm:mr-2" /> {t("common.saving") || "Saving..."}</>) : t("ledger.saveEntry")}
                     </Button>
                   </DialogFooter>
@@ -1084,7 +1761,9 @@ const Ledger = () => {
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="expense">{t("ledger.expense")}</SelectItem>
                 <SelectItem value="sale">{t("ledger.sale")}</SelectItem>
-                <SelectItem value="payment">{t("ledger.payment")}</SelectItem>
+                <SelectItem value="payment">All Payments</SelectItem>
+                <SelectItem value="farmer_payment">Farmer Payments</SelectItem>
+                <SelectItem value="buyer_payment">Buyer Receipts</SelectItem>
                 <SelectItem value="loan">{t("ledger.loan")}</SelectItem>
               </SelectContent>
             </Select>
@@ -1139,7 +1818,7 @@ const Ledger = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                      {typeBadge(e.entry_type)}
+                      {typeBadge(e.entry_type, isBuyerPayment(e))}
                       <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
                         {e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}
                       </span>
@@ -1148,17 +1827,22 @@ const Ledger = () => {
                       <FarmerAvatar name={e.farmers?.name} photoUrl={(e.farmers as any)?.photo_url} className="h-8 w-8" />
                       <p className="text-sm font-bold text-foreground truncate">{e.farmers?.name ?? "—"}</p>
                     </div>
+                    {isBuyerPayment(e) && (e as any).buyer && (
+                      <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 truncate mt-0.5">
+                        Received from: {(e as any).buyer}
+                      </p>
+                    )}
                     {e.description && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{e.description}</p>
                     )}
-                    {e.entry_type === "sale" && <SaleMeta e={e} />}
+                    {e.entry_type === "sale" && <SaleMeta e={e} linkedReceipts={buyerReceiptsBySale.get(e.id) || 0} />}
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <span className={cn(
                       "font-mono font-bold text-[15px] whitespace-nowrap",
                       e.entry_type === "expense" && "text-red-600 dark:text-red-400",
                       e.entry_type === "sale" && "text-emerald-600 dark:text-emerald-400",
-                      e.entry_type === "payment" && "text-amber-600 dark:text-amber-400",
+                      e.entry_type === "payment" && (isBuyerPayment(e) ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"),
                       e.entry_type === "loan" && "text-blue-600 dark:text-blue-400"
                     )}>₨ {Number(e.amount).toLocaleString()}</span>
                     
@@ -1219,10 +1903,11 @@ const Ledger = () => {
               </TableHeader>
               <TableBody>
                 {filteredEntries.map((e) => {
+                  const isBuyer = isBuyerPayment(e);
                   const catObj = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase());
                   const catLabel = catObj ? t(catObj.label) : ((e as any).category ? String((e as any).category) : null);
-                  const typeLabel = e.entry_type === "expense" ? t("ledger.expense") : e.entry_type === "sale" ? t("ledger.sale") : e.entry_type === "payment" ? t("ledger.payment") : t("ledger.loan");
-                  const displayCategory = catLabel || typeLabel;
+                  const typeLabel = e.entry_type === "expense" ? t("ledger.expense") : e.entry_type === "sale" ? t("ledger.sale") : e.entry_type === "payment" ? (isBuyer ? "Buyer Receipt" : t("ledger.payment")) : t("ledger.loan");
+                  const displayCategory = isBuyer ? "Buyer Receipt" : (catLabel || typeLabel);
                   return (
                   <TableRow key={e.id} className="hover:bg-muted/30 transition-colors border-b border-border/30">
                     <TableCell className="text-xs font-medium py-3 text-muted-foreground whitespace-nowrap">
@@ -1235,17 +1920,20 @@ const Ledger = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="capitalize text-sm font-medium text-foreground/90">{displayCategory}</span>
+                      <span className={cn("capitalize text-sm font-medium", isBuyer ? "text-emerald-700 dark:text-emerald-400 font-semibold" : "text-foreground/90")}>{displayCategory}</span>
+                      {isBuyer && (e as any).buyer && (
+                        <span className="block text-[10px] text-muted-foreground truncate">Buyer: {(e as any).buyer}</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm hidden md:table-cell max-w-[300px] text-muted-foreground" title={e.description || ""}>
                       <span className="block truncate">{e.description || "—"}</span>
-                      {e.entry_type === "sale" && <SaleMeta e={e} />}
+                      {e.entry_type === "sale" && <SaleMeta e={e} linkedReceipts={buyerReceiptsBySale.get(e.id) || 0} />}
                     </TableCell>
                     <TableCell className={cn(
                       "text-right font-mono font-bold text-sm whitespace-nowrap",
                       e.entry_type === "expense" && "text-rose-600 dark:text-rose-400",
                       e.entry_type === "sale" && "text-emerald-600 dark:text-emerald-400",
-                      e.entry_type === "payment" && "text-amber-600 dark:text-amber-400",
+                      e.entry_type === "payment" && (isBuyer ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"),
                       e.entry_type === "loan" && "text-sky-600 dark:text-sky-400"
                     )}>
                       Rs {Number(e.amount).toLocaleString()}

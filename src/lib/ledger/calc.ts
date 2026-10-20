@@ -131,6 +131,9 @@ export interface SaleResult {
   grossSale: number;
   totalCosts: number;
   netSale: number;
+  buyerPayable: number;
+  buyerRemaining: number;
+  buyerPaymentStatus: "unpaid" | "partial" | "paid";
   remaining: number;
   paymentStatus: "unpaid" | "partial" | "paid";
   areaAcres: number;
@@ -162,6 +165,12 @@ export function computeSale(i: SaleInput): SaleResult {
   const totalCosts = i.transportCost + i.labourCost + i.commissionCost + i.otherCosts;
   const netSale = grossSale - totalCosts;
 
+  // Buyer-side accounting: Net Buyer Payable = Gross Sale Amount - Commission
+  const buyerPayable = Math.max(grossSale - (i.commissionCost || 0), 0);
+  const buyerRemaining = Math.max(buyerPayable - i.paidAmount, 0);
+  const buyerPaymentStatus: SaleResult["buyerPaymentStatus"] =
+    i.paidAmount <= 0 ? "unpaid" : i.paidAmount >= buyerPayable - 0.01 ? "paid" : "partial";
+
   const remaining = Math.max(netSale - i.paidAmount, 0);
   const paymentStatus: SaleResult["paymentStatus"] =
     i.paidAmount <= 0 ? "unpaid" : i.paidAmount >= netSale - 0.01 ? "paid" : "partial";
@@ -184,6 +193,9 @@ export function computeSale(i: SaleInput): SaleResult {
     grossSale,
     totalCosts,
     netSale,
+    buyerPayable,
+    buyerRemaining,
+    buyerPaymentStatus,
     remaining,
     paymentStatus,
     areaAcres,
