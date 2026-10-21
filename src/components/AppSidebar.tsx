@@ -46,7 +46,7 @@ const AppSidebar = () => {
   ];
 
   return (
-    <Sidebar className="min-w-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+    <Sidebar className="min-w-0 border-r border-sidebar-border rtl:border-l rtl:border-r-0 bg-sidebar text-sidebar-foreground">
       <SidebarHeader className="border-b border-sidebar-border p-3">
         <div className="flex items-center justify-between gap-3 rounded-lg border border-sidebar-border bg-sidebar-accent/60 p-2.5">
           <div className="flex min-w-0 items-center gap-3">
@@ -70,7 +70,7 @@ const AppSidebar = () => {
           <div className="mt-3">
             <Select value={selectedSeason?.id || ""} onValueChange={(v) => setSelectedSeasonId(v)}>
               <SelectTrigger className="h-10 rounded-md border-sidebar-border bg-sidebar-accent/60 text-xs text-sidebar-foreground focus:ring-sidebar-ring">
-                <Leaf className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                <Leaf className="me-1.5 h-3.5 w-3.5 text-primary" />
                 <SelectValue placeholder={t("seasons.selectSeason")} />
               </SelectTrigger>
               <SelectContent className="border-border bg-popover text-popover-foreground">
@@ -102,7 +102,7 @@ const AppSidebar = () => {
                           : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                       }`}
                     >
-                      <item.icon className={`mr-2.5 h-5 w-5 ${isActive ? "text-primary" : "text-sidebar-foreground/50"}`} />
+                      <item.icon className={`me-2.5 h-5 w-5 ${isActive ? "text-primary" : "text-sidebar-foreground/50"}`} />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -129,7 +129,7 @@ const AppSidebar = () => {
                             : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                         }`}
                       >
-                        <item.icon className={`mr-2.5 h-5 w-5 ${isActive ? "text-primary" : "text-sidebar-foreground/50"}`} />
+                        <item.icon className={`me-2.5 h-5 w-5 ${isActive ? "text-primary" : "text-sidebar-foreground/50"}`} />
                         <span>{item.title}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -160,6 +160,8 @@ const AppSidebar = () => {
             variant="ghost"
             size="icon"
             onClick={signOut}
+            title={t("nav.logout")}
+            aria-label={t("nav.logout")}
             className="h-9 w-9 shrink-0 rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-primary"
           >
             <LogOut className="h-4 w-4" />

@@ -1,6 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -176,7 +179,62 @@
       scroll-behavior: smooth;
     }
   }
+
+  /* Comprehensive Language-Specific Typography (English, Urdu, Sindhi) */
+  html[lang="en"], html[lang="en"] body {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: normal;
+  }
+  html[lang="en"] {
+    --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-serif: 'Sora', sans-serif;
+  }
+
+  html[lang="ur"], html[lang="ur"] body {
+    font-family: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', 'Noto Naskh Arabic', -apple-system, Tahoma, Arial, sans-serif;
+    letter-spacing: 0;
+    line-height: 1.85;
+  }
+  html[lang="ur"] {
+    --font-sans: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', 'Noto Naskh Arabic', -apple-system, Tahoma, Arial, sans-serif;
+    --font-serif: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', serif;
+  }
+
+  html[lang="sd"], html[lang="sd"] body {
+    font-family: 'Noto Naskh Arabic', 'Noto Sans Arabic', -apple-system, Tahoma, Arial, sans-serif;
+    letter-spacing: 0;
+    line-height: 1.7;
+  }
+  html[lang="sd"] {
+    --font-sans: 'Noto Naskh Arabic', 'Noto Sans Arabic', -apple-system, Tahoma, Arial, sans-serif;
+    --font-serif: 'Noto Naskh Arabic', 'Noto Sans Arabic', serif;
+  }
+
+  /* Apply localized font to all buttons, inputs, labels, and headings */
+  html[lang="ur"] button, html[lang="ur"] input, html[lang="ur"] select, html[lang="ur"] textarea,
+  html[lang="ur"] h1, html[lang="ur"] h2, html[lang="ur"] h3, html[lang="ur"] h4, html[lang="ur"] p, html[lang="ur"] span, html[lang="ur"] label, html[lang="ur"] td, html[lang="ur"] th {
+    font-family: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', 'Noto Naskh Arabic', -apple-system, Tahoma, Arial, sans-serif;
+  }
+
+  html[lang="sd"] button, html[lang="sd"] input, html[lang="sd"] select, html[lang="sd"] textarea,
+  html[lang="sd"] h1, html[lang="sd"] h2, html[lang="sd"] h3, html[lang="sd"] h4, html[lang="sd"] p, html[lang="sd"] span, html[lang="sd"] label, html[lang="sd"] td, html[lang="sd"] th {
+    font-family: 'Noto Naskh Arabic', 'Noto Sans Arabic', -apple-system, Tahoma, Arial, sans-serif;
+  }
+
+  /* Keep numbers, currencies, phones, and mono text strictly LTR without scrambling RTL sentences */
+  [dir="rtl"] .font-mono,
+  [dir="rtl"] .tabular-nums,
+  [dir="rtl"] input[type="number"],
+  [dir="rtl"] input[type="tel"],
+  bdi,
+  [dir="rtl"] bdi {
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: start;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  }
 }
+
 
 @media print {
   body > * {

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSeason } from "@/contexts/SeasonContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import DashboardHero from "@/components/dashboard/DashboardHero";
 import DashboardStatCard from "@/components/dashboard/DashboardStatCard";
@@ -24,64 +25,78 @@ const money = (n: number) => `Rs ${Math.round(n).toLocaleString()}`;
 const Dashboard = () => {
   const { profile } = useAuth();
   const { seasons, selectedSeason, setSelectedSeasonId } = useSeason();
+  const { t, language } = useLanguage();
   const { kpis, overview, outstanding, alerts, season, totals, crops, buyers, avgYield } = useDashboardData();
 
   const firstName = (profile?.full_name || "Farmer").split(" ")[0];
 
   const overviewItems = useMemo<OverviewItem[]>(
     () => [
-      { label: "Total Sales", sublabel: "(This Month)", value: money(overview.salesMonth), trend: overview.salesTrend, icon: ShoppingCart, tone: "emerald" },
-      { label: "Total Expenses", sublabel: "(This Month)", value: money(overview.expensesMonth), trend: overview.expensesTrend, icon: Package, tone: "rose" },
-      { label: "Net Profit", sublabel: "(This Month)", value: money(overview.profitMonth), trend: overview.profitTrend, icon: BarChart3, tone: "sky" },
-      { label: "Collection", sublabel: "(This Month)", value: money(overview.collectionMonth), trend: overview.collectionTrend, icon: Wallet, tone: "amber" },
+      { label: t("dashboard.salesMonth"), sublabel: t("dashboard.thisMonth"), value: money(overview.salesMonth), trend: overview.salesTrend, icon: ShoppingCart, tone: "emerald" },
+      { label: t("dashboard.expensesMonth"), sublabel: t("dashboard.thisMonth"), value: money(overview.expensesMonth), trend: overview.expensesTrend, icon: Package, tone: "rose" },
+      { label: t("dashboard.netProfit"), sublabel: t("dashboard.thisMonth"), value: money(overview.profitMonth), trend: overview.profitTrend, icon: BarChart3, tone: "sky" },
+      { label: t("dashboard.collectionMonth"), sublabel: t("dashboard.thisMonth"), value: money(overview.collectionMonth), trend: overview.collectionTrend, icon: Wallet, tone: "amber" },
     ],
-    [overview]
+    [overview, t]
   );
 
   const insights = useMemo<Insight[]>(() => {
     const list: Insight[] = [];
     if (overview.profitTrend !== 0) {
+      const verb = overview.profitTrend >= 0 ? t("dashboard.profitIncreased") : t("dashboard.profitDecreased");
       list.push({
-        title: `Profit ${overview.profitTrend >= 0 ? "increased" : "decreased"} by ${Math.abs(overview.profitTrend).toFixed(0)}%`,
-        description: "Compared with last month's net profit.",
+        title: `${verb} (${Math.abs(overview.profitTrend).toFixed(0)}%)`,
+        description: t("dashboard.comparedLastMonth"),
         icon: TrendingUp,
         tone: overview.profitTrend >= 0 ? "emerald" : "amber",
       });
     }
     if (alerts.length > 0) {
       list.push({
-        title: "Inventory needs refill",
-        description: `${alerts.length} item${alerts.length > 1 ? "s are" : " is"} low or out of stock.`,
+        title: t("dashboard.inventoryRefill"),
+        description: language === "sd"
+          ? `${alerts.length} شيون گودام ۾ گهٽ يا ختم آهن.`
+          : language === "ur"
+          ? `${alerts.length} اشیاء گودام میں کم یا ختم ہیں۔`
+          : `${alerts.length} item${alerts.length > 1 ? "s are" : " is"} low or out of stock.`,
         icon: Boxes,
         tone: "sky",
       });
     }
     if (kpis.buyerOutstanding > 0) {
       list.push({
-        title: "Buyer dues pending",
-        description: `${money(kpis.buyerOutstanding)} is still receivable from buyers/mills.`,
+        title: t("dashboard.buyerDuesPending"),
+        description: language === "sd"
+          ? `${money(kpis.buyerOutstanding)} خريدارن کان وٺڻو آهي.`
+          : language === "ur"
+          ? `${money(kpis.buyerOutstanding)} خریداروں سے وصول کرنا ہے۔`
+          : `${money(kpis.buyerOutstanding)} is still receivable from buyers/mills.`,
         icon: Store,
         tone: "amber",
       });
     }
     if (kpis.farmerPayables > 0) {
       list.push({
-        title: "Farmer balance payable",
-        description: `${money(kpis.farmerPayables)} is payable to farmers (credit/profit share).`,
+        title: t("dashboard.farmerBalancePayable"),
+        description: language === "sd"
+          ? `${money(kpis.farmerPayables)} هارين کي ڏيڻو آهي.`
+          : language === "ur"
+          ? `${money(kpis.farmerPayables)} کسانوں کو ادا کرنا ہے۔`
+          : `${money(kpis.farmerPayables)} is payable to farmers.`,
         icon: PiggyBank,
         tone: "emerald",
       });
     }
     if (overview.collectionTrend !== 0) {
       list.push({
-        title: `Collection rate ${overview.collectionTrend >= 0 ? "improved" : "dropped"}`,
-        description: `Collections are ${Math.abs(overview.collectionTrend).toFixed(0)}% ${overview.collectionTrend >= 0 ? "higher" : "lower"} than last month.`,
+        title: t("dashboard.collectionRate"),
+        description: `${Math.abs(overview.collectionTrend).toFixed(0)}% ${overview.collectionTrend >= 0 ? "+" : "−"}`,
         icon: Wallet,
         tone: "violet",
       });
     }
     return list.slice(0, 4);
-  }, [overview, alerts.length, kpis.buyerOutstanding, kpis.farmerPayables]);
+  }, [overview, alerts.length, kpis.buyerOutstanding, kpis.farmerPayables, t, language]);
 
   const notifications = useMemo<NotificationItem[]>(() => {
     const list: NotificationItem[] = [];
@@ -89,8 +104,8 @@ const Dashboard = () => {
     overdue.forEach((o) =>
       list.push({
         id: `due-${o.farmerId}`,
-        title: o.isPayable ? "Farmer Credit Balance" : "Payment Due",
-        description: `${o.name} has ${money(Math.abs(o.amount))} ${o.isPayable ? "credit/payable" : "pending"} for ${o.days} days.`,
+        title: o.isPayable ? t("dashboard.farmerCredit") : t("dashboard.paymentDue"),
+        description: `${o.name} — ${money(Math.abs(o.amount))}`,
         time: `${o.days}d`,
         icon: Wallet,
         status: o.isPayable ? "info" : "danger",
@@ -99,9 +114,9 @@ const Dashboard = () => {
     alerts.slice(0, 2).forEach((a) =>
       list.push({
         id: `stock-${a.id}`,
-        title: a.level === "out" ? "Out of Stock Alert" : "Low Stock Alert",
-        description: `${a.name} — ${a.level === "out" ? "refill required" : `${a.stock} ${a.unit} left`}.`,
-        time: "Today",
+        title: a.level === "out" ? t("inventory.outOfStock") : t("inventory.lowStock"),
+        description: `${a.name} — ${a.level === "out" ? t("inventory.reorderNeeded") : `${a.stock} ${a.unit}`}`,
+        time: t("dashboard.today"),
         icon: AlertTriangle,
         status: a.level === "out" ? "danger" : "warning",
       })
@@ -109,8 +124,8 @@ const Dashboard = () => {
     if (selectedSeason && season.daysLeft > 0 && season.daysLeft <= 30) {
       list.push({
         id: "season-closing",
-        title: "Season Closing Soon",
-        description: `${selectedSeason.name} ends in ${season.daysLeft} days.`,
+        title: t("dashboard.seasonClosingSoon"),
+        description: `${selectedSeason.name} — ${season.daysLeft} ${t("dashboard.daysLeft")}`,
         time: `${season.daysLeft}d`,
         icon: CalendarClock,
         status: "warning",
@@ -119,23 +134,24 @@ const Dashboard = () => {
     if (outstanding.length > 0) {
       list.push({
         id: "accounts-pending",
-        title: "Farmer Accounts Open",
-        description: `${outstanding.length} farmer account${outstanding.length > 1 ? "s have" : " has"} an open balance.`,
-        time: "Now",
+        title: t("dashboard.farmerAccountsOpen"),
+        description: `${outstanding.length} ${t("dashboard.farmerBalances")}`,
+        time: t("dashboard.now"),
         icon: Users,
         status: "info",
       });
     }
     list.push({
       id: "bills-ready",
-      title: "Bills Ready to Generate",
-      description: "Account statements can be printed from Reports.",
-      time: "Now",
+      title: t("dashboard.billsReady"),
+      description: t("dashboard.billsReadyDesc"),
+      time: t("dashboard.now"),
       icon: FileCheck2,
       status: "success",
     });
     return list.slice(0, 6);
-  }, [outstanding, alerts, selectedSeason, season.daysLeft]);
+  }, [outstanding, alerts, selectedSeason, season.daysLeft, t, language]);
+
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 animate-in fade-in duration-500">
@@ -147,15 +163,15 @@ const Dashboard = () => {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardStatCard label="Buyer Outstanding" value={money(kpis.buyerOutstanding)} hint="Receivable from buyers / mills" icon={Store} />
+        <DashboardStatCard label={t("dashboard.buyerOutstanding")} value={money(kpis.buyerOutstanding)} hint={t("dashboard.buyerOutstandingHint")} icon={Store} />
         <DashboardStatCard
-          label={kpis.farmerPayables > 0 ? "Farmer Payables" : "Farmer Receivables"}
+          label={kpis.farmerPayables > 0 ? t("dashboard.farmerPayables") : t("dashboard.farmerReceivables")}
           value={kpis.farmerPayables > 0 ? money(kpis.farmerPayables) : money(kpis.farmerReceivables)}
-          hint={kpis.farmerPayables > 0 ? "Owed to farmers" : "Receivable from farmers"}
+          hint={kpis.farmerPayables > 0 ? t("dashboard.farmerPayablesHint") : t("dashboard.farmerReceivablesHint")}
           icon={Users}
         />
-        <DashboardStatCard label="Today's Collection" value={money(kpis.collectionToday)} hint="vs yesterday" trend={kpis.collectionTodayTrend} icon={Wallet} />
-        <DashboardStatCard label="Today's Profit" value={money(kpis.profitToday)} hint="vs yesterday" trend={kpis.profitTodayTrend} icon={TrendingUp} />
+        <DashboardStatCard label={t("dashboard.collectionToday")} value={money(kpis.collectionToday)} hint={t("dashboard.vsYesterday")} trend={kpis.collectionTodayTrend} icon={Wallet} />
+        <DashboardStatCard label={t("dashboard.profitToday")} value={money(kpis.profitToday)} hint={t("dashboard.vsYesterday")} trend={kpis.profitTodayTrend} icon={TrendingUp} />
       </div>
 
       <QuickActions />

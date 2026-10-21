@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   BarChart3, Boxes, FileText, HandCoins, Leaf, LucideIcon, PiggyBank, Plus,
   Receipt, ShoppingCart, UserPlus, Wallet,
@@ -18,34 +19,35 @@ const Tile = ({ icon: Icon, label, onClick }: { icon: LucideIcon; label: string;
   </button>
 );
 
-const transactions: { label: string; description: string; tab: string; icon: LucideIcon }[] = [
-  { label: "Add Sale", description: "Record sale transaction", tab: "sale", icon: ShoppingCart },
-  { label: "Add Expense", description: "Record expense transaction", tab: "expense", icon: Receipt },
-  { label: "Add Payment", description: "Record payment received", tab: "payment", icon: Wallet },
-  { label: "Add Loan Given", description: "Loan given to farmer", tab: "loan", icon: HandCoins },
-  { label: "Add Loan Received", description: "Loan received from farmer", tab: "loan", icon: PiggyBank },
-];
-
 const QuickActions = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const openLedger = (tab: string) => navigate("/ledger", { state: { openEntry: true, tab } });
+
+  const transactions = [
+    { label: t("dashboard.addSale"), description: t("ledger.sale"), tab: "sale", icon: ShoppingCart },
+    { label: t("dashboard.addExpense"), description: t("ledger.expense"), tab: "expense", icon: Receipt },
+    { label: t("dashboard.addPayment"), description: t("ledger.payment"), tab: "payment", icon: Wallet },
+    { label: t("dashboard.addLoanGiven"), description: t("ledger.loan"), tab: "loan", icon: HandCoins },
+    { label: t("dashboard.addLoanReceived"), description: t("ledger.loan"), tab: "loan", icon: PiggyBank },
+  ];
 
   return (
     <section
-      aria-label="Quick actions"
+      aria-label={t("dashboard.quickActions")}
       className="rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm"
     >
-      <h2 className="mb-3 text-sm font-semibold text-foreground">Quick Actions</h2>
+      <h2 className="mb-3 text-sm font-semibold text-foreground">{t("dashboard.quickActions")}</h2>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-6">
-        <Tile icon={UserPlus} label="Add Farmer" onClick={() => navigate("/farmers", { state: { openAdd: true } })} />
+        <Tile icon={UserPlus} label={t("dashboard.addFarmer")} onClick={() => navigate("/farmers", { state: { openAdd: true } })} />
 
         <DropdownMenu>
-          <DropdownMenuTrigger className={tileClass} aria-label="New transaction">
+          <DropdownMenuTrigger className={tileClass} aria-label={t("dashboard.newTransaction")}>
             <Plus className="h-6 w-6 text-primary" aria-hidden="true" />
-            <span className="text-xs font-medium text-foreground">New Transaction</span>
+            <span className="text-xs font-medium text-foreground">{t("dashboard.newTransaction")}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64 bg-popover">
-            <DropdownMenuLabel>New Transaction</DropdownMenuLabel>
+            <DropdownMenuLabel>{t("dashboard.newTransaction")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {transactions.map((tx) => (
               <DropdownMenuItem key={tx.label} onSelect={() => openLedger(tx.tab)} className="gap-3 py-2.5">
@@ -59,10 +61,10 @@ const QuickActions = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Tile icon={Boxes} label="Add Inventory" onClick={() => navigate("/inventory", { state: { openAdd: true } })} />
-        <Tile icon={FileText} label="Generate Bill" onClick={() => navigate("/reports")} />
-        <Tile icon={BarChart3} label="View Reports" onClick={() => navigate("/profit-loss")} />
-        <Tile icon={Leaf} label="Season Details" onClick={() => navigate("/seasons")} />
+        <Tile icon={Boxes} label={t("dashboard.addInventory")} onClick={() => navigate("/inventory", { state: { openAdd: true } })} />
+        <Tile icon={FileText} label={t("dashboard.generateBill")} onClick={() => navigate("/reports")} />
+        <Tile icon={BarChart3} label={t("dashboard.viewReports")} onClick={() => navigate("/profit-loss")} />
+        <Tile icon={Leaf} label={t("dashboard.seasonDetails")} onClick={() => navigate("/seasons")} />
       </div>
     </section>
   );

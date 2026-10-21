@@ -79,7 +79,7 @@ const PALETTE = ["#10B981", "#2563eb", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4
 const money = (n: number) => `Rs ${Math.round(n).toLocaleString()}`;
 
 const ProfitLoss = () => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { selectedSeason, seasons, setSelectedSeasonId } = useSeason();
   const [data, setData] = useState<ProfitLossData>({ income: 0, expenses: 0, entries: [] });
   const [rawEntries, setRawEntries] = useState<Entry[]>([]);
@@ -465,8 +465,8 @@ const ProfitLoss = () => {
           <StatCard label={labels.expenseLabel} value={data.expenses} prefix="Rs " icon={ArrowDownRight} tone="red" hint="Expenses + Sale Costs" />
           <StatCard label={labels.profitLabel} value={profit} prefix="Rs " icon={DollarSign} tone={profit >= 0 ? "blue" : "orange"} hint="Net Sales − Expenses" />
           <StatCard label={labels.marginLabel} value={Number(profitMargin)} suffix="%" decimals={2} icon={Target} tone="violet" />
-          <StatCard label="Cash in Hand" value={cashBalance} prefix="Rs " icon={Wallet} tone="orange" hint="Actual Inflows − Outflows" />
-          <StatCard label="Buyer Receivables" value={buyerOutstanding} prefix="Rs " icon={TrendingDown} tone="cyan" hint="Pending from Buyers" />
+          <StatCard label={t("profitLoss.cashInHand")} value={cashBalance} prefix="Rs " icon={Wallet} tone="orange" hint="Inflows − Outflows" />
+          <StatCard label={t("profitLoss.buyerReceivables")} value={buyerOutstanding} prefix="Rs " icon={TrendingDown} tone="cyan" hint="Pending from Buyers" />
         </div>
 
         {/* Detailed Cash & Receivables Reconciliation */}
@@ -474,32 +474,32 @@ const ProfitLoss = () => {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-2.5">
             <div className="flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">₨</span>
-              <h3 className="text-xs sm:text-sm font-semibold text-foreground">Cash Flow &amp; Receivables Status</h3>
+              <h3 className="text-xs sm:text-sm font-semibold text-foreground">{t("profitLoss.cashStatus")}</h3>
             </div>
             <span className="text-xs font-medium text-muted-foreground">
-              Season: {selectedSeason?.name ?? "All Time"}
+              {t("reports.cropSeason")}: {selectedSeason?.name ?? "All Time"}
             </span>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5 text-xs">
             <div className="rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 p-2.5 border border-emerald-200/50 dark:border-emerald-800/40">
-              <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 block">Sales Cash Collected</span>
-              <span className="font-mono font-bold text-sm sm:text-base text-emerald-900 dark:text-emerald-200">{money(totals.saleReceived)}</span>
+              <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 block">{t("profitLoss.salesCollected")}</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-emerald-900 dark:text-emerald-200"><bdi>{money(totals.saleReceived)}</bdi></span>
             </div>
             <div className="rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 p-2.5 border border-emerald-200/50 dark:border-emerald-800/40">
-              <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 block">Farmer Cash Payments</span>
-              <span className="font-mono font-bold text-sm sm:text-base text-emerald-900 dark:text-emerald-200">{money(totals.farmerPaymentsCash)}</span>
+              <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 block">{t("profitLoss.farmerCashPayments")}</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-emerald-900 dark:text-emerald-200"><bdi>{money(totals.farmerPaymentsCash)}</bdi></span>
             </div>
             <div className="rounded-lg bg-rose-50/60 dark:bg-rose-950/20 p-2.5 border border-rose-200/50 dark:border-rose-800/40">
-              <span className="text-[11px] font-medium text-rose-800 dark:text-rose-300 block">Cash Outflows (Exp + Costs)</span>
-              <span className="font-mono font-bold text-sm sm:text-base text-rose-900 dark:text-rose-200">{money(totals.expenses + totals.saleCosts + totals.loans)}</span>
+              <span className="text-[11px] font-medium text-rose-800 dark:text-rose-300 block">{t("profitLoss.cashOutflows")}</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-rose-900 dark:text-rose-200"><bdi>{money(totals.expenses + totals.saleCosts + totals.loans)}</bdi></span>
             </div>
             <div className="rounded-lg bg-amber-50/60 dark:bg-amber-950/20 p-2.5 border border-amber-200/50 dark:border-amber-800/40">
-              <span className="text-[11px] font-medium text-amber-800 dark:text-amber-300 block">Operating Cash in Hand</span>
-              <span className="font-mono font-bold text-sm sm:text-base text-amber-900 dark:text-amber-200">{money(totals.cashBalance)}</span>
+              <span className="text-[11px] font-medium text-amber-800 dark:text-amber-300 block">{t("profitLoss.operatingCash")}</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-amber-900 dark:text-amber-200"><bdi>{money(totals.cashBalance)}</bdi></span>
             </div>
             <div className="col-span-2 sm:col-span-4 lg:col-span-1 rounded-lg bg-blue-50/60 dark:bg-blue-950/20 p-2.5 border border-blue-200/50 dark:border-blue-800/40">
-              <span className="text-[11px] font-medium text-blue-800 dark:text-blue-300 block">Buyer Receivables</span>
-              <span className="font-mono font-bold text-sm sm:text-base text-blue-900 dark:text-blue-200">{money(totals.saleOutstanding)}</span>
+              <span className="text-[11px] font-medium text-blue-800 dark:text-blue-300 block">{t("profitLoss.buyerReceivables")}</span>
+              <span className="font-mono font-bold text-sm sm:text-base text-blue-900 dark:text-blue-200"><bdi>{money(totals.saleOutstanding)}</bdi></span>
             </div>
           </div>
         </div>
@@ -575,33 +575,33 @@ const ProfitLoss = () => {
       {/* ── 3. Crop-wise + 4. Revenue sources ─────────── */}
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <SectionCard
-          title="4. Crop-wise Profit Analysis"
+          title={t("profitLoss.cropAnalysis")}
           icon={Leaf}
           action={
             <div className="relative w-full sm:w-auto">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 value={cropSearch}
                 onChange={(e) => setCropSearch(e.target.value)}
-                placeholder="Search crop"
-                className="h-9 w-full rounded-xl pl-9 text-sm sm:w-40"
+                placeholder={t("common.search")}
+                className="h-9 w-full rounded-xl ps-9 text-sm sm:w-40 text-start"
               />
             </div>
           }
         >
           {visibleCropRows.length === 0 ? (
-            <EmptyState message="No crop data available" />
+            <EmptyState message={t("common.noData")} />
           ) : (
             <div className="-mx-2 max-w-[calc(100vw-3.5rem)] overflow-x-auto overscroll-x-contain sm:max-w-none">
               <table className="w-full min-w-[520px] text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="px-2 py-2 font-semibold">Crop</th>
-                    <th className="px-2 py-2 text-right font-semibold">Income</th>
-                    <th className="px-2 py-2 text-right font-semibold">Expense</th>
-                    <th className="px-2 py-2 text-right font-semibold">Profit</th>
-                    <th className="px-2 py-2 text-right font-semibold">ROI</th>
-                    <th className="px-2 py-2 text-right font-semibold">Status</th>
+                  <tr className="text-start text-xs uppercase tracking-wide text-muted-foreground">
+                    <th className="px-2 py-2 font-semibold text-start">{t("profitLoss.crop")}</th>
+                    <th className="px-2 py-2 text-end font-semibold">{t("profitLoss.income")}</th>
+                    <th className="px-2 py-2 text-end font-semibold">{t("profitLoss.expense")}</th>
+                    <th className="px-2 py-2 text-end font-semibold">{t("profitLoss.profit")}</th>
+                    <th className="px-2 py-2 text-end font-semibold">{t("profitLoss.margin")}</th>
+                    <th className="px-2 py-2 text-end font-semibold">{t("common.status")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

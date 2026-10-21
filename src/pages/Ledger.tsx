@@ -26,6 +26,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import FarmerAvatar from "@/components/FarmerAvatar";
 import { deriveSale, isBuyerPayment, getLinkedSaleId, money as fmtMoney, qty as fmtQty } from "@/lib/ledger/aggregate";
 import { computeSale, averageYieldPerAcre, WEIGHT_UNITS, AREA_UNITS, num, money, qty, toKg, formatMaundCompound, type WeightUnit, type AreaUnit } from "@/lib/ledger/calc";
+import { translateUnit } from "@/i18n/translations";
 
 const EXPENSE_CATEGORIES = [
   { key: "Seed", label: "expense.seed" },
@@ -43,28 +44,73 @@ type CostAllocation = "farmer" | "shared" | "landlord";
 
 /** Compact sale details derived from the shared aggregator (single source of truth). */
 const SaleMeta = ({ e, linkedReceipts = 0 }: { e: any; linkedReceipts?: number }) => {
+  const { language } = useLanguage();
   const s = deriveSale(e, linkedReceipts);
   const bits: string[] = [];
-  if (e.buyer) bits.push(`Buyer: ${String(e.buyer)}`);
-  if (e.crop_type) bits.push(String(e.crop_type));
-  if (e.field_name) bits.push(String(e.field_name));
-  if (s.netWeight > 0) {
-    if (e.weight_unit === "maund") {
-      bits.push(`${formatMaundCompound(s.netWeightKg)} (${fmtQty(s.netWeight)} Mnds)`);
-    } else {
-      bits.push(`${fmtQty(s.netWeight)} ${e.weight_unit || "kg"}`);
-    }
-  }
-  bits.push(`Gross ${fmtMoney(s.grossSale)}`);
-  if (s.commission > 0) bits.push(`Commission -${fmtMoney(s.commission)}`);
+
   const buyerPayable = s.grossSale - s.commission;
-  bits.push(`Buyer Payable ${fmtMoney(buyerPayable)}`);
-  bits.push(`Paid ${fmtMoney(s.paid)} · Due ${fmtMoney(Math.max(buyerPayable - s.paid, 0))}`);
-  if (s.transport > 0) bits.push(`Transport ${fmtMoney(s.transport)}`);
-  if (s.labour > 0) bits.push(`Labour ${fmtMoney(s.labour)}`);
-  if (s.other > 0) bits.push(`Other ${fmtMoney(s.other)}`);
-  if (s.yieldPerAcre != null) bits.push(`${fmtQty(s.yieldPerAcre)} Maund/Acre`);
-  return <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground/80">{bits.join(" • ")}</p>;
+  const due = Math.max(buyerPayable - s.paid, 0);
+
+  if (language === "sd") {
+    if (e.buyer) bits.push(`خريدار: ${String(e.buyer)}`);
+    if (e.crop_type) bits.push(String(e.crop_type));
+    if (e.field_name) bits.push(String(e.field_name));
+    if (s.netWeight > 0) {
+      if (e.weight_unit === "maund") {
+        bits.push(`${formatMaundCompound(s.netWeightKg, { lang: "sd" })} (${fmtQty(s.netWeight)} مڻ)`);
+      } else {
+        bits.push(`${fmtQty(s.netWeight)} ڪلو`);
+      }
+    }
+    bits.push(`ڪل ₨ ${Math.round(s.grossSale).toLocaleString()}`);
+    if (s.commission > 0) bits.push(`ڪميشن -₨ ${Math.round(s.commission).toLocaleString()}`);
+    bits.push(`خريدار واجب ₨ ${Math.round(buyerPayable).toLocaleString()}`);
+    bits.push(`وصول ₨ ${Math.round(s.paid).toLocaleString()} · بقايو ₨ ${Math.round(due).toLocaleString()}`);
+    if (s.transport > 0) bits.push(`ٽرانسپورٽ ₨ ${Math.round(s.transport).toLocaleString()}`);
+    if (s.labour > 0) bits.push(`مزدوري ₨ ${Math.round(s.labour).toLocaleString()}`);
+    if (s.other > 0) bits.push(`ٻيو ₨ ${Math.round(s.other).toLocaleString()}`);
+    if (s.yieldPerAcre != null) bits.push(`${fmtQty(s.yieldPerAcre)} مڻ/ايڪڙ`);
+  } else if (language === "ur") {
+    if (e.buyer) bits.push(`خریدار: ${String(e.buyer)}`);
+    if (e.crop_type) bits.push(String(e.crop_type));
+    if (e.field_name) bits.push(String(e.field_name));
+    if (s.netWeight > 0) {
+      if (e.weight_unit === "maund") {
+        bits.push(`${formatMaundCompound(s.netWeightKg, { lang: "ur" })} (${fmtQty(s.netWeight)} من)`);
+      } else {
+        bits.push(`${fmtQty(s.netWeight)} کلو`);
+      }
+    }
+    bits.push(`کل ₨ ${Math.round(s.grossSale).toLocaleString()}`);
+    if (s.commission > 0) bits.push(`کمیشن -₨ ${Math.round(s.commission).toLocaleString()}`);
+    bits.push(`خریدار واجب ₨ ${Math.round(buyerPayable).toLocaleString()}`);
+    bits.push(`وصول ₨ ${Math.round(s.paid).toLocaleString()} · بقایا ₨ ${Math.round(due).toLocaleString()}`);
+    if (s.transport > 0) bits.push(`ٹرانسپورٹ ₨ ${Math.round(s.transport).toLocaleString()}`);
+    if (s.labour > 0) bits.push(`مزدوری ₨ ${Math.round(s.labour).toLocaleString()}`);
+    if (s.other > 0) bits.push(`دیگر ₨ ${Math.round(s.other).toLocaleString()}`);
+    if (s.yieldPerAcre != null) bits.push(`${fmtQty(s.yieldPerAcre)} من/ایکڑ`);
+  } else {
+    if (e.buyer) bits.push(`Buyer: ${String(e.buyer)}`);
+    if (e.crop_type) bits.push(String(e.crop_type));
+    if (e.field_name) bits.push(String(e.field_name));
+    if (s.netWeight > 0) {
+      if (e.weight_unit === "maund") {
+        bits.push(`${formatMaundCompound(s.netWeightKg)} (${fmtQty(s.netWeight)} Mnds)`);
+      } else {
+        bits.push(`${fmtQty(s.netWeight)} ${e.weight_unit || "kg"}`);
+      }
+    }
+    bits.push(`Gross ${fmtMoney(s.grossSale)}`);
+    if (s.commission > 0) bits.push(`Commission -${fmtMoney(s.commission)}`);
+    bits.push(`Buyer Payable ${fmtMoney(buyerPayable)}`);
+    bits.push(`Paid ${fmtMoney(s.paid)} · Due ${fmtMoney(due)}`);
+    if (s.transport > 0) bits.push(`Transport ${fmtMoney(s.transport)}`);
+    if (s.labour > 0) bits.push(`Labour ${fmtMoney(s.labour)}`);
+    if (s.other > 0) bits.push(`Other ${fmtMoney(s.other)}`);
+    if (s.yieldPerAcre != null) bits.push(`${fmtQty(s.yieldPerAcre)} Maund/Acre`);
+  }
+
+  return <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground/80 text-start">{bits.join(" • ")}</p>;
 };
 
 const Ledger = () => {
@@ -825,7 +871,7 @@ const Ledger = () => {
     if (isBuyerRec) {
       return (
         <span className="inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
-          Buyer Receipt
+          {t("ledger.buyerReceiptBadge")}
         </span>
       );
     }
@@ -951,7 +997,7 @@ const Ledger = () => {
                   <DialogHeader className="px-3 sm:px-6 py-2 sm:py-5 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-b">
                     <DialogTitle className="font-serif text-base sm:text-2xl flex items-center gap-2 text-violet-900 dark:text-violet-100">
                       <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-violet-600 dark:text-violet-400" />
-                      {editingId ? "Edit Entry" : t("ledger.newTransaction")}
+                      {editingId ? t("ledger.editEntry") : t("ledger.newTransaction")}
                     </DialogTitle>
                     <DialogDescription className="text-[10px] sm:text-sm">{t("ledger.addEntry")}</DialogDescription>
                   </DialogHeader>
@@ -1078,20 +1124,20 @@ const Ledger = () => {
                       <TabsContent value="sale" className="space-y-2 sm:space-y-4">
                         {/* --- Crop & Buyer --- */}
                         <div className="rounded-lg sm:rounded-xl border border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
-                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">🌾 Crop Details</p>
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">🌾 {t("ledger.cropDetails")}</p>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.cropType")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder="Wheat / Cotton" /></div>
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Buyer</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={buyer} onChange={(e) => setBuyer(e.target.value)} placeholder="Buyer / Mill name" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.cropType")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={cropType} onChange={(e) => setCropType(e.target.value)} placeholder={language === "sd" ? "ڪڻڪ / ڦٽيون" : language === "ur" ? "گندم / کپاس" : "Wheat / Cotton"} /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.buyer")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={buyer} onChange={(e) => setBuyer(e.target.value)} placeholder={t("ledger.buyerPlaceholder")} /></div>
                           </div>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Field / Plot</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={fieldName} onChange={(e) => setFieldName(e.target.value)} placeholder="Field name" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.fieldPlot")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={fieldName} onChange={(e) => setFieldName(e.target.value)} placeholder={t("ledger.fieldPlaceholder")} /></div>
                             <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("common.description")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
                           </div>
                         </div>
 
                         {/* --- Weight & Rate --- */}
                         <div className="rounded-lg sm:rounded-xl border border-border bg-muted/30 p-2 sm:p-4 space-y-2 sm:space-y-3">
-                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">⚖️ Weight & Rate</p>
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">⚖️ {t("ledger.weightAndRate")}</p>
                           <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
                             <div className="space-y-0.5 sm:space-y-1.5">
                               <Label className="text-[9px] sm:text-sm font-semibold truncate block">
@@ -1121,9 +1167,8 @@ const Ledger = () => {
                                         ? "bg-emerald-600 text-white shadow-xs"
                                         : "text-muted-foreground hover:text-foreground"
                                     )}
-                                    title="Deductions in Kg"
                                   >
-                                    Kg
+                                    {translateUnit("kg", language)}
                                   </button>
                                   <button
                                     type="button"
@@ -1134,9 +1179,8 @@ const Ledger = () => {
                                         ? "bg-emerald-600 text-white shadow-xs"
                                         : "text-muted-foreground hover:text-foreground"
                                     )}
-                                    title="Deductions in Maunds"
                                   >
-                                    Mnd
+                                    {translateUnit("maund", language)}
                                   </button>
                                 </div>
                               </div>
@@ -1144,7 +1188,7 @@ const Ledger = () => {
                             </div>
 
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold">Unit</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("common.unit")}</Label>
                               <Select
                                 value={weightUnit}
                                 onValueChange={(v) => {
@@ -1153,11 +1197,13 @@ const Ledger = () => {
                                   setDeductionUnit("kg");
                                 }}
                               >
-                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm">
+                                  <SelectValue>{translateUnit(weightUnit, language)}</SelectValue>
+                                </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="kg">Kg</SelectItem>
-                                  <SelectItem value="maund">Maund (Mnds)</SelectItem>
-                                  <SelectItem value="ton">Ton</SelectItem>
+                                  <SelectItem value="kg">{translateUnit("kg", language)}</SelectItem>
+                                  <SelectItem value="maund">{translateUnit("maund", language)}</SelectItem>
+                                  <SelectItem value="ton">{translateUnit("ton", language)}</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -1166,7 +1212,7 @@ const Ledger = () => {
                             <div className="flex items-center gap-1.5">
                               <span className="font-semibold text-muted-foreground">{t("ledger.netWeight")}</span>
                               <span className="text-[7px] sm:text-[9px] uppercase tracking-wider text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-500/10 px-1 py-0.5 rounded">
-                                Auto Calculated
+                                {t("ledger.autoCalculated")}
                               </span>
                             </div>
                             <div className="text-left sm:text-right flex flex-col sm:items-end">
@@ -1177,18 +1223,18 @@ const Ledger = () => {
                                   </span>
                                   {num(grossWeight) > 0 && (
                                     <span className="text-[8px] sm:text-xs font-normal text-muted-foreground">
-                                      ({qty(sale.netWeight)} Mann · {qty(sale.netWeightKg)} kg)
+                                      ({qty(sale.netWeight)} {translateUnit("maund", language)} · {qty(sale.netWeightKg)} {translateUnit("kg", language)})
                                     </span>
                                   )}
                                 </>
                               ) : (
                                 <>
                                   <span className="font-mono font-bold text-xs sm:text-base text-emerald-700 dark:text-emerald-400">
-                                    {qty(sale.netWeight)} {weightUnit}
+                                    {qty(sale.netWeight)} {translateUnit(weightUnit, language)}
                                   </span>
                                   {num(grossWeight) > 0 && weightUnit !== "kg" && (
                                     <span className="text-[8px] sm:text-xs font-normal text-muted-foreground">
-                                      ({qty(sale.netWeightKg)} kg)
+                                      ({qty(sale.netWeightKg)} {translateUnit("kg", language)})
                                     </span>
                                   )}
                                 </>
@@ -1196,39 +1242,47 @@ const Ledger = () => {
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Rate (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.rate")} (₨)</Label><Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={saleRate} onChange={(e) => setSaleRate(e.target.value)} placeholder="0" /></div>
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold">Rate per</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.ratePer")}</Label>
                               <Select value={rateUnit} onValueChange={(v) => setRateUnit(v as WeightUnit)}>
-                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
-                                <SelectContent>{WEIGHT_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>Per {u.label === "Maund" ? "Maund (Mann)" : u.label}</SelectItem>)}</SelectContent>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm">
+                                  <SelectValue>{`${t("ledger.per")} ${translateUnit(rateUnit, language)}`}</SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {WEIGHT_UNITS.map((u) => (
+                                    <SelectItem key={u.value} value={u.value}>
+                                      {`${t("ledger.per")} ${translateUnit(u.value, language)}`}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
                               </Select>
                             </div>
                           </div>
                           <div className="rounded-md sm:rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-2 sm:p-3 text-[10px] sm:text-sm font-semibold flex justify-between items-center">
-                            <div>
-                              <span className="text-emerald-700 dark:text-emerald-400 block">Gross Sale <span className="text-[7px] sm:text-[9px] uppercase tracking-wider">Auto</span></span>
+                            <div className="text-start">
+                              <span className="text-emerald-700 dark:text-emerald-400 block">{t("dashboard.totalSaleGross")}</span>
                               {num(saleRate) > 0 && num(grossWeight) > 0 && weightUnit === "maund" && (
                                 <span className="text-[8px] sm:text-[11px] text-muted-foreground font-normal block">
-                                  {formatMaundCompound(sale.netWeightKg, { lang: language as any })} ({qty(sale.netWeight)} Mann) × ₨ {qty(num(saleRate))} / {rateUnit === "maund" ? "Mann" : rateUnit}
+                                  {formatMaundCompound(sale.netWeightKg, { lang: language as any })} ({qty(sale.netWeight)} {translateUnit("maund", language)}) × ₨ {qty(num(saleRate))} / {translateUnit(rateUnit, language)}
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs sm:text-lg font-mono text-emerald-600 dark:text-emerald-400">{money(sale.grossSale)}</span>
+                            <span className="text-xs sm:text-lg font-mono text-emerald-600 dark:text-emerald-400"><bdi>{money(sale.grossSale)}</bdi></span>
                           </div>
                         </div>
 
                         {/* --- Buyer Commission --- */}
-                        <div className="rounded-lg sm:rounded-xl border border-amber-500/30 bg-amber-50/40 dark:bg-amber-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
+                        <div className="rounded-lg sm:rounded-xl border border-amber-500/30 bg-amber-50/40 dark:bg-amber-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3 text-start">
                           <div className="flex items-center justify-between">
                             <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                              <span>🤝 Buyer Commission</span>
-                              <span className="text-[8px] sm:text-[10px] font-normal normal-case text-muted-foreground">(Deducted from Buyer's Bill)</span>
+                              <span>🤝 {t("ledger.buyerCommissionTitle")}</span>
+                              <span className="text-[8px] sm:text-[10px] font-normal normal-case text-muted-foreground">{t("ledger.buyerCommissionHint")}</span>
                             </p>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-3 items-center">
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold">Commission (₨)</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.commission")} (₨)</Label>
                               <Input
                                 className="h-8 sm:h-11 bg-background font-mono text-red-600 font-bold text-[10px] sm:text-sm"
                                 type="number"
@@ -1241,31 +1295,31 @@ const Ledger = () => {
                               />
                             </div>
                             <div className="rounded-md sm:rounded-lg bg-background border border-amber-500/20 p-2 sm:p-3 text-[10px] sm:text-sm flex flex-col justify-center">
-                              <span className="text-muted-foreground font-semibold text-[9px] sm:text-xs">Net Buyer Payable</span>
+                              <span className="text-muted-foreground font-semibold text-[9px] sm:text-xs">{t("ledger.netBuyerPayable")}</span>
                               <span className="font-mono font-bold text-xs sm:text-base text-amber-700 dark:text-amber-400">
-                                {money(Math.max(sale.grossSale - num(commissionCost), 0))}
+                                <bdi>{money(Math.max(sale.grossSale - num(commissionCost), 0))}</bdi>
                               </span>
                               <span className="text-[8px] sm:text-[10px] text-muted-foreground">
-                                Gross {money(sale.grossSale)} − Comm {money(num(commissionCost))}
+                                {money(sale.grossSale)} − {money(num(commissionCost))}
                               </span>
                             </div>
                           </div>
                         </div>
 
                         {/* --- Separate Crop Expenses (Farmer / Landlord) --- */}
-                        <div className="rounded-lg sm:rounded-xl border border-orange-500/30 bg-orange-50/40 dark:bg-orange-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
+                        <div className="rounded-lg sm:rounded-xl border border-orange-500/30 bg-orange-50/40 dark:bg-orange-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3 text-start">
                           <div className="flex items-center justify-between">
                             <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-orange-700 dark:text-orange-400 flex items-center gap-1.5">
-                              <span>🚜 Separate Crop Expenses</span>
-                              <span className="text-[8px] sm:text-[10px] font-normal normal-case text-muted-foreground">(Farmer / Landlord Account)</span>
+                              <span>🚜 {t("ledger.separateCropExpensesTitle")}</span>
+                              <span className="text-[8px] sm:text-[10px] font-normal normal-case text-muted-foreground">{t("ledger.separateCropExpensesSubtitle")}</span>
                             </p>
                           </div>
                           <p className="text-[8px] sm:text-[11px] text-muted-foreground">
-                            These expenses belong to farmer/landlord crop accounting and do NOT reduce the buyer's payable amount.
+                            {t("ledger.separateCropExpensesNotice")}
                           </p>
                           <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">Transport / Kiraya (₨)</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">{t("ledger.transportKiraya")}</Label>
                               <Input
                                 className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm font-mono"
                                 type="number"
@@ -1278,7 +1332,7 @@ const Ledger = () => {
                               />
                             </div>
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">Labour / Loading (₨)</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">{t("ledger.labourLoading")}</Label>
                               <Input
                                 className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm font-mono"
                                 type="number"
@@ -1291,7 +1345,7 @@ const Ledger = () => {
                               />
                             </div>
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">Other Crop Costs (₨)</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold truncate block">{t("ledger.otherCropCosts")}</Label>
                               <Input
                                 className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm font-mono"
                                 type="number"
@@ -1306,7 +1360,7 @@ const Ledger = () => {
                           </div>
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1 border-t border-orange-200 dark:border-orange-900/50">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Label className="text-[9px] sm:text-xs font-semibold text-muted-foreground">Allocation:</Label>
+                              <Label className="text-[9px] sm:text-xs font-semibold text-muted-foreground">{t("ledger.allocationLabel")}</Label>
                               <div className="inline-flex items-center rounded-lg border border-border bg-background p-0.5 text-[9px] sm:text-xs">
                                 <button
                                   type="button"
@@ -1326,7 +1380,7 @@ const Ledger = () => {
                                     costAllocation === "shared" ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
                                   )}
                                 >
-                                  50/50 Shared
+                                  {t("ledger.sharedFifty")}
                                 </button>
                                 <button
                                   type="button"
@@ -1341,52 +1395,63 @@ const Ledger = () => {
                               </div>
                             </div>
                             <div className="text-[10px] sm:text-sm font-semibold text-orange-700 dark:text-orange-400">
-                              Total Crop Expenses: <span className="font-mono">{money(num(transportCost) + num(labourCost) + num(otherCosts))}</span>
+                              {t("ledger.totalCropExpensesLabel")} <span className="font-mono"><bdi>{money(num(transportCost) + num(labourCost) + num(otherCosts))}</bdi></span>
                             </div>
                           </div>
                         </div>
 
                         {/* --- Yield Summary --- */}
-                        <div className="rounded-lg sm:rounded-xl border border-amber-500/20 bg-amber-50/40 dark:bg-amber-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
-                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">🌱 Yield Summary</p>
+                        <div className="rounded-lg sm:rounded-xl border border-amber-500/20 bg-amber-50/40 dark:bg-amber-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3 text-start">
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">🌱 {t("dashboard.totalYield")}</p>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Total Area</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={totalArea} onChange={(e) => setTotalArea(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("dashboard.totalArea")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={totalArea} onChange={(e) => setTotalArea(e.target.value)} placeholder="0" /></div>
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold">Area Unit</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.areaUnit")}</Label>
                               <Select value={areaUnit} onValueChange={(v) => setAreaUnit(v as AreaUnit)}>
-                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
-                                <SelectContent>{AREA_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}</SelectContent>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm">
+                                  <SelectValue>{translateUnit(areaUnit, language)}</SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {AREA_UNITS.map((u) => (
+                                    <SelectItem key={u.value} value={u.value}>
+                                      {translateUnit(u.value, language)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
                               </Select>
                             </div>
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Total Yield</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={totalYield} onChange={(e) => setTotalYield(e.target.value)} placeholder="0" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("dashboard.totalYield")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={totalYield} onChange={(e) => setTotalYield(e.target.value)} placeholder="0" /></div>
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold">Yield Unit</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.yieldUnit")}</Label>
                               <Select value={yieldUnit} onValueChange={(v) => setYieldUnit(v as WeightUnit)}>
-                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"><SelectValue /></SelectTrigger>
-                                <SelectContent>{WEIGHT_UNITS.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}</SelectContent>
+                                <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm">
+                                  <SelectValue>{translateUnit(yieldUnit, language)}</SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {WEIGHT_UNITS.map((u) => (
+                                    <SelectItem key={u.value} value={u.value}>
+                                      {translateUnit(u.value, language)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
                               </Select>
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-3 text-[8px] sm:text-xs">
-                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Yield / Acre</span><span className="font-mono font-bold text-amber-700 dark:text-amber-400">{sale.yieldPerAcre != null ? `${qty(sale.yieldPerAcre)} ${yieldUnit}` : "—"}</span></div>
-                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Cost / Acre</span><span className="font-mono font-bold text-red-600">{sale.costPerAcre != null ? money(sale.costPerAcre) : "—"}</span></div>
-                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Sale / Acre</span><span className="font-mono font-bold text-emerald-600">{sale.saleValuePerAcre != null ? money(sale.saleValuePerAcre) : "—"}</span></div>
-                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">Effective Rate</span><span className="font-mono font-bold">{sale.effectiveRate != null ? `${money(sale.effectiveRate)}/${weightUnit}` : "—"}</span></div>
+                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">{t("dashboard.yieldPerAcre")}</span><span className="font-mono font-bold text-amber-700 dark:text-amber-400">{sale.yieldPerAcre != null ? `${qty(sale.yieldPerAcre)} ${translateUnit(yieldUnit, language)}` : "—"}</span></div>
+                            <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">{t("dashboard.profitPerAcre")}</span><span className="font-mono font-bold text-emerald-600">{sale.saleValuePerAcre != null ? money(sale.saleValuePerAcre) : "—"}</span></div>
                           </div>
-                          <p className="text-[8px] sm:text-[11px] text-muted-foreground">
-                            {avgYield ? `Your average: ${qty(avgYield.value)} ${avgYield.unit}/acre (${avgYield.samples} records)` : "Not enough history yet for average yield comparison."}
-                          </p>
                         </div>
 
                         {/* --- Payment --- */}
-                        <div className="rounded-lg sm:rounded-xl border border-blue-500/20 bg-blue-50/40 dark:bg-blue-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
-                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">💰 Buyer Payment</p>
+                        <div className="rounded-lg sm:rounded-xl border border-blue-500/20 bg-blue-50/40 dark:bg-blue-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3 text-start">
+                          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">💰 {t("ledger.buyerReceipt")}</p>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold">Paid by Buyer (₨)</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.paidByBuyer")} (₨)</Label>
                               <Input className="h-8 sm:h-11 bg-background font-mono text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} placeholder="0" />
                             </div>
-                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">Notes</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={saleNotes} onChange={(e) => setSaleNotes(e.target.value)} placeholder="Optional" /></div>
+                            <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.notes")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={saleNotes} onChange={(e) => setSaleNotes(e.target.value)} placeholder={t("ledger.optional")} /></div>
                           </div>
                           {(() => {
                             const netBuyerPayable = Math.max(sale.grossSale - num(commissionCost), 0);
@@ -1396,17 +1461,17 @@ const Ledger = () => {
                             return (
                               <div className="grid grid-cols-3 gap-1.5 sm:gap-3 text-[8px] sm:text-xs">
                                 <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col">
-                                  <span className="text-muted-foreground font-semibold">Net Buyer Payable</span>
+                                  <span className="text-muted-foreground font-semibold">{t("ledger.netBuyerPayable")}</span>
                                   <span className="font-mono font-bold text-emerald-600">{money(netBuyerPayable)}</span>
                                 </div>
                                 <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col">
-                                  <span className="text-muted-foreground font-semibold">Due from Buyer</span>
+                                  <span className="text-muted-foreground font-semibold">{t("ledger.dueFromBuyer")}</span>
                                   <span className="font-mono font-bold text-red-600">{money(buyerRemaining)}</span>
                                 </div>
                                 <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col">
-                                  <span className="text-muted-foreground font-semibold">Status</span>
+                                  <span className="text-muted-foreground font-semibold">{t("ledger.status")}</span>
                                   <span className={cn("font-bold uppercase", buyerStatus === "paid" ? "text-emerald-600" : buyerStatus === "partial" ? "text-amber-600" : "text-red-600")}>
-                                    {buyerStatus}
+                                    {buyerStatus === "paid" ? t("ledger.statusPaid") : buyerStatus === "partial" ? t("ledger.statusPartial") : t("ledger.statusUnpaid")}
                                   </span>
                                 </div>
                               </div>
@@ -1416,10 +1481,10 @@ const Ledger = () => {
 
                         <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/30 p-2 sm:p-4 text-[10px] sm:text-sm font-semibold flex justify-between items-center">
                           <div>
-                            <span className="text-emerald-700 dark:text-emerald-400 block">{t("ledger.totalAmount")} (Gross)</span>
+                            <span className="text-emerald-700 dark:text-emerald-400 block">{t("ledger.totalAmount")} ({t("ledger.gross")})</span>
                             {num(commissionCost) > 0 && (
                               <span className="text-[8px] sm:text-[11px] text-muted-foreground font-normal">
-                                Net Buyer Payable: {money(Math.max(sale.grossSale - num(commissionCost), 0))} (after {money(num(commissionCost))} Commission)
+                                {t("ledger.netBuyerPayable")}: {money(Math.max(sale.grossSale - num(commissionCost), 0))} ({t("ledger.after")} {money(num(commissionCost))} {t("ledger.commission")})
                               </span>
                             )}
                           </div>
@@ -1432,14 +1497,14 @@ const Ledger = () => {
                         {/* Purpose / Direction selector */}
                         <div className="space-y-1 sm:space-y-1.5">
                           <Label className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            Payment Purpose
+                            {t("ledger.paymentPurpose")}
                           </Label>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                             <button
                               type="button"
                               onClick={() => setPaymentPurpose("farmer_payment")}
                               className={cn(
-                                "p-2 sm:p-3 rounded-lg border text-left flex items-center gap-2 transition-all",
+                                "p-2 sm:p-3 rounded-lg border text-start flex items-center gap-2 transition-all",
                                 paymentPurpose === "farmer_payment"
                                   ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold ring-1 ring-amber-500"
                                   : "border-border bg-background text-muted-foreground hover:bg-muted/50"
@@ -1447,15 +1512,15 @@ const Ledger = () => {
                             >
                               <span className="text-base sm:text-lg">👨‍🌾</span>
                               <div className="min-w-0">
-                                <div className="text-[10px] sm:text-xs font-semibold">Farmer Payment</div>
-                                <div className="text-[7px] sm:text-[9px] text-muted-foreground font-normal truncate">Pay / disburse to farmer</div>
+                                <div className="text-[10px] sm:text-xs font-semibold">{t("ledger.farmerPayment")}</div>
+                                <div className="text-[7px] sm:text-[9px] text-muted-foreground font-normal truncate">{t("ledger.farmerPaymentDesc")}</div>
                               </div>
                             </button>
                             <button
                               type="button"
                               onClick={() => setPaymentPurpose("buyer_receipt")}
                               className={cn(
-                                "p-2 sm:p-3 rounded-lg border text-left flex items-center gap-2 transition-all",
+                                "p-2 sm:p-3 rounded-lg border text-start flex items-center gap-2 transition-all",
                                 paymentPurpose === "buyer_receipt"
                                   ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold ring-1 ring-emerald-500"
                                   : "border-border bg-background text-muted-foreground hover:bg-muted/50"
@@ -1463,8 +1528,8 @@ const Ledger = () => {
                             >
                               <span className="text-base sm:text-lg">🏪</span>
                               <div className="min-w-0">
-                                <div className="text-[10px] sm:text-xs font-semibold">Buyer Payment Received</div>
-                                <div className="text-[7px] sm:text-[9px] text-muted-foreground font-normal truncate">Collect receipt from buyer</div>
+                                <div className="text-[10px] sm:text-xs font-semibold">{t("ledger.buyerReceipt")}</div>
+                                <div className="text-[7px] sm:text-[9px] text-muted-foreground font-normal truncate">{t("ledger.buyerReceiptDesc")}</div>
                               </div>
                             </button>
                           </div>
@@ -1501,7 +1566,7 @@ const Ledger = () => {
                           <div className="space-y-2 sm:space-y-3.5">
                             {/* Buyer Selector */}
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold">Buyer / Customer *</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.buyerCustomer")} *</Label>
                               <Select
                                 value={selectedReceiptBuyer}
                                 onValueChange={(b) => {
@@ -1511,7 +1576,7 @@ const Ledger = () => {
                                 }}
                               >
                                 <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm">
-                                  <SelectValue placeholder="Select Buyer" />
+                                  <SelectValue placeholder={t("ledger.selectBuyer")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {distinctBuyers.length === 0 ? (
@@ -1528,10 +1593,10 @@ const Ledger = () => {
                             {/* Outstanding Sale Selector */}
                             <div className="space-y-0.5 sm:space-y-1.5">
                               <div className="flex justify-between items-center">
-                                <Label className="text-[9px] sm:text-sm font-semibold">Related Outstanding Sale *</Label>
+                                <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.relatedSale")} *</Label>
                                 {buyerSales.length > 0 && (
                                   <span className="text-[8px] sm:text-[10px] text-muted-foreground">
-                                    {buyerSales.filter(s => s.outstanding > 0.01).length} pending sales
+                                    {buyerSales.filter(s => s.outstanding > 0.01).length} {t("ledger.pendingSales")}
                                   </span>
                                 )}
                               </div>
@@ -1580,19 +1645,19 @@ const Ledger = () => {
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[8px] sm:text-xs">
                                   <div className="bg-background/80 rounded p-1.5 border border-border/50">
-                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">Gross Sale</span>
+                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">{t("dashboard.totalSaleGross")}</span>
                                     <span className="font-mono font-bold">{money(selectedReceiptSale.amount)}</span>
                                   </div>
                                   <div className="bg-background/80 rounded p-1.5 border border-border/50">
-                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">Commission</span>
+                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">{t("ledger.commission")}</span>
                                     <span className="font-mono font-bold text-amber-600">−{money(num(selectedReceiptSale.commission_cost))}</span>
                                   </div>
                                   <div className="bg-background/80 rounded p-1.5 border border-border/50">
-                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">Buyer Payable</span>
+                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">{t("ledger.netBuyerPayable")}</span>
                                     <span className="font-mono font-bold text-emerald-600">{money(selectedReceiptSale.netBuyerPayable)}</span>
                                   </div>
                                   <div className="bg-background/80 rounded p-1.5 border border-border/50">
-                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">Outstanding Due</span>
+                                    <span className="text-muted-foreground block text-[7px] sm:text-[9px]">{t("ledger.dueFromBuyer")}</span>
                                     <span className="font-mono font-bold text-red-600">{money(selectedReceiptSale.outstanding)}</span>
                                   </div>
                                 </div>
@@ -1602,7 +1667,7 @@ const Ledger = () => {
                             {/* Amount & Quick Full-Pay */}
                             <div className="space-y-0.5 sm:space-y-1.5">
                               <div className="flex items-center justify-between">
-                                <Label className="text-[9px] sm:text-sm font-semibold">Amount Received (₨) *</Label>
+                                <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.paidByBuyer")} (₨) *</Label>
                                 {selectedReceiptSale && selectedReceiptSale.outstanding > 0 && (
                                   <Button
                                     type="button"
@@ -1611,7 +1676,7 @@ const Ledger = () => {
                                     className="h-6 text-[8px] sm:text-xs text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-50/50 hover:bg-emerald-100"
                                     onClick={() => setReceiptAmount(String(selectedReceiptSale.outstanding))}
                                   >
-                                    Pay Full (₨ {selectedReceiptSale.outstanding.toLocaleString()})
+                                    {t("ledger.payFull")} (₨ {selectedReceiptSale.outstanding.toLocaleString()})
                                   </Button>
                                 )}
                               </div>
@@ -1628,35 +1693,35 @@ const Ledger = () => {
                               />
                               {selectedReceiptSale && num(receiptAmount) > selectedReceiptSale.outstanding + 0.01 && (
                                 <p className="text-[8px] sm:text-[11px] text-red-600 font-medium">
-                                  ⚠️ Amount cannot exceed the outstanding balance of ₨ {selectedReceiptSale.outstanding.toLocaleString()}
+                                  ⚠️ {t("ledger.dueFromBuyer")}: ₨ {selectedReceiptSale.outstanding.toLocaleString()}
                                 </p>
                               )}
                             </div>
 
                             {/* Payment Method */}
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold">Payment Method</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.paymentMethod")}</Label>
                               <Select value={receiptPaymentMethod} onValueChange={setReceiptPaymentMethod}>
                                 <SelectTrigger className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="cash">Cash</SelectItem>
-                                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                                  <SelectItem value="cheque">Cheque</SelectItem>
-                                  <SelectItem value="online">Online / Other</SelectItem>
+                                  <SelectItem value="cash">{t("ledger.cashPayment")}</SelectItem>
+                                  <SelectItem value="bank_transfer">{t("ledger.bankTransfer")}</SelectItem>
+                                  <SelectItem value="cheque">{t("ledger.cheque")}</SelectItem>
+                                  <SelectItem value="online">{t("ledger.onlineOther")}</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
 
                             {/* Reference / Notes */}
                             <div className="space-y-0.5 sm:space-y-1.5">
-                              <Label className="text-[9px] sm:text-sm font-semibold">Reference / Notes</Label>
+                              <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.notes")}</Label>
                               <Input
                                 className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"
                                 value={receiptNotes}
                                 onChange={(e) => setReceiptNotes(e.target.value)}
-                                placeholder="e.g. Cheque #, bank receipt, batch reference (optional)"
+                                placeholder={t("ledger.optional")}
                               />
                             </div>
                           </div>
@@ -1714,7 +1779,7 @@ const Ledger = () => {
                   {value.toLocaleString()}
                 </span>
               </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2 font-medium">Total from all farmers</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2 font-medium">{t("ledger.totalAllFarmers")}</p>
             </CardContent>
           </Card>
         ))}
@@ -1727,50 +1792,50 @@ const Ledger = () => {
         <CardHeader className="pb-3 sm:pb-4 pt-4 sm:pt-6 px-4 sm:px-6 border-b border-border/40 space-y-3 sm:space-y-5">
           <div className="flex items-center justify-between gap-3 sm:gap-4 flex-wrap">
             <CardTitle className="text-base sm:text-xl font-serif flex items-center gap-2">
-              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
-              {t("ledger.recentEntries")}
+              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500 shrink-0" />
+              <span>{t("ledger.recentEntries")}</span>
             </CardTitle>
             <Badge variant="outline" className="border-violet-500/30 text-violet-600 dark:text-violet-400 bg-violet-500/10 font-bold px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs">
-              {filteredEntries.length} / {entries.length} Entries
+              <bdi>{filteredEntries.length} / {entries.length} {t("ledger.entriesCount")}</bdi>
             </Badge>
           </div>
 
           {/* Premium Filters */}
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-6 gap-2 sm:gap-3">
             <div className="relative lg:col-span-2 group col-span-2 sm:col-span-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground group-focus-within:text-violet-500 transition-colors" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground group-focus-within:text-violet-500 transition-colors" />
               <Input
-                placeholder="Search farmer, description…"
+                placeholder={t("ledger.searchPlaceholder")}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="pl-9 sm:pl-10 h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 border-border/60 focus:border-violet-500/50 transition-all text-xs sm:text-sm"
+                className="ps-9 sm:ps-10 h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 border-border/60 focus:border-violet-500/50 transition-all text-xs sm:text-sm text-start"
               />
             </div>
             <Select value={filterFarmer} onValueChange={setFilterFarmer}>
-              <SelectTrigger className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 text-xs sm:text-sm"><SelectValue placeholder="Farmer" /></SelectTrigger>
+              <SelectTrigger className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 text-xs sm:text-sm"><SelectValue placeholder={t("ledger.farmer")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Farmers</SelectItem>
+                <SelectItem value="all">{t("ledger.allFarmers")}</SelectItem>
                 {seasonFarmers.map((fs) => (
                   <SelectItem key={fs.farmer_id} value={fs.farmer_id}>{fs.farmers?.name || "—"}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={filterType} onValueChange={(v) => { setFilterType(v); if (v !== "expense") setFilterCategory("all"); }}>
-              <SelectTrigger className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 text-xs sm:text-sm"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectTrigger className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 text-xs sm:text-sm"><SelectValue placeholder={t("ledger.type")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="all">{t("ledger.filterByType")}</SelectItem>
                 <SelectItem value="expense">{t("ledger.expense")}</SelectItem>
                 <SelectItem value="sale">{t("ledger.sale")}</SelectItem>
-                <SelectItem value="payment">All Payments</SelectItem>
-                <SelectItem value="farmer_payment">Farmer Payments</SelectItem>
-                <SelectItem value="buyer_payment">Buyer Receipts</SelectItem>
+                <SelectItem value="payment">{t("ledger.payment")}</SelectItem>
+                <SelectItem value="farmer_payment">{t("ledger.farmerPayment")}</SelectItem>
+                <SelectItem value="buyer_payment">{t("ledger.buyerReceipt")}</SelectItem>
                 <SelectItem value="loan">{t("ledger.loan")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterCategory} onValueChange={setFilterCategory} disabled={filterType !== "all" && filterType !== "expense"}>
-              <SelectTrigger className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 text-xs sm:text-sm"><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectTrigger className="h-9 sm:h-10 rounded-lg sm:rounded-xl bg-background/50 text-xs sm:text-sm"><SelectValue placeholder={t("ledger.category")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{t("common.all")}</SelectItem>
                 {EXPENSE_CATEGORIES.map((c) => (
                   <SelectItem key={c.key} value={c.key}>{t(c.label)}</SelectItem>
                 ))}
@@ -1779,9 +1844,9 @@ const Ledger = () => {
             <div className="flex gap-1.5 sm:gap-2">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("h-9 sm:h-10 flex-1 justify-start text-left font-normal text-[10px] sm:text-xs rounded-lg sm:rounded-xl bg-background/50", !filterFromDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
-                    {filterFromDate ? format(filterFromDate, "MMM d") : "From"}
+                  <Button variant="outline" className={cn("h-9 sm:h-10 flex-1 justify-start text-start font-normal text-[10px] sm:text-xs rounded-lg sm:rounded-xl bg-background/50", !filterFromDate && "text-muted-foreground")}>
+                    <CalendarIcon className="me-1 h-3 w-3 sm:me-1.5 sm:h-3.5 sm:w-3.5 shrink-0" />
+                    <span>{filterFromDate ? format(filterFromDate, "MMM d") : t("common.from")}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -1790,9 +1855,9 @@ const Ledger = () => {
               </Popover>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("h-9 sm:h-10 flex-1 justify-start text-left font-normal text-[10px] sm:text-xs rounded-lg sm:rounded-xl bg-background/50", !filterToDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
-                    {filterToDate ? format(filterToDate, "MMM d") : "To"}
+                  <Button variant="outline" className={cn("h-9 sm:h-10 flex-1 justify-start text-start font-normal text-[10px] sm:text-xs rounded-lg sm:rounded-xl bg-background/50", !filterToDate && "text-muted-foreground")}>
+                    <CalendarIcon className="me-1 h-3 w-3 sm:me-1.5 sm:h-3.5 sm:w-3.5 shrink-0" />
+                    <span>{filterToDate ? format(filterToDate, "MMM d") : t("common.to")}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -1804,7 +1869,7 @@ const Ledger = () => {
           {hasActiveFilters && (
             <div className="flex justify-end mt-1">
               <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground hover:text-foreground rounded-lg">
-                <X className="h-3.5 w-3.5 mr-1" /> Clear active filters
+                <X className="h-3.5 w-3.5 me-1" /> {t("ledger.clearFilters")}
               </Button>
             </div>
           )}
@@ -1893,12 +1958,12 @@ const Ledger = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border/40">
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("common.date")}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.farmer")}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11">{t("ledger.category")}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden md:table-cell">{t("common.description")}</TableHead>
-                  <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11">{t("common.amount")} (Rs)</TableHead>
-                  {(canEdit || canDelete) && !isSeasonClosed && <TableHead className="text-right text-xs font-bold uppercase tracking-wider h-11 w-[100px]">Actions</TableHead>}
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 text-start">{t("common.date")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 text-start">{t("ledger.farmer")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 text-start">{t("ledger.category")}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-11 hidden md:table-cell text-start">{t("common.description")}</TableHead>
+                  <TableHead className="text-end text-xs font-bold uppercase tracking-wider h-11">{t("common.amount")} (₨)</TableHead>
+                  {(canEdit || canDelete) && !isSeasonClosed && <TableHead className="text-end text-xs font-bold uppercase tracking-wider h-11 w-[100px]">{t("common.actions")}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1906,43 +1971,42 @@ const Ledger = () => {
                   const isBuyer = isBuyerPayment(e);
                   const catObj = EXPENSE_CATEGORIES.find(c => c.key.toLowerCase() === ((e as any).category || "").toLowerCase());
                   const catLabel = catObj ? t(catObj.label) : ((e as any).category ? String((e as any).category) : null);
-                  const typeLabel = e.entry_type === "expense" ? t("ledger.expense") : e.entry_type === "sale" ? t("ledger.sale") : e.entry_type === "payment" ? (isBuyer ? "Buyer Receipt" : t("ledger.payment")) : t("ledger.loan");
-                  const displayCategory = isBuyer ? "Buyer Receipt" : (catLabel || typeLabel);
+                  const typeLabel = e.entry_type === "expense" ? t("ledger.expense") : e.entry_type === "sale" ? t("ledger.sale") : e.entry_type === "payment" ? (isBuyer ? t("ledger.buyerReceipt") : t("ledger.payment")) : t("ledger.loan");
+                  const displayCategory = isBuyer ? t("ledger.buyerReceipt") : (catLabel || typeLabel);
                   return (
                   <TableRow key={e.id} className="hover:bg-muted/30 transition-colors border-b border-border/30">
-                    <TableCell className="text-xs font-medium py-3 text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-xs font-medium py-3 text-muted-foreground whitespace-nowrap text-start">
                       {e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-sm font-semibold text-foreground">
+                    <TableCell className="text-sm font-semibold text-foreground text-start">
                       <div className="flex items-center gap-2.5">
-                        <FarmerAvatar name={e.farmers?.name} photoUrl={(e.farmers as any)?.photo_url} className="h-9 w-9 ring-2 ring-white dark:ring-background shadow-sm" />
+                        <FarmerAvatar name={e.farmers?.name} photoUrl={(e.farmers as any)?.photo_url} className="h-9 w-9 ring-2 ring-white dark:ring-background shadow-sm shrink-0" />
                         <span className="truncate">{e.farmers?.name ?? "—"}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-start">
                       <span className={cn("capitalize text-sm font-medium", isBuyer ? "text-emerald-700 dark:text-emerald-400 font-semibold" : "text-foreground/90")}>{displayCategory}</span>
                       {isBuyer && (e as any).buyer && (
-                        <span className="block text-[10px] text-muted-foreground truncate">Buyer: {(e as any).buyer}</span>
+                        <span className="block text-[10px] text-muted-foreground truncate">
+                          {language === "sd" ? "خريدار: " : language === "ur" ? "خریدار: " : "Buyer: "}{(e as any).buyer}
+                        </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm hidden md:table-cell max-w-[300px] text-muted-foreground" title={e.description || ""}>
+                    <TableCell className="text-sm hidden md:table-cell max-w-[300px] text-muted-foreground text-start" title={e.description || ""}>
                       <span className="block truncate">{e.description || "—"}</span>
                       {e.entry_type === "sale" && <SaleMeta e={e} linkedReceipts={buyerReceiptsBySale.get(e.id) || 0} />}
                     </TableCell>
                     <TableCell className={cn(
-                      "text-right font-mono font-bold text-sm whitespace-nowrap",
+                      "text-end font-mono font-bold text-sm whitespace-nowrap",
                       e.entry_type === "expense" && "text-rose-600 dark:text-rose-400",
                       e.entry_type === "sale" && "text-emerald-600 dark:text-emerald-400",
                       e.entry_type === "payment" && (isBuyer ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"),
                       e.entry_type === "loan" && "text-sky-600 dark:text-sky-400"
                     )}>
-                      Rs {Number(e.amount).toLocaleString()}
+                      <bdi>₨ {Number(e.amount).toLocaleString()}</bdi>
                     </TableCell>
                     {(canEdit || canDelete) && !isSeasonClosed && (
-                      <TableCell className="text-right py-2">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* We remove opacity-0 logic since TableRow hover state for children is tricky without group class, just show them slightly faded */}
-                        </div>
+                      <TableCell className="text-end py-2">
                         <div className="flex items-center justify-end gap-1 opacity-60 hover:opacity-100 transition-opacity">
                           {canEdit && (
                             <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-violet-500/10 hover:text-violet-600 rounded-lg transition-colors" onClick={() => openEdit(e)}>
@@ -1958,38 +2022,37 @@ const Ledger = () => {
                               </AlertDialogTrigger>
                               <AlertDialogContent className="rounded-lg">
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete {e.entry_type === "expense" ? "Expense" : e.entry_type === "sale" ? "Sale" : e.entry_type === "payment" ? "Payment" : "Entry"}?</AlertDialogTitle>
+                                  <AlertDialogTitle>{t("common.delete")} {e.entry_type === "expense" ? t("ledger.expense") : e.entry_type === "sale" ? t("ledger.sale") : e.entry_type === "payment" ? t("ledger.payment") : t("ledger.loan")}?</AlertDialogTitle>
                                   <AlertDialogDescription asChild>
-                                    <div className="space-y-3 text-sm mt-2">
-                                      <p>This action cannot be undone. Please review the details below:</p>
+                                    <div className="space-y-3 text-sm mt-2 text-start">
                                       <div className="rounded-xl border bg-muted/40 p-4 space-y-2">
                                         <div className="flex justify-between gap-4">
-                                          <span className="text-muted-foreground">Farmer</span>
+                                          <span className="text-muted-foreground">{t("ledger.farmer")}</span>
                                           <span className="font-bold text-foreground">{e.farmers?.name ?? "—"}</span>
                                         </div>
                                         <div className="flex justify-between gap-4">
-                                          <span className="text-muted-foreground">Date</span>
+                                          <span className="text-muted-foreground">{t("common.date")}</span>
                                           <span className="font-medium text-foreground">{e.entry_date ? new Date(e.entry_date + "T00:00:00").toLocaleDateString() : new Date(e.created_at).toLocaleDateString()}</span>
                                         </div>
                                         <div className="flex justify-between gap-4">
-                                          <span className="text-muted-foreground">Type</span>
+                                          <span className="text-muted-foreground">{t("ledger.type")}</span>
                                           <span className="font-bold uppercase tracking-wider text-[10px] text-foreground">{e.entry_type}</span>
                                         </div>
                                         {(e as any).category && (
                                           <div className="flex justify-between gap-4">
-                                            <span className="text-muted-foreground">Category</span>
+                                            <span className="text-muted-foreground">{t("ledger.category")}</span>
                                             <span className="font-medium capitalize text-foreground">{(e as any).category}</span>
                                           </div>
                                         )}
                                         {e.description && (
                                           <div className="flex justify-between gap-4">
-                                            <span className="text-muted-foreground">Description</span>
-                                            <span className="font-medium text-foreground text-right max-w-[60%] truncate">{e.description}</span>
+                                            <span className="text-muted-foreground">{t("common.description")}</span>
+                                            <span className="font-medium text-foreground text-end max-w-[60%] truncate">{e.description}</span>
                                           </div>
                                         )}
                                         <div className="flex justify-between gap-4 pt-3 border-t border-border/60 mt-3">
                                           <span className="text-muted-foreground uppercase text-xs font-bold tracking-wider pt-0.5">
-                                            Amount
+                                            {t("common.amount")}
                                           </span>
                                           <span className={cn(
                                             "font-mono font-bold text-lg leading-none",
@@ -1997,7 +2060,7 @@ const Ledger = () => {
                                             e.entry_type === "sale" && "text-emerald-600 dark:text-emerald-400",
                                             e.entry_type === "payment" && "text-amber-600 dark:text-amber-400",
                                             e.entry_type === "loan" && "text-blue-600 dark:text-blue-400",
-                                          )}>₨ {Number(e.amount).toLocaleString()}</span>
+                                          )}><bdi>₨ {Number(e.amount).toLocaleString()}</bdi></span>
                                         </div>
                                       </div>
                                     </div>
@@ -2021,7 +2084,7 @@ const Ledger = () => {
                     <TableCell colSpan={(canEdit || canDelete) && !isSeasonClosed ? 6 : 5} className="h-32 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center">
                         <BookOpen className="h-8 w-8 mb-2 opacity-20" />
-                        {hasActiveFilters ? "No entries match your filters" : t("ledger.noEntries")}
+                        {hasActiveFilters ? t("ledger.noMatching") : t("ledger.noEntries")}
                       </div>
                     </TableCell>
                   </TableRow>

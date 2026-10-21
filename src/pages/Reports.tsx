@@ -28,7 +28,7 @@ const pt = (key: string, lang: Language): string => {
 };
 
 const Reports = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { selectedSeason, farmerSeasons } = useSeason();
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [selectedFarmerId, setSelectedFarmerId] = useState<string>("all");
@@ -36,9 +36,15 @@ const Reports = () => {
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [reportReady, setReportReady] = useState(false);
-  // User picks Urdu OR Sindhi for printing (English UI is for the in-app preview only)
-  const [printLang, setPrintLang] = useState<Language>("ur");
+  // Default print language to user's selected language (Sindhi or Urdu)
+  const [printLang, setPrintLang] = useState<Language>(() => (language === "sd" ? "sd" : "ur"));
   const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (language === "sd" || language === "ur") {
+      setPrintLang(language);
+    }
+  }, [language]);
 
   // Only show farmers in the current season
   const seasonFarmerIds = farmerSeasons.map(fs => fs.farmer_id);
@@ -806,7 +812,7 @@ const Reports = () => {
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.totalSales")}</p><p className="font-mono font-medium text-emerald-600 text-sm sm:text-base">{fmt(totalSales)}</p></div>
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.farmerExpenses")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalFarmerExpenses)}</p></div>
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.landlordExpenses")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalLandlordExpenses)}</p></div>
-                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">Total Expenses</p><p className="font-mono font-medium text-red-600 text-sm sm:text-base">{fmt(totalExpenses)}</p></div>
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.totalExpenses")}</p><p className="font-mono font-medium text-red-600 text-sm sm:text-base">{fmt(totalExpenses)}</p></div>
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.personalLoans")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalLoans)}</p></div>
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.paymentsReceived")}</p><p className="font-mono font-medium text-sm sm:text-base">{fmt(totalPayments)}</p></div>
                     <div className="bg-muted/30 rounded-lg p-2 sm:p-3"><p className="text-muted-foreground text-[10px] sm:text-xs">{t("reports.netProfitLoss")}</p><p className={`font-mono font-medium text-sm sm:text-base ${netProfit >= 0 ? "text-blue-600" : "text-destructive"}`}>{netProfit >= 0 ? "+" : "−"} {fmt(Math.abs(netProfit))}</p></div>

@@ -18,24 +18,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus, AlertTriangle, Pencil, Trash2, FileText, Package, Boxes, Wallet, TrendingUp,
-  Sparkles, ArrowUpRight, ArrowDownRight, Clock, Leaf,
+  Plus, Pencil, Trash2, FileText, Search,
 } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip } from "recharts";
 import type { Tables } from "@/integrations/supabase/types";
-import heroImg from "@/assets/inventory-hero.png";
-
-const EMERALD = "#10B981";
-const EMERALD_SOFT = "#F0FDF4";
-const AMBER = "#F59E0B";
-const RED = "#DC2626";
-const SLATE = "#94A3B8";
 
 const Inventory = () => {
   const { user, isManagerOrAdmin, isAdmin } = useAuth();
   const { t, language } = useLanguage();
   const { toast } = useToast();
   const [items, setItems] = useState<Tables<"inventory">[]>([]);
+  const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Tables<"inventory"> | null>(null);
@@ -90,47 +82,49 @@ const Inventory = () => {
       const lowStock = item.current_stock <= item.low_stock_threshold;
 
       itemsHTML += `
-        <div style="margin-bottom:20px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;page-break-inside:avoid;">
-          <div style="background:linear-gradient(135deg,#10B981,#059669);padding:14px 18px;color:#fff;display:flex;justify-content:space-between;">
-            <div><h3 style="margin:0;font-size:16px;font-weight:700;">${item.item_name}</h3>
-            <p style="margin:4px 0 0;opacity:.8;font-size:12px;">${tl("Unit", "اکائی", "اڪائي")}: ${item.unit}</p></div>
+        <div style="margin-bottom:16px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;page-break-inside:avoid;">
+          <div style="background:#064E3B;padding:12px 16px;color:#fff;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <h3 style="margin:0;font-size:15px;font-weight:700;">${item.item_name}</h3>
+              <p style="margin:2px 0 0;opacity:.85;font-size:11px;">${tl("Unit", "اکائی", "اڪائي")}: ${item.unit}</p>
+            </div>
             <div style="text-align:${isRTL ? "left" : "right"};">
-              <p style="margin:0;font-size:14px;font-weight:700;">₨ ${Number(item.price_per_unit).toLocaleString()}/${item.unit}</p>
-              <p style="margin:4px 0 0;font-size:12px;color:${lowStock ? "#fbbf24" : "rgba(255,255,255,.85)"};">
-                ${tl("Stock", "ذخیرہ", "ذخيرو")}: ${item.current_stock} ${item.unit} ${lowStock ? "⚠️" : ""}
+              <p style="margin:0;font-size:13px;font-weight:700;">₨ ${Number(item.price_per_unit).toLocaleString()}/${item.unit}</p>
+              <p style="margin:2px 0 0;font-size:11px;color:${lowStock ? "#f59e0b" : "#86efac"};">
+                ${tl("Stock", "موجودہ مقدار", "موجود مقدار")}: ${item.current_stock} ${item.unit}
               </p>
             </div>
           </div>
-          <div style="padding:12px 18px;font-size:12px;color:#334155;">
+          <div style="padding:10px 16px;font-size:12px;color:#334155;background:#f8fafc;">
             ${tl("Given to farmers", "کسانوں کو دیا", "هارين کي ڏنو")}:
             <b>${totalGiven} ${item.unit}</b> · ₨ ${totalValue.toLocaleString()}
           </div>
         </div>`;
     });
 
-    const totalValue = items.reduce((s, i) => s + Number(i.current_stock) * Number(i.price_per_unit), 0);
+    const totalVal = items.reduce((s, i) => s + Number(i.current_stock) * Number(i.price_per_unit), 0);
 
     const html = `<!DOCTYPE html><html dir="${isRTL ? "rtl" : "ltr"}"><head><meta charset="utf-8"/>
-      <title>${tl("Inventory Report", "گودام کی رپورٹ", "گودام جي رپورٽ")}</title>
-      <style>body{font-family:${isRTL ? "'Jameel Noori Nastaleeq','Noto Naskh Arabic',Arial,sans-serif" : "'Inter','Segoe UI',Arial,sans-serif"};color:#1e293b;padding:30px;font-size:13px;}@media print{@page{margin:15mm;}}</style>
+      <title>${t("inventory.title")}</title>
+      <style>body{font-family:${isRTL ? "'Noto Sans Arabic', 'Noto Naskh Arabic', Arial, sans-serif" : "'Segoe UI', Arial, sans-serif"};color:#1e293b;padding:24px;font-size:13px;}@media print{@page{margin:12mm;}}</style>
       </head><body>
-      <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #10B981;">
-        <h1 style="font-size:22px;color:#10B981;margin:0;">🌾 ${tl("Agri Ledger", "زرعی حساب کتاب", "زرعي حساب ڪتاب")}</h1>
-        <p style="color:#64748b;margin-top:6px;">${tl("Inventory Report", "گودام کی رپورٹ", "گودام جي رپورٽ")} · ${new Date().toLocaleDateString()}</p>
-        <p style="color:#64748b;margin-top:4px;">${tl("Total value", "کل قیمت", "ڪل قيمت")}: <b>₨ ${totalValue.toLocaleString()}</b></p>
+      <div style="text-align:center;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #059669;">
+        <h1 style="font-size:20px;color:#064E3B;margin:0;">🌾 ${t("nav.appName")}</h1>
+        <p style="color:#64748b;margin-top:4px;font-size:12px;">${t("inventory.title")} · ${new Date().toLocaleDateString()}</p>
+        <p style="color:#064E3B;margin-top:4px;font-size:13px;">${t("inventory.stockValue")}: <b>₨ ${totalVal.toLocaleString()}</b></p>
       </div>
       ${itemsHTML}
       </body></html>`;
 
     printWindow.document.write(html);
     printWindow.document.close();
-    setTimeout(() => printWindow.print(), 500);
+    setTimeout(() => printWindow.print(), 400);
   };
 
   const handleSave = async () => {
     if (!user) return;
     const name = form.item_name.trim();
-    if (!name) { toast({ title: "Item name required", variant: "destructive" }); return; }
+    if (!name) { toast({ title: t("inventory.itemName") + " required", variant: "destructive" }); return; }
     const stock = Number(form.current_stock);
     const price = Number(form.price_per_unit);
     const threshold = Number(form.low_stock_threshold);
@@ -139,11 +133,17 @@ const Inventory = () => {
     if (Number.isNaN(threshold) || threshold < 0) { toast({ title: "Low-stock alert must be 0 or more", variant: "destructive" }); return; }
     try {
       await offlineRepo.insert("inventory", {
-        item_name: name, current_stock: stock, unit: form.unit.trim() || "bags",
-        price_per_unit: price, low_stock_threshold: threshold, created_by: user.id,
+        item_name: name,
+        current_stock: stock,
+        unit: form.unit.trim() || "bags",
+        price_per_unit: price,
+        low_stock_threshold: threshold,
+        created_by: user.id,
       });
-      toast({ title: isOnline() ? "Item added" : "Saved offline — will sync" });
-      setOpen(false); setForm({ item_name: "", current_stock: "", unit: "bags", price_per_unit: "", low_stock_threshold: "5" }); fetchItems();
+      toast({ title: t("inventory.saveItem") });
+      setOpen(false);
+      setForm({ item_name: "", current_stock: "", unit: "bags", price_per_unit: "", low_stock_threshold: "5" });
+      fetchItems();
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }
@@ -152,8 +152,10 @@ const Inventory = () => {
   const openEdit = (item: Tables<"inventory">) => {
     setEditingItem(item);
     setEditForm({
-      item_name: item.item_name, current_stock: String(item.current_stock),
-      unit: item.unit, price_per_unit: String(item.price_per_unit),
+      item_name: item.item_name,
+      current_stock: String(item.current_stock),
+      unit: item.unit,
+      price_per_unit: String(item.price_per_unit),
       low_stock_threshold: String(item.low_stock_threshold),
     });
     setEditOpen(true);
@@ -162,7 +164,7 @@ const Inventory = () => {
   const handleUpdate = async () => {
     if (!editingItem) return;
     const name = editForm.item_name.trim();
-    if (!name) { toast({ title: "Item name required", variant: "destructive" }); return; }
+    if (!name) { toast({ title: t("inventory.itemName") + " required", variant: "destructive" }); return; }
     const stock = Number(editForm.current_stock);
     const price = Number(editForm.price_per_unit);
     const threshold = Number(editForm.low_stock_threshold);
@@ -171,111 +173,168 @@ const Inventory = () => {
     if (Number.isNaN(threshold) || threshold < 0) { toast({ title: "Low-stock alert must be 0 or more", variant: "destructive" }); return; }
     try {
       await offlineRepo.update("inventory", editingItem.id, {
-        item_name: name, current_stock: stock,
-        unit: editForm.unit.trim() || "bags", price_per_unit: price,
+        item_name: name,
+        current_stock: stock,
+        unit: editForm.unit.trim() || "bags",
+        price_per_unit: price,
         low_stock_threshold: threshold,
       });
-      toast({ title: isOnline() ? "Item updated" : "Updated offline — will sync" });
-      setEditOpen(false); setEditingItem(null); fetchItems();
-    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+      toast({ title: t("inventory.updateItem") });
+      setEditOpen(false);
+      setEditingItem(null);
+      fetchItems();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await offlineRepo.remove("inventory", id);
-      toast({ title: isOnline() ? "Item deleted" : "Deleted offline — will sync" });
+      toast({ title: t("inventory.deleteItem") });
       fetchItems();
-    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
   };
 
   const stats = useMemo(() => {
     const totalItems = items.length;
-    const totalValue = items.reduce((s, i) => s + Number(i.current_stock) * Number(i.price_per_unit), 0);
-    const outOfStock = items.filter((i) => Number(i.current_stock) <= 0).length;
+    const totalValue = items.reduce((s, i) => s + (Number(i.current_stock) || 0) * (Number(i.price_per_unit) || 0), 0);
     const lowStock = items.filter((i) => Number(i.current_stock) > 0 && Number(i.current_stock) <= Number(i.low_stock_threshold)).length;
-    const inStock = items.filter((i) => Number(i.current_stock) > Number(i.low_stock_threshold)).length;
-    const health = totalItems ? Math.round((inStock / totalItems) * 100) : 0;
-    return { totalItems, totalValue, outOfStock, lowStock, inStock, health };
+    const outOfStock = items.filter((i) => Number(i.current_stock) <= 0).length;
+    const inStock = totalItems - lowStock - outOfStock;
+    return { totalItems, totalValue, lowStock, outOfStock, inStock };
   }, [items]);
 
-  const donutData = [
-    { name: "In Stock", value: stats.inStock, color: EMERALD },
-    { name: "Low Stock", value: stats.lowStock, color: AMBER },
-    { name: "Out of Stock", value: stats.outOfStock, color: RED },
-    { name: "Others", value: Math.max(0, stats.totalItems - stats.inStock - stats.lowStock - stats.outOfStock), color: SLATE },
-  ];
-
-  const trendData = useMemo(
-    () => Array.from({ length: 12 }).map((_, i) => ({
-      x: i,
-      v: Math.round(stats.totalValue * (0.55 + 0.45 * Math.sin(i / 2 + items.length) ** 2)) || Math.round(50 + i * 12),
-    })),
-    [stats.totalValue, items.length],
-  );
-
-  const topValuable = [...items]
-    .sort((a, b) => Number(b.current_stock) * Number(b.price_per_unit) - Number(a.current_stock) * Number(a.price_per_unit))
-    .slice(0, 4);
-
-  const lowStockList = items.filter((i) => Number(i.current_stock) <= Number(i.low_stock_threshold)).slice(0, 4);
-  const recent = [...items].sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime()).slice(0, 4);
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((i) =>
+      (i.item_name || "").toLowerCase().includes(q) ||
+      (i.unit || "").toLowerCase().includes(q)
+    );
+  }, [items, search]);
 
   const statusOf = (i: Tables<"inventory">) => {
-    if (Number(i.current_stock) <= 0) return { label: "Out of Stock", cls: "bg-rose-50 text-rose-600 border border-rose-100" };
-    if (Number(i.current_stock) <= Number(i.low_stock_threshold)) return { label: "Low Stock", cls: "bg-amber-50 text-amber-700 border border-amber-100" };
-    return { label: "In Stock", cls: "bg-emerald-50 text-emerald-700 border border-emerald-100" };
+    if (Number(i.current_stock) <= 0) {
+      return { label: t("inventory.outOfStock"), cls: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/40" };
+    }
+    if (Number(i.current_stock) <= Number(i.low_stock_threshold)) {
+      return { label: t("inventory.lowStock"), cls: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/40" };
+    }
+    return { label: t("inventory.inStock"), cls: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/40" };
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Inventory Overview</h1>
-          <p className="text-sm text-muted-foreground mt-1">Complete overview of your stock inventory.</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">{t("inventory.title")}</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{t("inventory.subtitle")}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={downloadPDF} disabled={items.length === 0}
-            className="rounded-lg border-border bg-card hover:bg-secondary h-10 px-4 shadow-sm">
-            <FileText className="mr-2 h-4 w-4" />Export Report
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadPDF}
+            disabled={items.length === 0}
+            className="h-9 px-3 text-xs sm:text-sm rounded-lg border-border bg-card shadow-xs"
+          >
+            <FileText className="me-1.5 h-4 w-4" />
+            {t("inventory.exportReport")}
           </Button>
+
           {isManagerOrAdmin && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button size="sm"
-                  className="rounded-lg h-10 px-4 text-white shadow-lg shadow-emerald-900/20 hover:-translate-y-0.5 transition-all"
-                  style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}>
-                  <Plus className="mr-2 h-4 w-4" />Add New Item
+                <Button
+                  size="sm"
+                  className="h-9 px-3.5 text-xs sm:text-sm font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                >
+                  <Plus className="me-1.5 h-4 w-4" />
+                  {t("inventory.addItem")}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[95vw] sm:w-full max-w-lg rounded-lg">
+              <DialogContent className="w-[95vw] sm:w-full max-w-md rounded-lg">
                 <DialogHeader>
-                  <DialogTitle className="text-xl">Add Inventory Item</DialogTitle>
-                  <DialogDescription>Enter the details for the new stock item.</DialogDescription>
+                  <DialogTitle className="text-lg">{t("inventory.addInventoryItem")}</DialogTitle>
+                  <DialogDescription className="text-xs">{t("inventory.enterDetails")}</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2"><Label>Item Name *</Label>
-                    <Input value={form.item_name} onChange={(e) => setForm({ ...form, item_name: e.target.value })} /></div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label>Current Stock</Label>
-                      <Input type="number" inputMode="decimal" min="0" step="0.01" value={form.current_stock}
-                        onChange={(e) => setForm({ ...form, current_stock: e.target.value })} /></div>
-                    <div className="space-y-2"><Label>Unit</Label>
-                      <Input maxLength={20} value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
+                <div className="space-y-3.5 pt-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">{t("inventory.itemName")} *</Label>
+                    <Input
+                      value={form.item_name}
+                      onChange={(e) => setForm({ ...form, item_name: e.target.value })}
+                      placeholder="e.g. DAP, Urea, Beaj"
+                      className="h-10 text-sm"
+                    />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label>Price / Unit (₨)</Label>
-                      <Input type="number" inputMode="decimal" min="0" step="0.01" value={form.price_per_unit}
-                        onChange={(e) => setForm({ ...form, price_per_unit: e.target.value })} /></div>
-                    <div className="space-y-2"><Label>Low-Stock Alert</Label>
-                      <Input type="number" inputMode="numeric" min="0" step="1" value={form.low_stock_threshold}
-                        onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} /></div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">{t("inventory.stock")}</Label>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        value={form.current_stock}
+                        onChange={(e) => setForm({ ...form, current_stock: e.target.value })}
+                        placeholder="0"
+                        className="h-10 text-sm font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">{t("inventory.unit")}</Label>
+                      <Input
+                        maxLength={20}
+                        value={form.unit}
+                        onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                        placeholder="bags, kg, lit"
+                        className="h-10 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">{t("inventory.pricePerUnit")}</Label>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        value={form.price_per_unit}
+                        onChange={(e) => setForm({ ...form, price_per_unit: e.target.value })}
+                        placeholder="0"
+                        className="h-10 text-sm font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">{t("inventory.lowStockThreshold")}</Label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min="0"
+                        step="1"
+                        value={form.low_stock_threshold}
+                        onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })}
+                        placeholder="5"
+                        className="h-10 text-sm font-mono"
+                      />
+                    </div>
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button className="w-full rounded-xl text-white"
-                    style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}
-                    onClick={handleSave} disabled={!form.item_name}>Save Item</Button>
+                <DialogFooter className="gap-2 sm:gap-0 pt-2">
+                  <Button variant="outline" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
+                  <Button
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={handleSave}
+                    disabled={!form.item_name}
+                  >
+                    {t("inventory.saveItem")}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -283,315 +342,264 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-[28px] p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/20"
-        style={{ background: `linear-gradient(120deg, ${EMERALD} 0%, #059669 55%, #34D399 100%)` }}>
-        <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full bg-card/10 blur-3xl" />
-        <div className="absolute -bottom-24 right-1/4 w-72 h-72 rounded-full bg-emerald-200/10 blur-3xl" />
-        <div className="relative grid gap-6 sm:grid-cols-[1.6fr,1fr] items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-card/15 backdrop-blur px-3 py-1 text-xs font-medium">
-              <Sparkles className="h-3.5 w-3.5" /> Live inventory snapshot
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mt-6">
-              {[
-                { icon: Boxes, label: "Total Items", value: stats.totalItems.toLocaleString(), sub: "SKUs tracked" },
-                { icon: Wallet, label: "Stock Value", value: `Rs ${stats.totalValue.toLocaleString()}`, sub: "current worth" },
-                { icon: AlertTriangle, label: "Low Stock", value: stats.lowStock, sub: "need reorder", tone: "amber" },
-                { icon: TrendingUp, label: "Out of Stock", value: stats.outOfStock, sub: "unavailable", tone: "red" },
-              ].map((m) => (
-                <div key={m.label}>
-                  <div className={`inline-flex h-9 w-9 items-center justify-center rounded-xl backdrop-blur ${
-                    m.tone === "amber" ? "bg-amber-300/20 text-amber-100"
-                      : m.tone === "red" ? "bg-rose-300/20 text-rose-100"
-                        : "bg-card/15 text-white"
-                  }`}>
-                    <m.icon className="h-4 w-4" />
-                  </div>
-                  <p className="mt-3 text-xs uppercase tracking-wider text-white/70">{m.label}</p>
-                  <p className="text-2xl sm:text-3xl font-bold mt-1 leading-tight">{m.value}</p>
-                  <p className="text-xs text-white/60 mt-0.5">{m.sub}</p>
-                </div>
-              ))}
-            </div>
+      {/* Simple, Professional, Clean Metric Summary (No bags picture, clean responsive layout) */}
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+        <Card className="rounded-lg border border-border bg-card shadow-xs">
+          <CardContent className="p-3.5 sm:p-4">
+            <span className="text-[11px] sm:text-xs font-medium text-muted-foreground block truncate">
+              {t("inventory.totalItems")}
+            </span>
+            <p className="mt-1 text-xl sm:text-2xl font-bold font-mono tracking-tight text-foreground">
+              {stats.totalItems}
+            </p>
+            <p className="mt-0.5 text-[10px] sm:text-xs text-muted-foreground truncate">
+              {stats.inStock} {t("inventory.inStock")}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-lg border border-border bg-card shadow-xs">
+          <CardContent className="p-3.5 sm:p-4">
+            <span className="text-[11px] sm:text-xs font-medium text-muted-foreground block truncate">
+              {t("inventory.stockValue")}
+            </span>
+            <p className="mt-1 text-xl sm:text-2xl font-bold font-mono tracking-tight text-emerald-700 dark:text-emerald-400">
+              <bdi>₨ {Math.round(stats.totalValue).toLocaleString()}</bdi>
+            </p>
+            <p className="mt-0.5 text-[10px] sm:text-xs text-muted-foreground truncate">
+              {t("inventory.totalVal")}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className={`rounded-lg border shadow-xs ${stats.lowStock > 0 ? "border-amber-300 bg-amber-50/40 dark:bg-amber-950/20 dark:border-amber-800" : "border-border bg-card"}`}>
+          <CardContent className="p-3.5 sm:p-4">
+            <span className="text-[11px] sm:text-xs font-medium text-muted-foreground block truncate">
+              {t("inventory.lowStock")}
+            </span>
+            <p className={`mt-1 text-xl sm:text-2xl font-bold font-mono tracking-tight ${stats.lowStock > 0 ? "text-amber-700 dark:text-amber-400" : "text-foreground"}`}>
+              {stats.lowStock}
+            </p>
+            <p className="mt-0.5 text-[10px] sm:text-xs text-muted-foreground truncate">
+              {stats.lowStock > 0 ? t("inventory.reorderNeeded") : t("inventory.healthyStock")}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className={`rounded-lg border shadow-xs ${stats.outOfStock > 0 ? "border-rose-300 bg-rose-50/40 dark:bg-rose-950/20 dark:border-rose-800" : "border-border bg-card"}`}>
+          <CardContent className="p-3.5 sm:p-4">
+            <span className="text-[11px] sm:text-xs font-medium text-muted-foreground block truncate">
+              {t("inventory.outOfStock")}
+            </span>
+            <p className={`mt-1 text-xl sm:text-2xl font-bold font-mono tracking-tight ${stats.outOfStock > 0 ? "text-rose-700 dark:text-rose-400" : "text-foreground"}`}>
+              {stats.outOfStock}
+            </p>
+            <p className="mt-0.5 text-[10px] sm:text-xs text-muted-foreground truncate">
+              {stats.outOfStock > 0 ? t("inventory.reorderNeeded") : t("inventory.allAvailable")}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Stock Table Card */}
+      <Card className="rounded-lg border border-border bg-card shadow-xs overflow-hidden">
+        <div className="p-3.5 sm:p-5 border-b border-border flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm sm:text-base font-bold text-foreground">{t("inventory.liveStock")}</h2>
+            <Badge variant="secondary" className="text-xs">
+              {filteredItems.length}
+            </Badge>
           </div>
-          <div className="hidden sm:flex justify-end">
-            <img src={heroImg} alt="Inventory" width={420} height={280}
-              className="w-[320px] lg:w-[420px] object-contain drop-shadow-2xl" />
+          <div className="relative w-full sm:w-64">
+            <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("common.search")}
+              className="ps-9 h-9 text-xs sm:text-sm rounded-lg"
+            />
           </div>
         </div>
-      </div>
 
-      {/* Content grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Table */}
-        <Card className="min-w-0 overflow-hidden rounded-lg border-border/70 bg-card/80 shadow-sm backdrop-blur lg:col-span-2">
-          <CardContent className="min-w-0 p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Top Inventory Items</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Live stock across your warehouses.</p>
-              </div>
-              <Badge variant="secondary" className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                {items.length} items
-              </Badge>
-            </div>
-            <div className="-mx-2 overflow-x-auto overscroll-x-contain">
-              <table className="w-full min-w-[680px] text-sm">
-                <thead>
-                  <tr className="text-left text-[11px] uppercase tracking-wider text-slate-400">
-                    <th className="px-3 py-2 font-medium">Item</th>
-                    <th className="px-3 py-2 font-medium">Category</th>
-                    <th className="px-3 py-2 font-medium text-right">Stock</th>
-                    <th className="px-3 py-2 font-medium text-right">Price/Unit</th>
-                    <th className="px-3 py-2 font-medium text-right">Value</th>
-                    <th className="px-3 py-2 font-medium">Status</th>
-                    <th className="px-3 py-2 font-medium text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.length === 0 && (
-                    <tr><td colSpan={7} className="text-center py-14 text-slate-400">No inventory items yet.</td></tr>
-                  )}
-                  {items.map((item) => {
-                    const st = statusOf(item);
-                    const value = Number(item.current_stock) * Number(item.price_per_unit);
-                    return (
-                      <tr key={item.id} className="group border-t border-slate-100 hover:bg-emerald-50/40 transition-colors">
-                        <td className="px-3 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                              <Leaf className="h-4 w-4 text-emerald-600" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-foreground">{item.item_name}</p>
-                              <p className="text-xs text-slate-400">Alert @ {item.low_stock_threshold}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-muted-foreground capitalize">{item.unit}</td>
-                        <td className="px-3 py-3 text-right font-medium text-slate-800">
-                          {item.current_stock} <span className="text-slate-400 text-xs">{item.unit}</span>
-                        </td>
-                        <td className="px-3 py-3 text-right font-medium text-slate-800">Rs {Number(item.price_per_unit).toLocaleString()}</td>
-                        <td className="px-3 py-3 text-right font-semibold text-foreground">Rs {value.toLocaleString()}</td>
-                        <td className="px-3 py-3">
-                          <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${st.cls}`}>{st.label}</span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition">
-                            {isManagerOrAdmin && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-emerald-100/60" onClick={() => openEdit(item)}>
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
-                            {isAdmin && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-rose-500 hover:bg-rose-50">
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete item</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete <strong>{item.item_name}</strong>?
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(item.id)}
-                                      className="bg-rose-500 hover:bg-rose-600">Delete</AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs sm:text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/40 text-muted-foreground text-start">
+                <th className="px-3.5 sm:px-4 py-2.5 font-semibold text-start">{t("inventory.item")}</th>
+                <th className="px-3.5 sm:px-4 py-2.5 font-semibold text-start">{t("inventory.category")}</th>
+                <th className="px-3.5 sm:px-4 py-2.5 font-semibold text-end">{t("inventory.stock")}</th>
+                <th className="px-3.5 sm:px-4 py-2.5 font-semibold text-end">{t("inventory.rate")}</th>
+                <th className="px-3.5 sm:px-4 py-2.5 font-semibold text-end">{t("inventory.totalVal")}</th>
+                <th className="px-3.5 sm:px-4 py-2.5 font-semibold text-start">{t("inventory.status")}</th>
+                <th className="px-3.5 sm:px-4 py-2.5 font-semibold text-end">{t("inventory.actions")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-muted-foreground text-xs sm:text-sm">
+                    {t("inventory.noItemsFound")}
+                  </td>
+                </tr>
+              ) : (
+                filteredItems.map((item) => {
+                  const st = statusOf(item);
+                  const itemValue = Number(item.current_stock) * Number(item.price_per_unit);
+                  return (
+                    <tr key={item.id} className="hover:bg-muted/40 transition-colors">
+                      <td className="px-3.5 sm:px-4 py-3">
+                        <span className="font-semibold text-foreground block">{item.item_name}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {t("inventory.lowStockThreshold")}: {item.low_stock_threshold}
+                        </span>
+                      </td>
+                      <td className="px-3.5 sm:px-4 py-3 text-muted-foreground capitalize">
+                        {item.unit}
+                      </td>
+                      <td className="px-3.5 sm:px-4 py-3 text-end font-mono font-medium text-foreground">
+                        <bdi>{Number(item.current_stock).toLocaleString()} <span className="text-muted-foreground text-[11px]">{item.unit}</span></bdi>
+                      </td>
+                      <td className="px-3.5 sm:px-4 py-3 text-end font-mono text-muted-foreground">
+                        <bdi>₨ {Number(item.price_per_unit).toLocaleString()}</bdi>
+                      </td>
+                      <td className="px-3.5 sm:px-4 py-3 text-end font-mono font-bold text-foreground">
+                        <bdi>₨ {Math.round(itemValue).toLocaleString()}</bdi>
+                      </td>
+                      <td className="px-3.5 sm:px-4 py-3 text-start">
+                        <span className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-md border ${st.cls}`}>
+                          {st.label}
+                        </span>
+                      </td>
+                      <td className="px-3.5 sm:px-4 py-3 text-end">
+                        <div className="flex items-center justify-end gap-1">
+                          {isManagerOrAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => openEdit(item)}
+                              title={t("common.edit")}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          {isAdmin && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                                  title={t("common.delete")}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-lg">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>{t("inventory.deleteItem")}</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {t("inventory.deleteConfirm")} <strong>{item.item_name}</strong>?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(item.id)}
+                                    className="bg-rose-600 hover:bg-rose-700 text-white"
+                                  >
+                                    {t("common.delete")}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
-        {/* Donut */}
-        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
-          <CardContent className="p-5 sm:p-6">
-            <div className="mb-4">
-              <h2 className="text-lg font-bold text-foreground">Stock Summary</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Inventory distribution & health.</p>
-            </div>
-            <div className="relative h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={donutData} innerRadius={62} outerRadius={86} paddingAngle={3} dataKey="value" stroke="none">
-                    {donutData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <p className="text-3xl font-bold text-foreground">{stats.totalItems}</p>
-                <p className="text-xs text-muted-foreground">Total Items</p>
-              </div>
-            </div>
-            <div className="mt-2 space-y-2">
-              {donutData.map((d) => (
-                <div key={d.name} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-muted-foreground">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: d.color }} />
-                    {d.name}
-                  </span>
-                  <span className="font-medium text-slate-800">{d.value}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-lg bg-emerald-50/60 border border-emerald-100 p-3">
-              <div className="flex items-center justify-between text-xs text-emerald-800">
-                <span className="font-medium">Inventory health</span><span>{stats.health}%</span>
-              </div>
-              <div className="mt-2 h-1.5 rounded-full bg-emerald-100 overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${stats.health}%`, background: `linear-gradient(90deg, ${EMERALD}, #34D399)` }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bottom grid */}
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {/* Recent activity */}
-        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="h-4 w-4 text-emerald-600" />
-              <h3 className="font-bold text-foreground">Recent Activity</h3>
-            </div>
-            {recent.length === 0 && <p className="text-xs text-slate-400">No activity yet.</p>}
-            <ul className="space-y-3">
-              {recent.map((i) => (
-                <li key={i.id} className="flex items-start gap-3 text-sm">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-slate-800 truncate">{i.item_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Stock updated · {i.current_stock} {i.unit}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Low stock */}
-        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <h3 className="font-bold text-foreground">Low Stock Alerts</h3>
-            </div>
-            {lowStockList.length === 0 && <p className="text-xs text-slate-400">All items are healthy.</p>}
-            <ul className="space-y-2">
-              {lowStockList.map((i) => (
-                <li key={i.id} className="flex items-center justify-between rounded-xl bg-amber-50/60 border border-amber-100 px-3 py-2 text-sm">
-                  <span className="font-medium text-slate-800 truncate">{i.item_name}</span>
-                  <span className="text-xs font-semibold text-amber-700">{i.current_stock} {i.unit}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Top valuable */}
-        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <ArrowUpRight className="h-4 w-4 text-emerald-600" />
-              <h3 className="font-bold text-foreground">Top Valuable</h3>
-            </div>
-            {topValuable.length === 0 && <p className="text-xs text-slate-400">Add items to see rankings.</p>}
-            <ul className="space-y-3">
-              {topValuable.map((i, idx) => (
-                <li key={i.id} className="flex items-center gap-3 text-sm">
-                  <span className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
-                    {idx + 1}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-slate-800 truncate">{i.item_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Rs {(Number(i.current_stock) * Number(i.price_per_unit)).toLocaleString()}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Performance */}
-        <Card className="rounded-lg border-border/70 bg-card/80 backdrop-blur shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="font-bold text-foreground">Inventory Performance</h3>
-              <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
-                <ArrowDownRight className="h-3 w-3 rotate-180" />+8.4%
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">Rs {stats.totalValue.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mb-2">Value trend · last 12 weeks</p>
-            <div className="h-24">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="perfGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={EMERALD} stopOpacity={0.45} />
-                      <stop offset="100%" stopColor={EMERALD} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 12 }} />
-                  <Area type="monotone" dataKey="v" stroke={EMERALD} strokeWidth={2.2} fill="url(#perfGrad)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Edit dialog */}
+      {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="w-[95vw] sm:w-full max-w-lg rounded-lg">
+        <DialogContent className="w-[95vw] sm:w-full max-w-md rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl">Edit Item</DialogTitle>
-            <DialogDescription>Update inventory details.</DialogDescription>
+            <DialogTitle className="text-lg">{t("inventory.editItem")}</DialogTitle>
+            <DialogDescription className="text-xs">{t("inventory.updateDetails")}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2"><Label>Item Name *</Label>
-              <Input value={editForm.item_name} onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2"><Label>Current Stock</Label>
-                <Input type="number" inputMode="decimal" min="0" step="0.01" value={editForm.current_stock}
-                  onChange={(e) => setEditForm({ ...editForm, current_stock: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Unit</Label>
-                <Input maxLength={20} value={editForm.unit} onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} /></div>
+          <div className="space-y-3.5 pt-1">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">{t("inventory.itemName")} *</Label>
+              <Input
+                value={editForm.item_name}
+                onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })}
+                className="h-10 text-sm"
+              />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2"><Label>Price / Unit (₨)</Label>
-                <Input type="number" inputMode="decimal" min="0" step="0.01" value={editForm.price_per_unit}
-                  onChange={(e) => setEditForm({ ...editForm, price_per_unit: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Low-Stock Alert</Label>
-                <Input type="number" inputMode="numeric" min="0" step="1" value={editForm.low_stock_threshold}
-                  onChange={(e) => setEditForm({ ...editForm, low_stock_threshold: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">{t("inventory.stock")}</Label>
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={editForm.current_stock}
+                  onChange={(e) => setEditForm({ ...editForm, current_stock: e.target.value })}
+                  className="h-10 text-sm font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">{t("inventory.unit")}</Label>
+                <Input
+                  maxLength={20}
+                  value={editForm.unit}
+                  onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
+                  className="h-10 text-sm"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">{t("inventory.pricePerUnit")}</Label>
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={editForm.price_per_unit}
+                  onChange={(e) => setEditForm({ ...editForm, price_per_unit: e.target.value })}
+                  className="h-10 text-sm font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">{t("inventory.lowStockThreshold")}</Label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  step="1"
+                  value={editForm.low_stock_threshold}
+                  onChange={(e) => setEditForm({ ...editForm, low_stock_threshold: e.target.value })}
+                  className="h-10 text-sm font-mono"
+                />
+              </div>
             </div>
           </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button className="text-white" style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}
-              onClick={handleUpdate} disabled={!editForm.item_name}>Update Item</Button>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>{t("common.cancel")}</Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={handleUpdate}
+              disabled={!editForm.item_name}
+            >
+              {t("common.save")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

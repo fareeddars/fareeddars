@@ -442,14 +442,14 @@ const Farmers = () => {
 
       {/* --- Premium Search Bar --- */}
       <div className="relative max-w-xl mx-auto sm:mx-0 group">
-        <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+        <div className="absolute inset-y-0 start-0 ps-3 sm:ps-4 flex items-center pointer-events-none">
           <Search className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-focus-within:text-indigo-500 transition-colors" />
         </div>
         <Input 
-          placeholder="Search by Name, CNIC, Phone, or Landlord..." 
+          placeholder={t("farmers.searchFarmers")} 
           value={search} 
           onChange={(e) => setSearch(e.target.value)} 
-          className="pl-10 sm:pl-12 h-11 sm:h-14 rounded-xl sm:rounded-lg border-border/60 bg-card/50 backdrop-blur-sm focus:border-indigo-500/50 shadow-sm text-sm sm:text-base transition-all group-focus-within:shadow-md group-focus-within:bg-card" 
+          className="ps-10 sm:ps-12 h-11 sm:h-14 rounded-xl sm:rounded-lg border-border/60 bg-card/50 backdrop-blur-sm focus:border-indigo-500/50 shadow-sm text-sm sm:text-base transition-all group-focus-within:shadow-md group-focus-within:bg-card text-start" 
         />
       </div>
 
@@ -515,7 +515,7 @@ const Farmers = () => {
                 <div>
                   <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-muted-foreground block">{t("farmers.balance")}</span>
                   <span className={`text-[10px] font-semibold uppercase tracking-wider ${balanceOf(farmer.id) < 0 ? "text-emerald-600 dark:text-emerald-400" : balanceOf(farmer.id) > 0 ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"}`}>
-                    {balanceOf(farmer.id) < 0 ? "Payable" : balanceOf(farmer.id) > 0 ? "Due" : "Settled"}
+                    {balanceOf(farmer.id) < 0 ? t("dashboard.payable") : balanceOf(farmer.id) > 0 ? t("dashboard.due") : t("farmers.settled")}
                   </span>
                 </div>
                 <span className={`font-bold font-mono text-sm sm:text-lg tracking-tight ${balanceOf(farmer.id) > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
@@ -531,7 +531,7 @@ const Farmers = () => {
               <UserPlus className="h-10 w-10 text-muted-foreground/40" />
             </div>
             <h3 className="text-xl font-bold font-serif mb-1">{t("farmers.noFarmers")}</h3>
-            <p className="text-muted-foreground text-sm">No farmers matched your search.</p>
+            <p className="text-muted-foreground text-sm">{t("farmers.noFarmersMatch")}</p>
           </div>
         )}
       </div>
