@@ -988,20 +988,20 @@ const Ledger = () => {
                   </Button>
                 </DialogTrigger>
                     <DialogContent
-                  className="sm:max-w-xl h-dvh sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-none sm:rounded-lg"
+                  className="h-dvh max-h-dvh w-screen max-w-none overflow-hidden flex flex-col p-0 rounded-none sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:rounded-lg"
                   onKeyDown={(e) => { if (e.key === "Enter" && saving) { e.preventDefault(); e.stopPropagation(); } }}
                   onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}
                   onPointerDownOutside={(e) => { if (saving) e.preventDefault(); }}
                   onInteractOutside={(e) => { if (saving) e.preventDefault(); }}
                 >
-                  <DialogHeader className="px-3 sm:px-6 py-2 sm:py-5 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-b">
+                  <DialogHeader className="shrink-0 px-3 sm:px-6 py-2 sm:py-5 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-b">
                     <DialogTitle className="font-serif text-base sm:text-2xl flex items-center gap-2 text-violet-900 dark:text-violet-100">
                       <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-violet-600 dark:text-violet-400" />
                       {editingId ? t("ledger.editEntry") : t("ledger.newTransaction")}
                     </DialogTitle>
                     <DialogDescription className="text-[10px] sm:text-sm">{t("ledger.addEntry")}</DialogDescription>
                   </DialogHeader>
-                  <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-2 sm:py-4">
+                  <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-6 py-2 sm:py-4">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                       <TabsList className="w-full grid grid-cols-4 h-auto gap-0.5 sm:gap-1 bg-muted/50 p-0.5 sm:p-1 rounded-md sm:rounded-lg mb-2 sm:mb-6">
                         <TabsTrigger value="expense" className="data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-red-500/30 rounded sm:rounded-lg text-[8px] sm:text-xs uppercase tracking-wider py-1.5 sm:py-2.5 transition-all duration-300 font-bold flex flex-col sm:flex-row items-center gap-0 sm:gap-1.5">
@@ -1736,7 +1736,7 @@ const Ledger = () => {
                       </TabsContent>
                     </Tabs>
                   </div>
-                  <DialogFooter className="p-2 sm:p-6 bg-muted/30 border-t mt-auto">
+                  <DialogFooter className="shrink-0 p-2 sm:p-6 bg-muted/30 border-t mt-auto">
                     <Button
                       size="sm"
                       onClick={handleSave}
