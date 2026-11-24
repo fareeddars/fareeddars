@@ -1,12 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
-import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
+import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 
-function sb(ctx: ToolContext) {
-  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+function getCreateLedgerSupabaseConfig() {
+  const url = process.env.SUPABASE_URL;
+  let key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const keySet = process.env.SUPABASE_PUBLISHABLE_KEYS;
+  if (!key && keySet) {
+    try {
+      const parsed: unknown = JSON.parse(keySet);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const keys = parsed as Record<string, unknown>;
+        for (const candidate of [keys.default, ...Object.values(keys)]) {
+          if (typeof candidate === "string" && candidate.trim().startsWith("sb_publishable_")) {
+            key = candidate.trim();
+            break;
+          }
+        }
+      }
+    } catch {
+      // Fall back to the legacy anon key below.
+    }
+  }
+  key ??= process.env.SUPABASE_ANON_KEY;
+  return url && key ? { url, key } : null;
 }
 
 export default defineTool({
@@ -26,7 +43,15 @@ export default defineTool({
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   handler: async (input, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    const { data, error } = await sb(ctx)
+    const userId = ctx.getUserId();
+    if (!userId) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    const config = getCreateLedgerSupabaseConfig();
+    if (!config) return { content: [{ type: "text", text: "Database configuration is missing" }], isError: true };
+    const supabase = createClient(config.url, config.key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error } = await supabase
       .from("ledger_entries")
       .insert({
         farmer_id: input.farmer_id,
@@ -37,7 +62,7 @@ export default defineTool({
         entry_date: input.entry_date ?? new Date().toISOString().slice(0, 10),
         season_id: input.season_id ?? null,
         farmer_season_id: input.farmer_season_id ?? null,
-        created_by: ctx.getUserId()!,
+        created_by: userId,
       })
       .select()
       .single();

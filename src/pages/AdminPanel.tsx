@@ -18,6 +18,8 @@ import type { Tables } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
+type EditableRoleFields = Pick<Tables<"user_roles">, "role" | "is_active" | "can_create" | "can_edit" | "can_delete">;
+type RoleUpdate = Partial<EditableRoleFields>;
 
 interface UserWithRole {
   profile: Tables<"profiles">;
@@ -59,8 +61,8 @@ const AdminPanel = () => {
 
   useEffect(() => { fetchUsers(); }, []);
 
-  const updateRole = async (userId: string, field: string, value: any) => {
-    const { error } = await supabase.from("user_roles").update({ [field]: value }).eq("user_id", userId);
+  const updateRole = async (userId: string, update: RoleUpdate) => {
+    const { error } = await supabase.from("user_roles").update(update).eq("user_id", userId);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
     else { toast({ title: "Updated" }); fetchUsers(); }
   };
@@ -271,7 +273,7 @@ const AdminPanel = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Select value={u.role.role} onValueChange={(v) => updateRole(u.profile.user_id, "role", v)}>
+                  <Select value={u.role.role} onValueChange={(v) => updateRole(u.profile.user_id, { role: v as AppRole })}>
                     <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="admin">Admin</SelectItem>
@@ -279,12 +281,12 @@ const AdminPanel = () => {
                       <SelectItem value="staff">Staff</SelectItem>
                     </SelectContent>
                   </Select>
-                  <label className="flex items-center gap-1.5 text-xs"><Switch checked={u.role.is_active} onCheckedChange={(v) => updateRole(u.profile.user_id, "is_active", v)} />{t("admin.active")}</label>
+                  <label className="flex items-center gap-1.5 text-xs"><Switch checked={u.role.is_active} onCheckedChange={(v) => updateRole(u.profile.user_id, { is_active: v })} />{t("admin.active")}</label>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap text-xs">
-                  <label className="flex items-center gap-1.5"><Switch checked={u.role.can_create} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_create", v)} />{t("admin.create")}</label>
-                  <label className="flex items-center gap-1.5"><Switch checked={u.role.can_edit} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_edit", v)} />{t("common.edit")}</label>
-                  <label className="flex items-center gap-1.5"><Switch checked={u.role.can_delete} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_delete", v)} />{t("common.delete")}</label>
+                  <label className="flex items-center gap-1.5"><Switch checked={u.role.can_create} onCheckedChange={(v) => updateRole(u.profile.user_id, { can_create: v })} />{t("admin.create")}</label>
+                  <label className="flex items-center gap-1.5"><Switch checked={u.role.can_edit} onCheckedChange={(v) => updateRole(u.profile.user_id, { can_edit: v })} />{t("common.edit")}</label>
+                  <label className="flex items-center gap-1.5"><Switch checked={u.role.can_delete} onCheckedChange={(v) => updateRole(u.profile.user_id, { can_delete: v })} />{t("common.delete")}</label>
                 </div>
               </div>
             ))}
@@ -318,7 +320,7 @@ const AdminPanel = () => {
                     </TableCell>
                     <TableCell className="text-sm">{u.profile.email}</TableCell>
                     <TableCell>
-                      <Select value={u.role.role} onValueChange={(v) => updateRole(u.profile.user_id, "role", v)}>
+                      <Select value={u.role.role} onValueChange={(v) => updateRole(u.profile.user_id, { role: v as AppRole })}>
                         <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="admin">Admin</SelectItem>
@@ -327,10 +329,10 @@ const AdminPanel = () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell><Switch checked={u.role.can_create} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_create", v)} /></TableCell>
-                    <TableCell><Switch checked={u.role.can_edit} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_edit", v)} /></TableCell>
-                    <TableCell><Switch checked={u.role.can_delete} onCheckedChange={(v) => updateRole(u.profile.user_id, "can_delete", v)} /></TableCell>
-                    <TableCell><Switch checked={u.role.is_active} onCheckedChange={(v) => updateRole(u.profile.user_id, "is_active", v)} /></TableCell>
+                    <TableCell><Switch checked={u.role.can_create} onCheckedChange={(v) => updateRole(u.profile.user_id, { can_create: v })} /></TableCell>
+                    <TableCell><Switch checked={u.role.can_edit} onCheckedChange={(v) => updateRole(u.profile.user_id, { can_edit: v })} /></TableCell>
+                    <TableCell><Switch checked={u.role.can_delete} onCheckedChange={(v) => updateRole(u.profile.user_id, { can_delete: v })} /></TableCell>
+                    <TableCell><Switch checked={u.role.is_active} onCheckedChange={(v) => updateRole(u.profile.user_id, { is_active: v })} /></TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/10 hover:text-primary" onClick={() => {

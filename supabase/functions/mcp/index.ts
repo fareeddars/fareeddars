@@ -9,11 +9,27 @@ import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { createClient } from "npm:@supabase/supabase-js@^2.96.0";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z } from "npm:zod@^3.25.76";
-function sb(ctx) {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
+function getFarmersSupabaseConfig() {
+  const url = process.env.SUPABASE_URL;
+  let key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const keySet = process.env.SUPABASE_PUBLISHABLE_KEYS;
+  if (!key && keySet) {
+    try {
+      const parsed = JSON.parse(keySet);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const keys = parsed;
+        for (const candidate of [keys.default, ...Object.values(keys)]) {
+          if (typeof candidate === "string" && candidate.trim().startsWith("sb_publishable_")) {
+            key = candidate.trim();
+            break;
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  key ??= process.env.SUPABASE_ANON_KEY;
+  return url && key ? { url, key } : null;
 }
 var list_farmers_default = defineTool({
   name: "list_farmers",
@@ -26,7 +42,13 @@ var list_farmers_default = defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ search, limit }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    let q = sb(ctx).from("farmers").select("id,name,phone,cnic,landlord,initial_balance,created_at").order("created_at", { ascending: false }).limit(limit ?? 50);
+    const config = getFarmersSupabaseConfig();
+    if (!config) return { content: [{ type: "text", text: "Database configuration is missing" }], isError: true };
+    const supabase = createClient(config.url, config.key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    let q = supabase.from("farmers").select("id,name,phone,cnic,landlord,initial_balance,created_at").order("created_at", { ascending: false }).limit(limit ?? 50);
     if (search) q = q.ilike("name", `%${search}%`);
     const { data, error } = await q;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
@@ -38,11 +60,27 @@ var list_farmers_default = defineTool({
 import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.96.0";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z2 } from "npm:zod@^3.25.76";
-function sb2(ctx) {
-  return createClient2(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
+function getLedgerSupabaseConfig() {
+  const url = process.env.SUPABASE_URL;
+  let key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const keySet = process.env.SUPABASE_PUBLISHABLE_KEYS;
+  if (!key && keySet) {
+    try {
+      const parsed = JSON.parse(keySet);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const keys = parsed;
+        for (const candidate of [keys.default, ...Object.values(keys)]) {
+          if (typeof candidate === "string" && candidate.trim().startsWith("sb_publishable_")) {
+            key = candidate.trim();
+            break;
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  key ??= process.env.SUPABASE_ANON_KEY;
+  return url && key ? { url, key } : null;
 }
 var list_ledger_default = defineTool2({
   name: "list_ledger_entries",
@@ -58,7 +96,13 @@ var list_ledger_default = defineTool2({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ farmer_id, entry_type, from_date, to_date, limit }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    let q = sb2(ctx).from("ledger_entries").select("id,farmer_id,entry_type,category,amount,description,entry_date,created_at").order("entry_date", { ascending: false }).limit(limit ?? 100);
+    const config = getLedgerSupabaseConfig();
+    if (!config) return { content: [{ type: "text", text: "Database configuration is missing" }], isError: true };
+    const supabase = createClient2(config.url, config.key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    let q = supabase.from("ledger_entries").select("id,farmer_id,entry_type,category,amount,description,entry_date,created_at").order("entry_date", { ascending: false }).limit(limit ?? 100);
     if (farmer_id) q = q.eq("farmer_id", farmer_id);
     if (entry_type) q = q.eq("entry_type", entry_type);
     if (from_date) q = q.gte("entry_date", from_date);
@@ -73,11 +117,27 @@ var list_ledger_default = defineTool2({
 import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.96.0";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z3 } from "npm:zod@^3.25.76";
-function sb3(ctx) {
-  return createClient3(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
+function getInventorySupabaseConfig() {
+  const url = process.env.SUPABASE_URL;
+  let key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const keySet = process.env.SUPABASE_PUBLISHABLE_KEYS;
+  if (!key && keySet) {
+    try {
+      const parsed = JSON.parse(keySet);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const keys = parsed;
+        for (const candidate of [keys.default, ...Object.values(keys)]) {
+          if (typeof candidate === "string" && candidate.trim().startsWith("sb_publishable_")) {
+            key = candidate.trim();
+            break;
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  key ??= process.env.SUPABASE_ANON_KEY;
+  return url && key ? { url, key } : null;
 }
 var list_inventory_default = defineTool3({
   name: "list_inventory",
@@ -89,7 +149,13 @@ var list_inventory_default = defineTool3({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ low_stock_only }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    const { data, error } = await sb3(ctx).from("inventory").select("id,item_name,unit,current_stock,price_per_unit,low_stock_threshold").order("item_name", { ascending: true });
+    const config = getInventorySupabaseConfig();
+    if (!config) return { content: [{ type: "text", text: "Database configuration is missing" }], isError: true };
+    const supabase = createClient3(config.url, config.key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data, error } = await supabase.from("inventory").select("id,item_name,unit,current_stock,price_per_unit,low_stock_threshold").order("item_name", { ascending: true });
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     const rows = low_stock_only ? (data ?? []).filter((r) => r.current_stock <= r.low_stock_threshold) : data ?? [];
     return { content: [{ type: "text", text: JSON.stringify(rows) }], structuredContent: { items: rows } };
@@ -100,11 +166,27 @@ var list_inventory_default = defineTool3({
 import { createClient as createClient4 } from "npm:@supabase/supabase-js@^2.96.0";
 import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z4 } from "npm:zod@^3.25.76";
-function sb4(ctx) {
-  return createClient4(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
+function getCreateLedgerSupabaseConfig() {
+  const url = process.env.SUPABASE_URL;
+  let key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const keySet = process.env.SUPABASE_PUBLISHABLE_KEYS;
+  if (!key && keySet) {
+    try {
+      const parsed = JSON.parse(keySet);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const keys = parsed;
+        for (const candidate of [keys.default, ...Object.values(keys)]) {
+          if (typeof candidate === "string" && candidate.trim().startsWith("sb_publishable_")) {
+            key = candidate.trim();
+            break;
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  key ??= process.env.SUPABASE_ANON_KEY;
+  return url && key ? { url, key } : null;
 }
 var create_ledger_entry_default = defineTool4({
   name: "create_ledger_entry",
@@ -123,7 +205,15 @@ var create_ledger_entry_default = defineTool4({
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   handler: async (input, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    const { data, error } = await sb4(ctx).from("ledger_entries").insert({
+    const userId = ctx.getUserId();
+    if (!userId) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    const config = getCreateLedgerSupabaseConfig();
+    if (!config) return { content: [{ type: "text", text: "Database configuration is missing" }], isError: true };
+    const supabase = createClient4(config.url, config.key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data, error } = await supabase.from("ledger_entries").insert({
       farmer_id: input.farmer_id,
       entry_type: input.entry_type,
       amount: input.amount,
@@ -132,7 +222,7 @@ var create_ledger_entry_default = defineTool4({
       entry_date: input.entry_date ?? (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
       season_id: input.season_id ?? null,
       farmer_season_id: input.farmer_season_id ?? null,
-      created_by: ctx.getUserId()
+      created_by: userId
     }).select().single();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return { content: [{ type: "text", text: `Created entry ${data.id}` }], structuredContent: { entry: data } };
