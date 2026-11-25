@@ -988,7 +988,7 @@ const Ledger = () => {
                   </Button>
                 </DialogTrigger>
                     <DialogContent
-                  className="h-dvh max-h-dvh w-screen max-w-none overflow-hidden flex flex-col p-0 rounded-none sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:rounded-lg"
+                  className="!fixed !inset-0 !left-0 !top-0 !h-dvh !max-h-none !w-screen !max-w-none !translate-x-0 !translate-y-0 overflow-hidden flex flex-col gap-0 p-0 rounded-none"
                   onKeyDown={(e) => { if (e.key === "Enter" && saving) { e.preventDefault(); e.stopPropagation(); } }}
                   onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}
                   onPointerDownOutside={(e) => { if (saving) e.preventDefault(); }}
