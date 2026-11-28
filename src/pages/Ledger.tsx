@@ -41,6 +41,8 @@ const EXPENSE_CATEGORIES = [
 ];
 
 type CostAllocation = "farmer" | "shared" | "landlord";
+const SALE_ENTRY_STEPS = ["details", "weight", "costs", "yield", "payment"] as const;
+type SaleEntryStep = (typeof SALE_ENTRY_STEPS)[number];
 
 /** Compact sale details derived from the shared aggregator (single source of truth). */
 const SaleMeta = ({ e, linkedReceipts = 0 }: { e: any; linkedReceipts?: number }) => {
@@ -122,6 +124,12 @@ const Ledger = () => {
   const [inventory, setInventory] = useState<Tables<"inventory">[]>([]);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("expense");
+  const [saleEntryStep, setSaleEntryStep] = useState<SaleEntryStep>("details");
+  const saleStepIndex = SALE_ENTRY_STEPS.indexOf(saleEntryStep);
+  const moveSaleStep = (direction: -1 | 1) => {
+    const nextStep = SALE_ENTRY_STEPS[saleStepIndex + direction];
+    if (nextStep) setSaleEntryStep(nextStep);
+  };
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -328,13 +336,14 @@ const Ledger = () => {
     setTotalArea(""); setAreaUnit("acre"); setTotalYield(""); setYieldUnit("maund"); setPaidAmount(""); setSaleNotes("");
     setPaymentPurpose("farmer_payment"); setSelectedReceiptBuyer(""); setSelectedReceiptSaleId(""); setReceiptAmount(""); setReceiptPaymentMethod("cash"); setReceiptNotes("");
     setPaymentMethod("cash"); setCashAmount(""); setCropType(""); setCropWeight(""); setCropRate("");
-    setLoanAmount(""); setActiveTab("expense");
+    setLoanAmount(""); setActiveTab("expense"); setSaleEntryStep("details");
     setEditingId(null);
   };
 
   const openEdit = (e: any) => {
     setEditingId(e.id);
     setActiveTab(e.entry_type || "expense");
+    setSaleEntryStep("details");
     setFarmerId(e.farmer_id || "");
     setEntryDate(e.entry_date ? new Date(e.entry_date + "T00:00:00") : new Date());
     setDescription(e.description || "");
@@ -994,16 +1003,16 @@ const Ledger = () => {
                   onPointerDownOutside={(e) => { if (saving) e.preventDefault(); }}
                   onInteractOutside={(e) => { if (saving) e.preventDefault(); }}
                 >
-                  <DialogHeader className="shrink-0 px-3 sm:px-6 py-2 sm:py-5 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-b">
+                  <DialogHeader className="shrink-0 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-b">
                     <DialogTitle className="font-serif text-base sm:text-2xl flex items-center gap-2 text-violet-900 dark:text-violet-100">
                       <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-violet-600 dark:text-violet-400" />
                       {editingId ? t("ledger.editEntry") : t("ledger.newTransaction")}
                     </DialogTitle>
                     <DialogDescription className="text-[10px] sm:text-sm">{t("ledger.addEntry")}</DialogDescription>
                   </DialogHeader>
-                  <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-6 py-2 sm:py-4">
+                  <div className="min-h-0 flex-1 overflow-hidden px-2 sm:px-4 py-1 sm:py-2">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                      <TabsList className="w-full grid grid-cols-4 h-auto gap-0.5 sm:gap-1 bg-muted/50 p-0.5 sm:p-1 rounded-md sm:rounded-lg mb-2 sm:mb-6">
+                      <TabsList className="w-full grid grid-cols-4 h-auto gap-0.5 sm:gap-1 bg-muted/50 p-0.5 sm:p-1 rounded-md sm:rounded-lg mb-1 sm:mb-2">
                         <TabsTrigger value="expense" className="data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-red-500/30 rounded sm:rounded-lg text-[8px] sm:text-xs uppercase tracking-wider py-1.5 sm:py-2.5 transition-all duration-300 font-bold flex flex-col sm:flex-row items-center gap-0 sm:gap-1.5">
                           <TrendingDown className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> <span className="text-[7px] sm:text-xs leading-none">{t("ledger.expense")}</span>
                         </TabsTrigger>
@@ -1018,8 +1027,8 @@ const Ledger = () => {
                         </TabsTrigger>
                       </TabsList>
 
-                      <div className="space-y-1.5 sm:space-y-4 mb-2 sm:mb-6">
-                        <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
+                      <div className="space-y-1 sm:space-y-2 mb-1 sm:mb-2">
+                        <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
                           <div className="space-y-0.5 sm:space-y-1.5">
                             <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.farmer")} *</Label>
                             <Select
@@ -1052,7 +1061,8 @@ const Ledger = () => {
                       </div>
 
                       {/* EXPENSE TAB */}
-                      <TabsContent value="expense" className="space-y-1.5 sm:space-y-5">
+                      <TabsContent value="expense" className="space-y-1 sm:space-y-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-3">
                         <div className="space-y-0.5 sm:space-y-1.5">
                           <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.category")}</Label>
                           <Select value={category} onValueChange={setCategory}>
@@ -1070,6 +1080,7 @@ const Ledger = () => {
                               {inventory.map((item) => (<SelectItem key={item.id} value={item.id}>{item.item_name} — ₨{item.price_per_unit}/{item.unit} ({t("ledger.stock")}: {item.current_stock})</SelectItem>))}
                             </SelectContent>
                           </Select>
+                        </div>
                         </div>
                         <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
                           <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.price")} (₨)</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" type="number" inputMode="decimal" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" /></div>
@@ -1121,8 +1132,9 @@ const Ledger = () => {
                       </TabsContent>
 
                       {/* SALE TAB */}
-                      <TabsContent value="sale" className="space-y-2 sm:space-y-4">
+                      <TabsContent value="sale" className="space-y-1 sm:space-y-2">
                         {/* --- Crop & Buyer --- */}
+                        {saleEntryStep === "details" && (
                         <div className="rounded-lg sm:rounded-xl border border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3">
                           <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">🌾 {t("ledger.cropDetails")}</p>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
@@ -1134,8 +1146,10 @@ const Ledger = () => {
                             <div className="space-y-0.5 sm:space-y-1.5"><Label className="text-[9px] sm:text-sm font-semibold">{t("common.description")}</Label><Input className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("ledger.enterDescription")} /></div>
                           </div>
                         </div>
+                        )}
 
                         {/* --- Weight & Rate --- */}
+                        {saleEntryStep === "weight" && (
                         <div className="rounded-lg sm:rounded-xl border border-border bg-muted/30 p-2 sm:p-4 space-y-2 sm:space-y-3">
                           <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">⚖️ {t("ledger.weightAndRate")}</p>
                           <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
@@ -1271,8 +1285,11 @@ const Ledger = () => {
                             <span className="text-xs sm:text-lg font-mono text-emerald-600 dark:text-emerald-400"><bdi>{money(sale.grossSale)}</bdi></span>
                           </div>
                         </div>
+                        )}
 
                         {/* --- Buyer Commission --- */}
+                        {saleEntryStep === "costs" && (
+                        <>
                         <div className="rounded-lg sm:rounded-xl border border-amber-500/30 bg-amber-50/40 dark:bg-amber-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3 text-start">
                           <div className="flex items-center justify-between">
                             <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
@@ -1399,8 +1416,11 @@ const Ledger = () => {
                             </div>
                           </div>
                         </div>
+                        </>
+                        )}
 
                         {/* --- Yield Summary --- */}
+                        {saleEntryStep === "yield" && (
                         <div className="rounded-lg sm:rounded-xl border border-amber-500/20 bg-amber-50/40 dark:bg-amber-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3 text-start">
                           <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">🌱 {t("dashboard.totalYield")}</p>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
@@ -1442,8 +1462,11 @@ const Ledger = () => {
                             <div className="rounded-md bg-background border p-1.5 sm:p-2.5 flex flex-col"><span className="text-muted-foreground font-semibold">{t("dashboard.profitPerAcre")}</span><span className="font-mono font-bold text-emerald-600">{sale.saleValuePerAcre != null ? money(sale.saleValuePerAcre) : "—"}</span></div>
                           </div>
                         </div>
+                        )}
 
                         {/* --- Payment --- */}
+                        {saleEntryStep === "payment" && (
+                        <>
                         <div className="rounded-lg sm:rounded-xl border border-blue-500/20 bg-blue-50/40 dark:bg-blue-950/20 p-2 sm:p-4 space-y-2 sm:space-y-3 text-start">
                           <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">💰 {t("ledger.buyerReceipt")}</p>
                           <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
@@ -1490,6 +1513,8 @@ const Ledger = () => {
                           </div>
                           <span className="text-sm sm:text-xl font-mono text-emerald-600 dark:text-emerald-400">{money(sale.grossSale)}</span>
                         </div>
+                        </>
+                        )}
                       </TabsContent>
 
                       {/* PAYMENT TAB */}
@@ -1563,7 +1588,7 @@ const Ledger = () => {
                           </>
                         ) : (
                           /* BUYER PAYMENT RECEIVED WORKFLOW */
-                          <div className="space-y-2 sm:space-y-3.5">
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                             {/* Buyer Selector */}
                             <div className="space-y-0.5 sm:space-y-1.5">
                               <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.buyerCustomer")} *</Label>
@@ -1634,7 +1659,7 @@ const Ledger = () => {
 
                             {/* Selected Sale Detail Card */}
                             {selectedReceiptSale && (
-                              <div className="rounded-lg sm:rounded-xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 p-2 sm:p-3.5 space-y-1.5">
+                              <div className="col-span-2 rounded-lg sm:rounded-xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 p-2 sm:p-3.5 space-y-1.5">
                                 <div className="flex items-center justify-between text-[9px] sm:text-xs">
                                   <span className="font-bold text-emerald-800 dark:text-emerald-300">
                                     Sale #{selectedReceiptSale.id.slice(0, 8)} • {selectedReceiptSale.crop_type || "Crop"}
@@ -1715,7 +1740,7 @@ const Ledger = () => {
                             </div>
 
                             {/* Reference / Notes */}
-                            <div className="space-y-0.5 sm:space-y-1.5">
+                            <div className="col-span-2 space-y-0.5 sm:space-y-1.5">
                               <Label className="text-[9px] sm:text-sm font-semibold">{t("ledger.notes")}</Label>
                               <Input
                                 className="h-8 sm:h-11 bg-background text-[10px] sm:text-sm"
@@ -1736,7 +1761,21 @@ const Ledger = () => {
                       </TabsContent>
                     </Tabs>
                   </div>
-                  <DialogFooter className="shrink-0 p-2 sm:p-6 bg-muted/30 border-t mt-auto">
+                  <DialogFooter className="shrink-0 p-2 sm:p-3 bg-muted/30 border-t mt-auto">
+                    <div className={cn("grid w-full grid-cols-1 items-center gap-1.5 sm:gap-2", activeTab === "sale" && "grid-cols-4")}>
+                    {activeTab === "sale" && (
+                      <Button type="button" variant="outline" disabled={saleStepIndex === 0} onClick={() => moveSaleStep(-1)} className="h-9 px-1 text-[9px] sm:h-11 sm:px-3 sm:text-sm">
+                        Previous
+                      </Button>
+                    )}
+                    {activeTab === "sale" && (
+                      <span className="text-center text-[9px] sm:text-xs text-muted-foreground">{saleStepIndex + 1} / {SALE_ENTRY_STEPS.length}</span>
+                    )}
+                    {activeTab === "sale" && (
+                      <Button type="button" variant="outline" disabled={saleStepIndex === SALE_ENTRY_STEPS.length - 1} onClick={() => moveSaleStep(1)} className="h-9 px-1 text-[9px] sm:h-11 sm:px-3 sm:text-sm">
+                        Next
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       onClick={handleSave}
@@ -1745,10 +1784,11 @@ const Ledger = () => {
                           ? (!selectedReceiptSaleId || !receiptAmount || num(receiptAmount) <= 0 || (selectedReceiptSale && num(receiptAmount) > selectedReceiptSale.outstanding + 0.01))
                           : !farmerId) || saving
                       }
-                      className="w-full h-9 sm:h-12 text-xs sm:text-base font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg transition-all duration-300 rounded-md sm:rounded-xl"
+                      className="w-full h-9 sm:h-11 px-1 sm:px-4 text-[9px] sm:text-base font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg transition-all duration-300 rounded-md sm:rounded-xl"
                     >
                       {saving ? (<><Loader2 className="animate-spin h-3.5 w-3.5 sm:h-5 sm:w-5 mr-1 sm:mr-2" /> {t("common.saving") || "Saving..."}</>) : t("ledger.saveEntry")}
                     </Button>
+                    </div>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
